@@ -1,0 +1,181 @@
+﻿@page "/pengesahan-viremen"
+@using IMAS.API.Belanjawan.Shared.Models
+@using IMAS.Blazor.Belanjawan.Services.Refit.Belanjawan
+@using MudBlazor
+@inject IViremenApi ViremenService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" GutterBottom>Pengesahan Viremen</MudText>
+
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    }
+    else
+    {
+        <MudTabs>
+            <MudTabPanel Text="Belum Sah">
+                <MudTable Items="_belumSahList" Hover="true" Striped="true" Dense="true">
+                    <HeaderContent>
+                        <MudTh>No. Viremen</MudTh>
+                        <MudTh>Tarikh</MudTh>
+                        <MudTh>Keterangan</MudTh>
+                        <MudTh>Penyedia</MudTh>
+                        <MudTh>Pengesah</MudTh>
+                        <MudTh>Pelulus</MudTh>
+                        <MudTh>Aksi</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.NoViremen</MudTd>
+                        <MudTd>@context.Tarikh.ToShortDateString()</MudTd>
+                        <MudTd>@context.Keterangan</MudTd>
+                        <MudTd>@context.Penyedia</MudTd>
+                        <MudTd>@context.Pengesah</MudTd>
+                        <MudTd>@context.Pelulus</MudTd>
+                        <MudTd>
+                            <MudButton Size="Size.Small" Color="Color.Info" OnClick="@(() => Pilih(context))">Pilih</MudButton>
+                            <MudButton Size="Size.Small" Color="Color.Primary" OnClick="@(() => UpdateStatus(context.ID, "Sah"))">Sah</MudButton>
+                            <MudButton Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteViremen(context.ID))">Hapus</MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Sudah Sah">
+                <MudTable Items="_sudahSahList" Hover="true" Striped="true" Dense="true">
+                    <HeaderContent>
+                        <MudTh>No. Viremen</MudTh>
+                        <MudTh>Tarikh</MudTh>
+                        <MudTh>Keterangan</MudTh>
+                        <MudTh>Penyedia</MudTh>
+                        <MudTh>Pengesah</MudTh>
+                        <MudTh>Pelulus</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.NoViremen</MudTd>
+                        <MudTd>@context.Tarikh.ToShortDateString()</MudTd>
+                        <MudTd>@context.Keterangan</MudTd>
+                        <MudTd>@context.Penyedia</MudTd>
+                        <MudTd>@context.Pengesah</MudTd>
+                        <MudTd>@context.Pelulus</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+        </MudTabs>
+    }
+
+    <MudDivider Class="my-4" />
+
+    <MudText Typo="Typo.h6">Tambah atau Kemaskini Viremen</MudText>
+    <MudTextField Label="No Viremen" @bind-Value="_viremenForm.NoViremen" />
+    <MudDatePicker Label="Tarikh" @bind-Value="_viremenForm.Tarikh" />
+    <MudTextField Label="Keterangan" @bind-Value="_viremenForm.Keterangan" />
+    <MudTextField Label="Penyedia" @bind-Value="_viremenForm.Penyedia" />
+    <MudTextField Label="Pengesah" @bind-Value="_viremenForm.Pengesah" />
+    <MudTextField Label="Pelulus" @bind-Value="_viremenForm.Pelulus" />
+
+    <MudButton Color="Color.Success" OnClick="SaveViremen">Simpan</MudButton>
+    <MudButton Color="Color.Default" OnClick="ResetForm">Batal</MudButton>
+</MudPaper>
+
+@code {
+    private List<ViremenDTO> _belumSahList = new();
+    private List<ViremenDTO> _sudahSahList = new();
+    private ViremenDTO _viremenForm = new();
+    private bool _isEdit = false;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        var allItems = await ViremenService.GetAllAsync() ?? new List<ViremenDTO>();
+
+        _belumSahList = allItems.Where(x => x.StatusSah == "BelumSah").ToList();
+        _sudahSahList = allItems.Where(x => x.StatusSah == "SudahSah").ToList();
+
+        _isLoading = false;
+    }
+
+    private async Task Pilih(ViremenDTO item)
+    {
+        Snackbar.Add($"Dipilih: {item.NoViremen}", Severity.Info);
+    }
+
+    private async Task UpdateStatus(Guid id, string statusBaru)
+    {
+        try
+        {
+            var viremen = _belumSahList.FirstOrDefault(v => v.ID == id);
+            if (viremen != null)
+            {
+                viremen.StatusSah = statusBaru;
+                await ViremenService.UpdateAsync(id, viremen);
+                Snackbar.Add($"Status berjaya dikemaskini ke '{statusBaru}'", Severity.Success);
+                await LoadData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal mengemaskini status: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteViremen(Guid id)
+    {
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Pasti?",
+            "Anda pasti mahu hapus rekod ini?",
+            yesText: "Ya",
+            cancelText: "Batal"
+        );
+
+        if (confirm == true)
+        {
+            var response = await ViremenService.DeleteAsync(id);
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Rekod berjaya dihapuskan.", Severity.Success);
+                await LoadData();
+            }
+            else
+            {
+                Snackbar.Add("Gagal menghapuskan rekod.", Severity.Error);
+            }
+        }
+    }
+
+    private async Task SaveViremen()
+    {
+        try
+        {
+            if (_isEdit)
+            {
+                await ViremenService.UpdateAsync(_viremenForm.ID, _viremenForm);
+            }
+            else
+            {
+                await ViremenService.CreateAsync(_viremenForm);
+            }
+
+            await LoadData();
+            ResetForm();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal simpan rekod: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void ResetForm()
+    {
+        _viremenForm = new ViremenDTO();
+        _isEdit = false;
+    }
+}

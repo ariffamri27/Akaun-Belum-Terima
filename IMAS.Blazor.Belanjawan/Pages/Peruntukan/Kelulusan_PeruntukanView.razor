@@ -1,0 +1,124 @@
+﻿@page "/kelulusan-peruntukan"
+@using IMAS.API.Belanjawan.Shared.Models
+@inject ISnackbar Snackbar
+@inject IMAS.Client.Services.Peruntukan.IKelulusanPeruntukanApi KelulusanApi
+
+<PageTitle>Kelulusan Peruntukan</PageTitle>
+
+<MudPaper Class="p-4 mx-auto" Style="max-width: 1000px;">
+    <MudText Typo="Typo.h5" GutterBottom>Senarai Kelulusan Peruntukan</MudText>
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    }
+    else
+    {
+        <MudTabs>
+            <MudTabPanel Text="Belum Lulus">
+                <MudTable Items="BelumLulusList" Hover="true" Striped="true" Dense="true">
+                    <HeaderContent>
+                        <MudTh>Bahagian</MudTh>
+                        <MudTh>Tahun</MudTh>
+                        <MudTh>Jumlah (RM)</MudTh>
+                        <MudTh>Tindakan</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Bahagian?.BahagianName</MudTd>
+                        <MudTd>@context.Tahun</MudTd>
+                        <MudTd>@context.JumlahDilulus.ToString("N2")</MudTd>
+                        <MudTd>
+                            <MudButton Size="Size.Small" Color="Color.Info" OnClick="@(() => Pilih(context))">Pilih</MudButton>
+                            <MudButton Size="Size.Small" Color="Color.Success" OnClick="@(() => KemaskiniStatus(context.ID, "Lulus"))">Lulus</MudButton>
+                            <MudButton Size="Size.Small" Color="Color.Error" OnClick="@(() => KemaskiniStatus(context.ID, "Tolak"))">Tolak</MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager />
+                    </PagerContent>
+                </MudTable>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Sudah Lulus">
+                <MudTable Items="FilteredSudahLulusList" Hover="true" Striped="true" Dense="true">
+                    <ToolBarContent>
+                        <MudTextField @bind-Value="searchText" Placeholder="Carian..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0" />
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh>Bahagian</MudTh>
+                        <MudTh>Tahun</MudTh>
+                        <MudTh>Jumlah (RM)</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Bahagian?.BahagianName</MudTd>
+                        <MudTd>@context.Tahun</MudTd>
+                        <MudTd>@context.JumlahDilulus.ToString("N2")</MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager />
+                    </PagerContent>
+                </MudTable>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</MudPaper>
+
+@code {
+    private List<KelulusanPeruntukanDTO> BelumLulusList = new();
+    private List<KelulusanPeruntukanDTO> SudahLulusList = new();
+    private string searchText = string.Empty;
+    private bool isLoading = true;
+
+    private IEnumerable<KelulusanPeruntukanDTO> FilteredSudahLulusList => SudahLulusList
+        .Where(x => string.IsNullOrWhiteSpace(searchText) ||
+                    (x.Bahagian?.BahagianName ?? "").Contains(searchText, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            isLoading = true;
+            var allItems = await KelulusanApi.GetAll() ?? new();
+
+            BelumLulusList = allItems
+                .Where(x => x.Status?.Trim().ToLower() == "belum")
+                .ToList();
+
+            SudahLulusList = allItems
+                .Where(x => x.Status?.Trim().ToLower() == "lulus")
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memuat data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void Pilih(KelulusanPeruntukanDTO item)
+    {
+        Snackbar.Add($"Dipilih: {item.Bahagian?.BahagianName ?? "Bahagian tidak diketahui"}", Severity.Info);
+    }
+
+    private async Task KemaskiniStatus(Guid id, string statusBaru)
+    {
+        try
+        {
+            await KelulusanApi.UpdateStatus(id, new StatusUpdateDTO { Status = statusBaru });
+            Snackbar.Add($"Status berjaya dikemaskini ke '{statusBaru}'", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal kemaskini status: {ex.Message}", Severity.Error);
+        }
+    }
+}

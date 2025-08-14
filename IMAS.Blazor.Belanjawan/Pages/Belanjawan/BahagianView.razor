@@ -1,0 +1,142 @@
+﻿@page "/bahagian"
+@using IMAS.API.Belanjawan.Shared.Models
+@using IMAS.Blazor.Belanjawan.Services.Refit
+@using IMAS.Blazor.Belanjawan.Services.Refit.Belanjawan
+@using MudBlazor
+@inject IBahagianApi BahagianService
+@inject IDialogService DialogService
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">Senarai Bahagian</MudText>
+
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    }
+    else
+    {
+        <MudTable Items="_bahagianList" Hover="true">
+            <HeaderContent>
+                <MudTh>ID</MudTh>
+                <MudTh>Bahagian Name</MudTh>
+                <MudTh>Keterangan</MudTh>
+                <MudTh>Dana ID</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="ID">@context.ID</MudTd>
+                <MudTd>@context.BahagianName</MudTd>
+                <MudTd>@context.Keterangan</MudTd>
+                <MudTd>@context.DanaID</MudTd>
+                <MudTd>
+                    <MudButton Color="Color.Primary" Size="Size.Small" OnClick="@(() => EditBahagian(context))">Edit</MudButton>
+                    <MudButton Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteBahagian(context.ID))">Hapus</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+
+    <MudDivider Class="my-4" />
+
+    <MudText Typo="Typo.h6">@(_isEdit ? "Kemaskini Bahagian" : "Tambah Bahagian")</MudText>
+    <MudTextField Label="Bahagian Name" @bind-Value="_bahagianForm.BahagianName" />
+    <MudTextField Label="Keterangan" @bind-Value="_bahagianForm.Keterangan" />
+    <MudSelect T="Guid?" Label="Dana" @bind-Value="_bahagianForm.DanaID">
+        @foreach (var dana in _danaList)
+        {
+            <MudSelectItem T="Guid?" Value="@(new Guid?(dana.Id))">@dana.DanaName</MudSelectItem>
+        }
+    </MudSelect>
+
+    <MudButton Color="Color.Success" OnClick="SaveBahagian">Simpan</MudButton>
+    <MudButton Color="Color.Default" OnClick="ResetForm">Batal</MudButton>
+</MudPaper>
+
+@code {
+    private List<BahagianDTO> _bahagianList = new();
+    private BahagianDTO _bahagianForm = new();
+    private bool _isEdit = false;
+    private bool _isLoading = false;
+    private List<DanaDTO> _danaList = new(); // declare list
+
+    [Inject] public IDanaApi DanaService { get; set; } // inject Dana service
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        _danaList = await DanaService.GetAllAsync(); // load Dana list
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        _bahagianList = await BahagianService.GetAllAsync();
+        _isLoading = false;
+    }
+
+    private void EditBahagian(BahagianDTO b)
+    {
+        _bahagianForm = new BahagianDTO
+        {
+            ID = b.ID,
+            BahagianName = b.BahagianName,
+            Keterangan = b.Keterangan,
+            DanaID = b.DanaID
+        };
+        _isEdit = true;
+    }
+
+    private async Task SaveBahagian()
+    {
+        try
+        {
+            if (_isEdit)
+            {
+                await BahagianService.UpdateAsync(_bahagianForm.ID, _bahagianForm);
+            }
+            else
+            {
+                await BahagianService.CreateAsync(_bahagianForm);
+            }
+
+            await LoadData();
+            ResetForm();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowMessageBox("Ralat", $"Gagal simpan rekod. {ex.Message}");
+        }
+    }
+
+
+    private async Task DeleteBahagian(Guid id)
+    {
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Pasti?",
+            "Anda pasti mahu hapus rekod ini?",
+            yesText: "Ya",
+            cancelText: "Batal"
+        );
+
+        if (confirm == true)
+        {
+            var response = await BahagianService.DeleteAsync(id);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+            }
+            else
+            {
+                await DialogService.ShowMessageBox("Ralat", "Gagal menghapuskan rekod.");
+            }
+        }
+    }
+
+    private void ResetForm()
+    {
+        _bahagianForm = new();
+        _isEdit = false;
+    }
+}

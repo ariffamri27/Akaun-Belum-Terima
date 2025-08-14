@@ -1,0 +1,59 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+
+    <MudAppBar Elevation="0"
+               Color="Color.Default"
+               Style="
+                    background: rgba(20, 90, 50, 0.7);
+                    backdrop-filter: blur(8px);
+                    -webkit-backdrop-filter: blur(8px);
+                    color: white;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    padding: 0 2rem;
+                    height: 64px;
+                    display: flex;
+                    align-items: center;
+                    border-bottom: 1px solid rgba(255,255,255,0.2);
+               ">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Edge="Edge.Start"
+                       OnClick="@((e) => DrawerToggle())"
+                       Style="color:white; margin-right:1rem;" />
+        <MudText Typo="Typo.h5"
+                 Class="font-weight-semibold"
+                 Style="letter-spacing:0.5px;">
+            myFINANCIAL
+        </MudText>
+        <MudSpacer />
+        <!-- Optional right-side actions: -->
+        <!-- <MudIconButton Icon="@Icons.Material.Filled.Notifications" Style="color:white; margin-left:1rem;" /> -->
+        <!-- <MudAvatar Image="profile.jpg" Size="Size.Medium" Style="margin-left:1rem;" /> -->
+    </MudAppBar>
+
+    <MudDrawer @bind-Open="_drawerOpen"
+               Variant="DrawerVariant.Responsive"
+               Elevation="2"
+               Class="drawer-style">
+        <NavMenu />
+    </MudDrawer>
+
+    <MudMainContent Class="mud-main-content">
+        @Body
+    </MudMainContent>
+
+</MudLayout>
+
+@code {
+    bool _drawerOpen = true;
+
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}

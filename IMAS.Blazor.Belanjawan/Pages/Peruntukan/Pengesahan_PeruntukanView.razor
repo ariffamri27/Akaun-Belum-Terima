@@ -1,0 +1,120 @@
+﻿@page "/pengesahan-peruntukan"
+@using IMAS.API.Belanjawan.Shared.Models
+@using IMAS.API.Belanjawan.Client.RefitInterfaces
+@inject IPengesahanPeruntukanApi PengesahanApi
+@inject ISnackbar Snackbar
+
+<PageTitle>Pengesahan Peruntukan</PageTitle>
+
+<MudPaper Class="p-4 mx-auto" Style="max-width: 1000px;">
+    <MudText Typo="Typo.h5" GutterBottom>Senarai Pengesahan Peruntukan</MudText>
+
+    <MudTabs>
+        <MudTabPanel Text="Belum Disahkan">
+            <MudTable Items="BelumSahList" Hover="true" Striped="true" Dense="true">
+                <HeaderContent>
+                    <MudTh>No. Rujukan</MudTh>
+                    <MudTh>Tarikh</MudTh>
+                    <MudTh>Keterangan</MudTh>
+                    <MudTh>Penyedia</MudTh>
+                    <MudTh>Tindakan</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Peruntukan?.NoPeruntukan</MudTd>
+                    <MudTd>@context.TarikhSah.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd>@context.Peruntukan?.Keterangan</MudTd>
+                    <MudTd>@context.Peruntukan?.Penyedia</MudTd>
+                    <MudTd>
+                        <MudButton Size="Size.Small" Color="Color.Success" OnClick="@(() => OnSahkanClicked(context))">Sah</MudButton>
+                        <MudButton Size="Size.Small" Color="Color.Error" OnClick="@(() => OnPembetulanClicked(context))">Pembetulan</MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Sudah Disahkan">
+            <MudTable Items="SudahSahList" Hover="true" Striped="true" Dense="true">
+                <ToolBarContent>
+                    <MudTextField @bind-Value="searchText" Placeholder="Carian..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Class="mt-0" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>No. Rujukan</MudTh>
+                    <MudTh>Tarikh</MudTh>
+                    <MudTh>Keterangan</MudTh>
+                    <MudTh>Penyedia</MudTh>
+                    <MudTh>Nota</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Peruntukan?.NoPeruntukan</MudTd>
+                    <MudTd>@context.TarikhSah.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd>@context.Peruntukan?.Keterangan</MudTd>
+                    <MudTd>@context.Peruntukan?.Penyedia</MudTd>
+                    <MudTd>@context.NotaSah</MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudTabPanel>
+    </MudTabs>
+</MudPaper>
+
+@code {
+    private List<PengesahanPeruntukanDTO> BelumSahList = new();
+    private List<PengesahanPeruntukanDTO> SudahSahList = new();
+    private string searchText = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshList();
+    }
+
+    private async Task RefreshList()
+    {
+        try
+        {
+            var allItems = await PengesahanApi.GetAllAsync();
+            BelumSahList = allItems.Where(x => x.StatusSah == "Belum").ToList();
+            SudahSahList = allItems.Where(x => x.StatusSah == "Sah").ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Ralat semasa memuat data: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OnSahkanClicked(PengesahanPeruntukanDTO dto)
+    {
+        try
+        {
+            dto.StatusSah = "Sah";
+            dto.TarikhSah = DateTime.Now;
+            await PengesahanApi.UpdateAsync(dto.ID, dto);
+            Snackbar.Add("Peruntukan berjaya disahkan.", Severity.Success);
+            await RefreshList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal mengesahkan: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OnPembetulanClicked(PengesahanPeruntukanDTO dto)
+    {
+        try
+        {
+            dto.StatusSah = "Pembetulan";
+            dto.TarikhSah = DateTime.Now;
+            await PengesahanApi.UpdateAsync(dto.ID, dto);
+            Snackbar.Add("Peruntukan ditandakan untuk pembetulan.", Severity.Info);
+            await RefreshList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal menandakan pembetulan: {ex.Message}", Severity.Error);
+        }
+    }
+}

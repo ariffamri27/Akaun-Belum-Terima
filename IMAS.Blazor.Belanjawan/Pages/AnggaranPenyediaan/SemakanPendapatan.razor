@@ -1,0 +1,146 @@
+﻿@page "/semakan-pendapatan"
+@using IMAS.API.Belanjawan.Shared.Models
+@using IMAS.Blazor.Belanjawan.Services.Refit
+@using IMAS.Blazor.Belanjawan.Services.Refit.Belanjawan
+@using MudBlazor
+@inject IPenyediaanPendapatanApi PenyediaanPendapatanService
+@inject IDialogService DialogService
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">Senarai Semakan Pendapatan</MudText>
+
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    }
+    else
+    {
+        <MudTable Items="_semakanPendapatanList" Hover="true">
+            <HeaderContent>
+                <MudTh>No Pendapatan</MudTh>
+                <MudTh>Tarikh Semak</MudTh>
+                <MudTh>Disemak Oleh</MudTh>
+                <MudTh>Status Semakan</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.NoPendapatan</MudTd>
+                <MudTd>@context.Tarikh</MudTd>
+                <MudTd>@context.Keterangan</MudTd>
+                <MudTd>@context.</MudTd>
+                <MudTd>
+                    <MudButton Color="Color.Primary" Size="Size.Small" OnClick="@(() => EditSemakanPendapatan(context))">Edit</MudButton>
+                    <MudButton Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteSemakanPendapatan(context.ID))">Hapus</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+
+    <MudDivider Class="my-4" />
+
+    <MudText Typo="Typo.h6">@(_isEdit ? "Kemaskini Semakan Pendapatan" : "Tambah Semakan Pendapatan")</MudText>
+    <MudDatePicker Label="Tarikh Semak" @bind-Value="_semakanPendapatanForm.Tarikh" />
+    <MudTextField Label="Status Semakan" @bind-Value="_semakanPendapatanForm.StatusSemak" />
+    <MudTextField Label="Ulasan" @bind-Value="_semakanPendapatanForm.Keterangan" />
+
+    <MudSelect T="Guid" Label="Penyediaan Pendapatan" @bind-Value="_semakanPendapatanForm.ID">
+        @foreach (var penyediaan in _penyediaanPendapatanList)
+        {
+            <MudSelectItem T="Guid?" Value="@(new Guid?(penyediaan.ID))">@penyediaan.NoPendapatan</MudSelectItem>
+        }
+    </MudSelect>
+
+    <MudButton Color="Color.Success" OnClick="SaveSemakanPendapatan">Simpan</MudButton>
+    <MudButton Color="Color.Default" OnClick="ResetForm">Batal</MudButton>
+</MudPaper>
+
+@code {
+    private List<PenyediaanPendapatanDTO> _semakanPendapatanList = new();
+    private PenyediaanPendapatanDTO _semakanPendapatanForm = new();
+    private bool _isEdit = false;
+    private bool _isLoading = false;
+    private List<PenyediaanPendapatanDTO> _penyediaanPendapatanList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load Penyediaan Pendapatan data (you can create a similar service for Penyediaan Pendapatan)
+        await LoadPenyediaanPendapatanData();
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        _semakanPendapatanList = await PenyediaanPendapatanService.GetAllAsync();
+        _isLoading = false;
+    }
+
+    private async Task LoadPenyediaanPendapatanData()
+    {
+        // Fetch all Penyediaan Pendapatan (make sure you have a service for this)
+        // _penyediaanPendapatanList = await PenyediaanPendapatanService.GetAllAsync();
+    }
+
+    private void EditSemakanPendapatan(PenyediaanPendapatanDTO s)
+    {
+        _semakanPendapatanForm = new PenyediaanPendapatanDTO
+        {
+            ID = s.ID,
+            Tarikh = s.Tarikh,
+            StatusSemak = s.StatusSemak,
+            Keterangan = s.Keterangan
+        };
+        _isEdit = true;
+    }
+
+    private async Task SaveSemakanPendapatan()
+    {
+        try
+        {
+            if (_isEdit)
+            {
+                await PenyediaanPendapatanService.UpdateAsync(_semakanPendapatanForm.ID, _semakanPendapatanForm);
+            }
+            else
+            {
+                await PenyediaanPendapatanService.CreateAsync(_semakanPendapatanForm);
+            }
+
+            await LoadData();
+            ResetForm();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowMessageBox("Ralat", $"Gagal simpan rekod. {ex.Message}");
+        }
+    }
+
+    private async Task DeleteSemakanPendapatan(Guid id)
+    {
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Pasti?",
+            "Anda pasti mahu hapus rekod ini?",
+            yesText: "Ya",
+            cancelText: "Batal"
+        );
+
+        if (confirm == true)
+        {
+            var response = await PenyediaanPendapatanService.DeleteAsync(id);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+            }
+            else
+            {
+                await DialogService.ShowMessageBox("Ralat", "Gagal menghapuskan rekod.");
+            }
+        }
+    }
+
+    private void ResetForm()
+    {
+        _semakanPendapatanForm = new();
+        _isEdit = false;
+    }
+}

@@ -1,0 +1,129 @@
+﻿@page "/pelarasan-peruntukan"
+@using IMAS.API.Belanjawan.Shared.Models
+@using IMAS.Blazor.Belanjawan.Services.Refit.Belanjawan
+@using MudBlazor
+@inject IPelarasanPeruntukanApi PelarasanService
+@inject ISnackbar Snackbar
+
+<PageTitle>Pelarasan Peruntukan</PageTitle>
+
+<MudPaper Class="p-4 mx-auto" Style="max-width: 1000px;">
+    <MudText Typo="Typo.h5" GutterBottom>Pelarasan Peruntukan</MudText>
+
+    <MudStack Row Justify="Justify.SpaceBetween" Class="mb-2">
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Print">Cetak</MudButton>
+        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.FileDownload">Export Excel</MudButton>
+    </MudStack>
+
+    <MudTable Items="_list" Hover="true" Striped="true">
+        <HeaderContent>
+            <MudTh>No. Pelarasan</MudTh>
+            <MudTh>Tarikh</MudTh>
+            <MudTh>Keterangan</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="No. Pelarasan">@context.NoPelarasan</MudTd>
+            <MudTd DataLabel="Tarikh">@context.Tarikh.ToShortDateString()</MudTd>
+            <MudTd DataLabel="Keterangan">@context.Keterangan</MudTd>
+            <MudTd>
+                <MudButton Color="Color.Primary" Size="Size.Small" OnClick="@(() => Edit(context))">Edit</MudButton>
+                <MudButton Color="Color.Error" Size="Size.Small" OnClick="@(() => Delete(context.ID))">Hapus</MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    <MudDivider Class="my-4" />
+
+    <MudText Typo="Typo.h6">@(_isEdit ? "Kemaskini Pelarasan" : "Tambah Pelarasan")</MudText>
+
+    <MudTextField Label="No Pelarasan" @bind-Value="_form.NoPelarasan" />
+    <MudDatePicker Label="Tarikh"
+                   Date="_form.Tarikh"
+                   DateChanged="@(v => _form.Tarikh = v ?? DateTime.Today)"
+                   Immediate="true" />
+    <MudTextField Label="Keterangan" @bind-Value="_form.Keterangan" />
+
+    <MudStack Row Spacing="2">
+        <MudButton Color="Color.Success" OnClick="Save">Simpan</MudButton>
+        <MudButton Color="Color.Default" OnClick="Reset">Batal</MudButton>
+    </MudStack>
+</MudPaper>
+
+@code {
+    private List<PelarasanPeruntukanDTO> _list = new();
+    private PelarasanPeruntukanDTO _form = new();
+    private bool _isEdit = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadList();
+    }
+
+    private async Task LoadList()
+    {
+        _list = await PelarasanService.GetAllAsync();
+    }
+
+    private void Edit(PelarasanPeruntukanDTO item)
+    {
+        _form = new PelarasanPeruntukanDTO
+        {
+            ID = item.ID,
+            NoPelarasan = item.NoPelarasan,
+            Tarikh = item.Tarikh,
+            Keterangan = item.Keterangan
+        };
+        _isEdit = true;
+    }
+
+    private async Task Save()
+    {
+        try
+        {
+            if (_isEdit)
+            {
+                await PelarasanService.UpdateAsync(_form.ID, _form);
+                Snackbar.Add("Rekod berjaya dikemaskini", Severity.Success);
+            }
+            else
+            {
+                await PelarasanService.CreateAsync(_form);
+                Snackbar.Add("Rekod berjaya ditambah", Severity.Success);
+            }
+
+            await LoadList();
+            Reset();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal simpan rekod: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task Delete(Guid id)
+    {
+        bool? confirm = await DialogService.ShowMessageBox("Pasti?", "Anda pasti mahu hapus rekod ini?", yesText: "Ya", cancelText: "Batal");
+        if (confirm == true)
+        {
+            var response = await PelarasanService.DeleteAsync(id);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadList();
+                Snackbar.Add("Rekod berjaya dihapuskan", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Gagal menghapuskan rekod", Severity.Error);
+            }
+        }
+    }
+
+    private void Reset()
+    {
+        _form = new();
+        _isEdit = false;
+    }
+
+    [Inject] public IDialogService DialogService { get; set; } = default!;
+}

@@ -1,0 +1,154 @@
+﻿@page "/kelulusan-agihan-peruntukan"
+@using IMAS.API.Belanjawan.Shared.Models
+@using IMAS.Blazor.Belanjawan.Services.Refit.Belanjawan
+@using MudBlazor
+@inject IAgihanPeruntukanApi AgihanPeruntukanService
+@inject IDialogService DialogService
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">Senarai Kelulusan Agihan Peruntukan</MudText>
+
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    }
+    else
+    {
+        <MudTabs>
+            <MudTabPanel Text="Belum Lulus">
+                <MudTable Items="_belumLulusList" Hover="true">
+                    <HeaderContent>
+                        <MudTh>No Agihan</MudTh>
+                        <MudTh>Tarikh</MudTh>
+                        <MudTh>Keterangan</MudTh>
+                        <MudTh>Status Lulus</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.NoAgihan</MudTd>
+                        <MudTd>@context.Tarikh.ToShortDateString()</MudTd>
+                        <MudTd>@context.Keterangan</MudTd>
+                        <MudTd>@context.StatusLulus</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+
+            <MudTabPanel Text="Sudah Lulus">
+                <MudTable Items="_sudahLulusList" Hover="true">
+                    <HeaderContent>
+                        <MudTh>No Agihan</MudTh>
+                        <MudTh>Tarikh</MudTh>
+                        <MudTh>Keterangan</MudTh>
+                        <MudTh>Status Lulus</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.NoAgihan</MudTd>
+                        <MudTd>@context.Tarikh.ToShortDateString()</MudTd>
+                        <MudTd>@context.Keterangan</MudTd>
+                        <MudTd>@context.StatusLulus</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+        </MudTabs>
+    }
+
+    <MudDivider Class="my-4" />
+
+    <MudText Typo="Typo.h6">@(_isEdit ? "Kemaskini Agihan Peruntukan" : "Tambah Agihan Peruntukan")</MudText>
+    <MudTextField Label="No Agihan" @bind-Value="_agihanForm.NoAgihan" />
+    <MudDatePicker Label="Tarikh" @bind-Value="_agihanForm.Tarikh" />
+    <MudTextField Label="Keterangan" @bind-Value="_agihanForm.Keterangan" />
+
+    <MudButton Color="Color.Success" OnClick="SaveAgihanPeruntukan">Simpan</MudButton>
+    <MudButton Color="Color.Default" OnClick="ResetForm">Batal</MudButton>
+</MudPaper>
+
+@code {
+    private List<AgihanPeruntukanDTO> _agihanPeruntukanList = new();
+    private List<AgihanPeruntukanDTO> _belumLulusList = new();
+    private List<AgihanPeruntukanDTO> _sudahLulusList = new();
+    private AgihanPeruntukanDTO _agihanForm = new();
+    private bool _isEdit = false;
+    private bool _isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        _agihanPeruntukanList = await AgihanPeruntukanService.GetAllAsync();
+
+        // Filter data into Belum Lulus and Sudah Lulus
+        _belumLulusList = _agihanPeruntukanList.Where(a => a.StatusLulus == "BelumLulus").ToList();
+        _sudahLulusList = _agihanPeruntukanList.Where(a => a.StatusLulus == "SudahLulus").ToList();
+
+        _isLoading = false;
+    }
+
+    private void EditAgihanPeruntukan(AgihanPeruntukanDTO a)
+    {
+        _agihanForm = new AgihanPeruntukanDTO
+        {
+            ID = a.ID,
+            NoAgihan = a.NoAgihan,
+            Tarikh = a.Tarikh,
+            Keterangan = a.Keterangan,
+            PeruntukanID = a.PeruntukanID,
+            BahagianID = a.BahagianID
+        };
+        _isEdit = true;
+    }
+
+    private async Task SaveAgihanPeruntukan()
+    {
+        try
+        {
+            if (_isEdit)
+            {
+                await AgihanPeruntukanService.UpdateAsync(_agihanForm.ID, _agihanForm);
+            }
+            else
+            {
+                await AgihanPeruntukanService.CreateAsync(_agihanForm);
+            }
+
+            await LoadData();
+            ResetForm();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowMessageBox("Ralat", $"Gagal simpan rekod. {ex.Message}");
+        }
+    }
+
+    private async Task DeleteAgihanPeruntukan(Guid id)
+    {
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Pasti?",
+            "Anda pasti mahu hapus rekod ini?",
+            yesText: "Ya",
+            cancelText: "Batal"
+        );
+
+        if (confirm == true)
+        {
+            var response = await AgihanPeruntukanService.DeleteAsync(id);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+            }
+            else
+            {
+                await DialogService.ShowMessageBox("Ralat", "Gagal menghapuskan rekod.");
+            }
+        }
+    }
+
+    private void ResetForm()
+    {
+        _agihanForm = new();
+        _isEdit = false;
+    }
+}

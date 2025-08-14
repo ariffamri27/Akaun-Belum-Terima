@@ -22,6 +22,8 @@
 
   <ItemGroup>
     <Folder Include="Shared\Infrastructure\Behavior\" />
+    <Folder Include="Shared\Infrastructure\Migrations\" />
+    <Folder Include="Shared\Infrastructure\Persistence\" />
     <Folder Include="Shared\Utilities\" />
   </ItemGroup>
 

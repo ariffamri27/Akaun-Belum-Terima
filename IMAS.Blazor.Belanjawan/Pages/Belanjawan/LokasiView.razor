@@ -1,0 +1,158 @@
+﻿@page "/lokasi"
+@using IMAS.API.Belanjawan.Shared.Models
+@using IMAS.Blazor.Belanjawan.Services.Refit
+@inject ILokasiApi LokasiService
+@inject ISnackbar Snackbar
+
+<PageTitle>Lokasi</PageTitle>
+
+<MudPaper Class="p-4 mx-auto" Style="max-width: 1000px;">
+    <MudText Typo="Typo.h5" GutterBottom>Senarai Lokasi</MudText>
+
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudTextField @bind-Value="SearchDana" Label="Carian Dana" Variant="Variant.Outlined" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudTextField @bind-Value="SearchBahagian" Label="Carian Bahagian" Variant="Variant.Outlined" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudTextField @bind-Value="SearchUnit" Label="Carian Unit" Variant="Variant.Outlined" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudTextField @bind-Value="SearchLokasi" Label="Carian Lokasi" Variant="Variant.Outlined" />
+        </MudItem>
+    </MudGrid>
+
+    <MudTable Items="FilteredLokasiList" Hover="true" Striped="true" Elevation="1">
+        <HeaderContent>
+            <MudTh>Dana</MudTh>
+            <MudTh>Bahagian</MudTh>
+            <MudTh>Unit</MudTh>
+            <MudTh>Lokasi</MudTh>
+            <MudTh>Keterangan</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Dana?.DanaName</MudTd>
+            <MudTd>@context.Bahagian?.BahagianName</MudTd>
+            <MudTd>@context.Unit?.UnitName</MudTd>
+            <MudTd>@context.LokasiName</MudTd>
+            <MudTd>@context.Keterangan</MudTd>
+            <MudTd>
+                <MudButton Color="Color.Primary" Size="Size.Small" OnClick="@(() => SelectLokasi(context))">Pilih</MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+
+    <MudDivider Class="my-4" />
+
+    @if (SelectedLokasi != null)
+    {
+        <MudText Typo="Typo.h6">Maklumat Lokasi</MudText>
+        <MudStack Spacing="2">
+            <MudTextField Label="Dana" Value="@SelectedLokasi.Dana?.DanaName" ReadOnly="true" />
+            <MudTextField Label="Bahagian" Value="@SelectedLokasi.Bahagian?.BahagianName" ReadOnly="true" />
+            <MudTextField Label="Unit" Value="@SelectedLokasi.Unit?.UnitName" ReadOnly="true" />
+            <MudTextField Label="Keterangan" @bind-Value="SelectedLokasi.Keterangan" ReadOnly="@(!IsEditing)" />
+            <MudTextField Label="Lokasi" @bind-Value="SelectedLokasi.LokasiName" ReadOnly="@(!IsEditing)" />
+
+            <MudStack Row Spacing="2">
+                @if (!IsEditing)
+                {
+                    <MudButton Color="Color.Primary" OnClick="StartEdit">Ubah</MudButton>
+                }
+                else
+                {
+                    <MudButton Color="Color.Success" OnClick="SaveChanges">Simpan</MudButton>
+                    <MudButton Color="Color.Secondary" OnClick="CancelEdit">Batal</MudButton>
+                }
+            </MudStack>
+        </MudStack>
+    }
+</MudPaper>
+
+@code {
+    private List<LokasiDTO> LokasiList = new();
+    private LokasiDTO? SelectedLokasi;
+    private bool IsEditing = false;
+
+    private string SearchDana = string.Empty;
+    private string SearchBahagian = string.Empty;
+    private string SearchUnit = string.Empty;
+    private string SearchLokasi = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLokasiList();
+    }
+
+    private async Task LoadLokasiList()
+    {
+        try
+        {
+            LokasiList = await LokasiService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memuatkan lokasi: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private IEnumerable<LokasiDTO> FilteredLokasiList => LokasiList.Where(l =>
+        (string.IsNullOrWhiteSpace(SearchDana) || l.Dana?.DanaName.Contains(SearchDana, StringComparison.OrdinalIgnoreCase) == true) &&
+        (string.IsNullOrWhiteSpace(SearchBahagian) || l.Bahagian?.BahagianName.Contains(SearchBahagian, StringComparison.OrdinalIgnoreCase) == true) &&
+        (string.IsNullOrWhiteSpace(SearchUnit) || l.Unit?.UnitName.Contains(SearchUnit, StringComparison.OrdinalIgnoreCase) == true) &&
+        (string.IsNullOrWhiteSpace(SearchLokasi) || l.LokasiName.Contains(SearchLokasi, StringComparison.OrdinalIgnoreCase))
+    );
+
+    private void SelectLokasi(LokasiDTO lokasi)
+    {
+        SelectedLokasi = new LokasiDTO
+        {
+            ID = lokasi.ID,
+            LokasiName = lokasi.LokasiName,
+            Keterangan = lokasi.Keterangan,
+            DanaID = lokasi.DanaID,
+            BahagianID = lokasi.BahagianID,
+            UnitID = lokasi.UnitID,
+            Dana = lokasi.Dana,
+            Bahagian = lokasi.Bahagian,
+            Unit = lokasi.Unit
+        };
+        IsEditing = false;
+    }
+
+    private void StartEdit() => IsEditing = true;
+
+    private void CancelEdit() => IsEditing = false;
+
+    private async Task SaveChanges()
+    {
+        if (SelectedLokasi?.ID == Guid.Empty)
+            return;
+
+        try
+        {
+            var payload = new LokasiDTO
+            {
+                ID = SelectedLokasi.ID,
+                LokasiName = SelectedLokasi.LokasiName,
+                Keterangan = SelectedLokasi.Keterangan,
+                DanaID = SelectedLokasi.DanaID,
+                BahagianID = SelectedLokasi.BahagianID,
+                UnitID = SelectedLokasi.UnitID
+            };
+
+            await LokasiService.UpdateAsync(payload.ID, payload);
+
+            Snackbar.Add("Maklumat lokasi berjaya dikemas kini.", Severity.Success);
+            await LoadLokasiList();
+            IsEditing = false;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Ralat semasa simpan: {ex.Message}", Severity.Error);
+        }
+    }
+}

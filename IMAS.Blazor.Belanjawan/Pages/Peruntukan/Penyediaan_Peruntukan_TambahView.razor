@@ -1,0 +1,119 @@
+﻿@page "/penyediaan-peruntukan-tambah"
+@using IMAS.API.Belanjawan.Shared.Models
+@using IMAS.Blazor.Belanjawan.Services.Refit
+@using IMAS.Blazor.Belanjawan.Services.Refit.Belanjawan
+@using Refit
+@inject IPenyediaanPeruntukanApi PeruntukanService
+@inject IDanaApi DanaService
+@inject IBahagianApi BahagianService
+@inject IUnitApi UnitService
+@inject ILokasiApi LokasiService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Tambah Peruntukan</PageTitle>
+
+<MudPaper Class="p-4 mx-auto" Style="max-width: 1000px;">
+    <MudText Typo="Typo.h5" GutterBottom>Tambah Maklumat Peruntukan</MudText>
+
+    <MudForm @ref="form" Model="Model" Valid="isValid">
+        <MudGrid>
+            <MudItem xs="12" sm="6">
+                <MudTextField Label="No. Peruntukan" @bind-Value="Model.NoPeruntukan" Required="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudDatePicker Label="Tarikh" @bind-Date="Model.Tarikh" Required="true" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="int" Label="Tahun Kewangan" @bind-Value="Model.TahunKewangan" Required="true">
+                    @for (int year = DateTime.Now.Year; year >= 2020; year--)
+                    {
+                        <MudSelectItem Value="@year">@year</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField Label="Keterangan" @bind-Value="Model.Keterangan" Lines="3" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField Label="Penyedia" @bind-Value="Model.Penyedia" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="Guid" Label="Dana" @bind-Value="Model.DanaID" Required="true">
+                    @foreach (var dana in DanaList)
+                    {
+                        <MudSelectItem Value="@dana.Id">@dana.DanaName</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="Guid" Label="Bahagian" @bind-Value="Model.BahagianID" Required="true">
+                    @foreach (var bahagian in BahagianList)
+                    {
+                        <MudSelectItem Value="@bahagian.ID">@bahagian.BahagianName</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="Guid" Label="Unit" @bind-Value="Model.UnitID" Required="true">
+                    @foreach (var unit in UnitList)
+                    {
+                        <MudSelectItem Value="@unit.ID">@unit.UnitName</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSelect T="Guid" Label="Lokasi" @bind-Value="Model.LokasiID" Required="true">
+                    @foreach (var lokasi in LokasiList)
+                    {
+                        <MudSelectItem Value="@lokasi.ID">@lokasi.LokasiName</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+
+        <MudStack Row Justify="Justify.FlexEnd" Class="mt-4">
+            <MudButton Color="Color.Success" OnClick="@Simpan">Simpan</MudButton>
+        </MudStack>
+    </MudForm>
+</MudPaper>
+
+@code {
+    private MudForm form;
+    private bool isValid;
+    private PeruntukanDTO Model = new();
+
+    private List<DanaDTO> DanaList = new();
+    private List<BahagianDTO> BahagianList = new();
+    private List<UnitDTO> UnitList = new();
+    private List<LokasiDTO> LokasiList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        DanaList = await DanaService.GetAllAsync();
+        BahagianList = await BahagianService.GetAllAsync();
+        UnitList = await UnitService.GetAllAsync();
+        LokasiList = await LokasiService.GetAllAsync();
+    }
+
+    private async Task Simpan()
+    {
+        await form.Validate();
+        if (!isValid)
+        {
+            Snackbar.Add("Sila lengkapkan semua maklumat yang diperlukan.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await PeruntukanService.CreateAsync(Model);
+            Snackbar.Add("Maklumat peruntukan berjaya disimpan.", Severity.Success);
+            Navigation.NavigateTo("/penyediaan-peruntukan");
+        }
+        catch (ApiException ex)
+        {
+            Snackbar.Add($"Gagal menyimpan. {ex.Message}", Severity.Error);
+        }
+    }
+}

@@ -1,0 +1,154 @@
+﻿@page "/had-siling"
+@using IMAS.API.Belanjawan.Shared.Models
+@using IMAS.Blazor.Belanjawan.Services.Refit
+@using IMAS.Blazor.Belanjawan.Services.Refit.Belanjawan
+@using MudBlazor
+@inject IHadSilingApi HadSilingService
+@inject IDialogService DialogService
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">Senarai Had Siling</MudText>
+
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    }
+    else
+    {
+        <MudTable Items="_hadSilingList" Hover="true">
+            <HeaderContent>
+                <MudTh>ID</MudTh>
+                <MudTh>Tahun Kewangan</MudTh>
+                <MudTh>Dana</MudTh>
+                <MudTh>Bahagian</MudTh>
+                <MudTh>Amaun</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="ID">@context.ID</MudTd>
+                <MudTd>@context.TahunKewangan</MudTd>
+                <MudTd>@context.Dana.DanaName</MudTd>
+                <MudTd>@context.Bahagian.BahagianName</MudTd>
+                <MudTd>@context.Amaun</MudTd>
+                <MudTd>@context.Status</MudTd>
+                <MudTd>
+                    <MudButton Color="Color.Primary" Size="Size.Small" OnClick="@(() => EditHadSiling(context))">Edit</MudButton>
+                    <MudButton Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteHadSiling(context.ID))">Hapus</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+
+    <MudDivider Class="my-4" />
+
+    <MudText Typo="Typo.h6">@(_isEdit ? "Kemaskini Had Siling" : "Tambah Had Siling")</MudText>
+    <MudTextField Label="Tahun Kewangan" @bind-Value="_hadSilingForm.TahunKewangan" />
+    <MudTextField Label="Amaun" @bind-Value="_hadSilingForm.Amaun" />
+    <MudSelect T="Guid" Label="Dana" @bind-Value="_hadSilingForm.DanaID">
+        @foreach (var dana in _danaList)
+        {
+            <MudSelectItem T="Guid" Value="@(dana.Id)">@dana.DanaName</MudSelectItem>
+        }
+    </MudSelect>
+    <MudSelect T="Guid" Label="Bahagian" @bind-Value="_hadSilingForm.BahagianID">
+        @foreach (var bahagian in _bahagianList)
+        {
+            <MudSelectItem T="Guid" Value="@(bahagian.ID)">@bahagian.BahagianName</MudSelectItem>
+        }
+    </MudSelect>
+    <MudButton Color="Color.Success" OnClick="SaveHadSiling">Simpan</MudButton>
+    <MudButton Color="Color.Default" OnClick="ResetForm">Batal</MudButton>
+</MudPaper>
+
+@code {
+    private List<HadSilingDTO> _hadSilingList = new();
+    private HadSilingDTO _hadSilingForm = new();
+    private bool _isEdit = false;
+    private bool _isLoading = false;
+    private List<DanaDTO> _danaList = new();
+    private List<BahagianDTO> _bahagianList = new();
+
+    [Inject] public IDanaApi DanaService { get; set; }
+    [Inject] public IBahagianApi BahagianService { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _danaList = await DanaService.GetAllAsync();
+        _bahagianList = await BahagianService.GetAllAsync();
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        _hadSilingList = await HadSilingService.GetAllAsync();
+        _isLoading = false;
+    }
+
+    private void EditHadSiling(HadSilingDTO hs)
+    {
+        _hadSilingForm = new HadSilingDTO
+        {
+            ID = hs.ID,
+            TahunKewangan = hs.TahunKewangan,
+            DanaID = hs.DanaID,
+            BahagianID = hs.BahagianID,
+            Amaun = hs.Amaun,
+            Status = hs.Status
+        };
+        _isEdit = true;
+    }
+
+    private async Task SaveHadSiling()
+    {
+        try
+        {
+            if (_isEdit)
+            {
+                await HadSilingService.UpdateAsync(_hadSilingForm.ID, _hadSilingForm);
+            }
+            else
+            {
+                await HadSilingService.CreateAsync(_hadSilingForm);
+            }
+
+            await LoadData();
+            ResetForm();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowMessageBox("Ralat", $"Gagal simpan rekod. {ex.Message}");
+        }
+    }
+
+    private async Task DeleteHadSiling(Guid id)
+    {
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Pasti?",
+            "Anda pasti mahu hapus rekod ini?",
+            yesText: "Ya",
+            cancelText: "Batal"
+        );
+
+        if (confirm == true)
+        {
+            var response = await HadSilingService.DeleteAsync(id);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData();
+            }
+            else
+            {
+                await DialogService.ShowMessageBox("Ralat", "Gagal menghapuskan rekod.");
+            }
+        }
+    }
+
+    private void ResetForm()
+    {
+        _hadSilingForm = new HadSilingDTO();
+        _isEdit = false;
+    }
+}
