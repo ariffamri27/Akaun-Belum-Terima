@@ -1,0 +1,259 @@
+﻿@page "/status-jurnal"
+@using IMAS.API.LejarAm.Shared.Models
+@using IMAS.API.LejarAm.Shared.Infrastructure.Refit
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+@inject IJurnalApi JurnalService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<MudPaper Class="pa-4">
+    <!-- Status Filter Section -->
+    <MudCard Class="mb-4" Style="background: linear-gradient(135deg, #00bcd4 0%, #4caf50 100%); color: white;">
+        <MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-3">📊 Status Jurnal</MudText>
+
+            <MudSelect T="string"
+                       Label="Status Dokumen"
+                       Value="_selectedStatus"
+                       ValueChanged="OnStatusChanged"
+                       ValueExpression="@(() => _selectedStatus)"
+                       Variant="Variant.Outlined"
+                       Style="background: white;">
+                <MudSelectItem Value="@string.Empty">Semua Status</MudSelectItem>
+                <MudSelectItem Value="@("BARU")">BARU</MudSelectItem>
+                <MudSelectItem Value="@("DRAFT")">DRAFT</MudSelectItem>
+                <MudSelectItem Value="@("POS")">POS</MudSelectItem>
+                <MudSelectItem Value="@("HAPUS")">HAPUS</MudSelectItem>
+            </MudSelect>
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Search Results Section -->
+    <MudCard Class="mb-4" Style="background: linear-gradient(135deg, #00bcd4 0%, #4caf50 100%); color: white;">
+        <MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-3">🔍 Keputusan Carian</MudText>
+
+            <MudGrid AlignItems="AlignItems.Center">
+                <MudItem xs="12" md="2">
+                    <MudSelect T="int"
+                               Value="_pageSize"
+                               ValueChanged="OnPageSizeChanged"
+                               ValueExpression="@(() => _pageSize)"
+                               Dense="true"
+                               Variant="Variant.Outlined"
+                               Style="background: white; min-width: 80px;">
+                        <MudSelectItem Value="@(10)">10</MudSelectItem>
+                        <MudSelectItem Value="@(25)">25</MudSelectItem>
+                        <MudSelectItem Value="@(50)">50</MudSelectItem>
+                        <MudSelectItem Value="@(100)">100</MudSelectItem>
+                    </MudSelect>
+                    <MudText Typo="Typo.caption">records</MudText>
+                </MudItem>
+                <MudItem xs="12" md="10" Class="d-flex justify-end">
+                    <MudTextField T="string"
+                                  Label="Search"
+                                  @bind-Value="_searchText"
+                                  OnKeyDown="OnSearchKeyDown"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="Icons.Material.Filled.Search"
+                                  Style="max-width: 300px; background: white;"
+                                  Variant="Variant.Outlined"
+                                  Immediate="true" />
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Data Table -->
+    <MudCard>
+        <MudCardContent>
+            <MudTable Items="_pagedList"
+                      Hover="true"
+                      Striped="true"
+                      Loading="_loading"
+                      T="JurnalDTO">
+                <HeaderContent>
+                    <MudTh>
+                        <MudTableSortLabel T="JurnalDTO" SortBy="j => j.NoJurnal">
+                            No. Jurnal
+                        </MudTableSortLabel>
+                    </MudTh>
+                    <MudTh>
+                        <MudTableSortLabel T="JurnalDTO" SortBy="j => j.TarikhJurnal">
+                            Tarikh
+                        </MudTableSortLabel>
+                    </MudTh>
+                    <MudTh>Keterangan</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Tindakan</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="No. Jurnal" Style="vertical-align: top;">
+                        @context.NoJurnal
+                    </MudTd>
+                    <MudTd DataLabel="Tarikh" Style="vertical-align: top;">
+                        @context.TarikhJurnal.ToString("dd/MM/yyyy")
+                    </MudTd>
+                    <MudTd DataLabel="Keterangan" Style="vertical-align: top;">
+                        @context.Keterangan
+                    </MudTd>
+                    <MudTd DataLabel="Status" Style="vertical-align: top;">
+                        <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">
+                            @context.Status
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Tindakan" Style="vertical-align: top;">
+                        <MudButton Color="Color.Info"
+                                   Size="Size.Small"
+                                   Variant="Variant.Filled"
+                                   OnClick="@(() => ViewDetails(context))">
+                            Papar Butiran
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudAlert Severity="Severity.Info">
+                        Tiada rekod dijumpai.
+                    </MudAlert>
+                </NoRecordsContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Pagination -->
+    <MudDivider Class="my-3" />
+    <MudGrid AlignItems="AlignItems.Center">
+        <MudItem xs="12" md="6">
+            <MudText Typo="Typo.body2">
+                Menunjukkan @(Math.Min(_totalItems, ((_currentPage - 1) * _pageSize) + 1))
+                hingga @((Math.Min(_currentPage * _pageSize, _totalItems)))
+                daripada @_totalItems rekod
+            </MudText>
+        </MudItem>
+        <MudItem xs="12" md="6" Class="d-flex justify-end">
+            <MudPagination Page="@_currentPage"
+                           Count="@((int)Math.Ceiling((double)_totalItems / _pageSize))"
+                           OnPageChanged="OnPageChanged"
+                           ShowFirstButton="true"
+                           ShowLastButton="true" />
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    // Data
+    private List<JurnalDTO> _all = new();
+
+    // UI state
+    private bool _loading = false;
+    private string _searchText = string.Empty;
+    private string? _selectedStatus = string.Empty;
+    private int _pageSize = 10;
+    private int _currentPage = 1;
+
+    // Derived
+    private IEnumerable<JurnalDTO> Filtered => _all.Where(j =>
+        // Status filter
+        (string.IsNullOrWhiteSpace(_selectedStatus) || string.Equals(j.Status, _selectedStatus, StringComparison.OrdinalIgnoreCase))
+        // Search filter
+        && (string.IsNullOrWhiteSpace(_searchText)
+            || (j.NoJurnal?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (j.NoRujukan?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (j.Keterangan?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (j.SumberTransaksi?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (j.JenisJurnal?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false))
+    );
+
+    private int _totalItems => Filtered.Count();
+
+    private List<JurnalDTO> _pagedList => Filtered
+        .OrderByDescending(j => j.TarikhJurnal)
+        .Skip((_currentPage - 1) * _pageSize)
+        .Take(_pageSize)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAll();
+    }
+
+    private async Task LoadAll()
+    {
+        _loading = true;
+        try
+        {
+            _all = await JurnalService.GetAllJurnals() ?? new();
+            _currentPage = 1;
+        }
+        catch (Exception ex)
+        {
+            _all = new();
+            Snackbar.Add($"Error memuatkan status jurnal: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private Task OnStatusChanged(string value)
+    {
+        _selectedStatus = value;
+        _currentPage = 1;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task OnPageSizeChanged(int newSize)
+    {
+        _pageSize = newSize;
+        _currentPage = 1;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            _currentPage = 1;
+            StateHasChanged();
+        }
+        return Task.CompletedTask;
+    }
+
+    private Task OnPageChanged(int page)
+    {
+        _currentPage = page;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Color GetStatusColor(string? status) => (status ?? "").ToUpperInvariant() switch
+    {
+        "BARU" => Color.Info,
+        "DRAFT" => Color.Warning,
+        "POS" => Color.Success,
+        "HAPUS" => Color.Error,
+        _ => Color.Default
+    };
+
+    private async Task ViewDetails(JurnalDTO j)
+    {
+        var parameters = new DialogParameters
+        {
+            { "JournalId", j.ID },
+            { "JournalNo", j.NoJurnal }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        };
+
+        // await DialogService.ShowAsync<JurnalStatusDetailDialog>("Butiran Status Jurnal", parameters, options);
+    }
+}

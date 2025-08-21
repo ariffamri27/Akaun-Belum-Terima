@@ -10,7 +10,7 @@ namespace IMAS.API.LejarAm.Shared.Infrastructure.Persistence
 
         public DbSet<JurnalEntities> Jurnal { get; set; }
         public DbSet<PenyelenggaraanLejarEntities> PenyelenggaraanLejar { get; set; }
-        public DbSet<JejakAuditEntities> JejakAudit { get; set; }
+        public DbSet<AuditTrailFilterEntities> AuditTrailFilter { get; set; }
         public DbSet<AuditTrailEntities> AuditTrial { get; set; }
 
 

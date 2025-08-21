@@ -32,7 +32,7 @@ namespace IMAS.API.LejarAm.Features.AuditTrail
                         KeteranganAkaun = a.KeteranganAkaun,
                         Debit = a.Debit,
                         Kredit = a.Kredit,
-                        JejakAuditEntitiesID = a.JejakAuditEntitiesID
+                        AuditTrailFilterEntitiesID = a.AuditTrailFilterEntitiesID
                     })
                     .ToListAsync(cancellationToken);
             }

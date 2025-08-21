@@ -4,16 +4,16 @@ using IMAS.API.LejarAm.Shared.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace IMAS.API.LejarAm.Features.JejakAudit
+namespace IMAS.API.LejarAm.Features.AuditTrailFilter
 {
-    public class GetByIdJejakAudit
+    public class GetByIdAuditTrailFilter
     {
-        public record Query : IRequest<JejakAuditDTO>
+        public record Query : IRequest<AuditTrailFilterDTO>
         {
             public Guid Id { get; init; }
         }
 
-        public class Handler : IRequestHandler<Query, JejakAuditDTO>
+        public class Handler : IRequestHandler<Query, AuditTrailFilterDTO>
         {
             private readonly FinancialDbContext _context;
 
@@ -22,10 +22,10 @@ namespace IMAS.API.LejarAm.Features.JejakAudit
                 _context = context;
             }
 
-            public async Task<JejakAuditDTO?> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<AuditTrailFilterDTO?> Handle(Query request, CancellationToken cancellationToken)
             {
-                var entity = await _context.JejakAudit.FindAsync(new object[] { request.Id }, cancellationToken);
-                return entity == null ? null : new JejakAuditDTO
+                var entity = await _context.AuditTrailFilter.FindAsync(new object[] { request.Id }, cancellationToken);
+                return entity == null ? null : new AuditTrailFilterDTO
                 {
                     ID = entity.ID,
                     TahunKewangan = entity.TahunKewangan,

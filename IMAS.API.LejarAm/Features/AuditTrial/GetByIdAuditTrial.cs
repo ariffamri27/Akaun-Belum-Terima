@@ -35,7 +35,7 @@ namespace IMAS.API.LejarAm.Features.AuditTrail
                     KeteranganAkaun = entity.KeteranganAkaun,
                     Debit = entity.Debit,
                     Kredit = entity.Kredit,
-                    JejakAuditEntitiesID = entity.JejakAuditEntitiesID
+                    AuditTrailFilterEntitiesID = entity.AuditTrailFilterEntitiesID
                 };
             }
         }

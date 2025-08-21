@@ -2,15 +2,14 @@
 using IMAS.API.LejarAm.Shared.Infrastructure.Persistence;
 using IMAS.API.LejarAm.Shared.Models;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
+using AuditTrailFilterEntity = IMAS.API.LejarAm.Shared.Domain.Entities.AuditTrailFilterEntities;
 
-namespace IMAS.API.LejarAm.Features.JejakAudit
+namespace IMAS.API.LejarAm.Features.AuditTrailFilter
 {
-    public class UpdateJejakAudit
+    public class CreateAuditTrailFilter
     {
-        public record Command : IRequest<JejakAuditDTO>
+        public record Command : IRequest<AuditTrailFilterDTO>
         {
-            public Guid Id { get; set; }
             public int TahunKewangan { get; init; }
             public string StatusDokumen { get; init; } = default!;
             public string NoMula { get; init; } = default!;
@@ -20,7 +19,7 @@ namespace IMAS.API.LejarAm.Features.JejakAudit
             public ICollection<AuditTrailDTO>? AuditTrails { get; init; }
         }
 
-        public class Handler : IRequestHandler<Command, JejakAuditDTO>
+        public class Handler : IRequestHandler<Command, AuditTrailFilterDTO>
         {
             private readonly FinancialDbContext _context;
 
@@ -29,23 +28,25 @@ namespace IMAS.API.LejarAm.Features.JejakAudit
                 _context = context;
             }
 
-            public async Task<JejakAuditDTO?> Handle(Command request, CancellationToken cancellationToken)
+            public async Task<AuditTrailFilterDTO> Handle(Command request, CancellationToken cancellationToken)
             {
-                var entity = await _context.JejakAudit.FirstOrDefaultAsync(x => x.ID == request.Id, cancellationToken);
-                if (entity == null) return null;
+                var entity = new AuditTrailFilterEntity
+                {
+                    ID = Guid.NewGuid(),
+                    TahunKewangan = request.TahunKewangan,
+                    StatusDokumen = request.StatusDokumen,
+                    NoMula = request.NoMula,
+                    NoAkhir = request.NoAkhir,
+                    TarikhMula = request.TarikhMula,
+                    TarikhAkhir = request.TarikhAkhir,
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "system" // replace with current user if available
+                };
 
-                entity.TahunKewangan = request.TahunKewangan;
-                entity.StatusDokumen = request.StatusDokumen;
-                entity.NoMula = request.NoMula;
-                entity.NoAkhir = request.NoAkhir;
-                entity.TarikhMula = request.TarikhMula;
-                entity.TarikhAkhir = request.TarikhAkhir;
-                entity.UpdatedAt = DateTime.UtcNow;
-                entity.UpdatedBy = "system";
-
+                _context.AuditTrailFilter.Add(entity);
                 await _context.SaveChangesAsync(cancellationToken);
 
-                return new JejakAuditDTO
+                return new AuditTrailFilterDTO
                 {
                     ID = entity.ID,
                     TahunKewangan = entity.TahunKewangan,

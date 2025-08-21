@@ -1,9 +1,9 @@
 ﻿using IMAS.API.LejarAm.Shared.Models;
 using Refit;
-using System.Threading.Tasks;
 
-namespace IMAS.API.LejarAm.Shared.Infrastructure.Refit
+namespace IMAS.Blazor.LejarAm.Services.Refit
 {
+    [Headers("Content-Type: application/json")]
     public interface IPenyelenggaraanLejarApi
     {
         [Get("/api/penyelenggaraanlejar")]
@@ -19,6 +19,6 @@ namespace IMAS.API.LejarAm.Shared.Infrastructure.Refit
         Task<PenyelenggaraanLejarDTO> UpdatePenyelenggaraanLejar(Guid id, [Body] PenyelenggaraanLejarDTO penyelenggaraanLejar);
 
         [Delete("/api/penyelenggaraanlejar/{id}")]
-        Task DeletePenyelenggaraanLejar(Guid id);
+        Task<ApiResponse<string>> DeletePenyelenggaraanLejar(Guid id);
     }
 }

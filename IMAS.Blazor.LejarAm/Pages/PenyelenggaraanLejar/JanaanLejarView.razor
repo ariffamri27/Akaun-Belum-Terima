@@ -1,0 +1,407 @@
+﻿@page "/janaan-lejar-am"
+@using IMAS.API.LejarAm.Shared.Models
+@using IMAS.Blazor.LejarAm.Services.Refit
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Web
+@inject IPenyelenggaraanLejarApi PenyelenggaraanLejarService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<MudPaper Class="pa-4">
+    <!-- Header & Controls -->
+    <MudCard Class="mb-4" Style="background: linear-gradient(135deg, #00bcd4 0%, #4caf50 100%); color: white;">
+        <MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-3">📊 Penyelenggaraan Kod Lejar Am</MudText>
+
+            <MudGrid AlignItems="AlignItems.Center">
+                <MudItem xs="12" md="2">
+                    <!-- Use Value/ValueChanged to avoid @bind duplication with ValueChanged -->
+                    <MudSelect T="int"
+                               Value="_pageSize"
+                               ValueChanged="OnPageSizeChanged"
+                               ValueExpression="@(() => _pageSize)"
+                               Dense="true"
+                               Variant="Variant.Outlined"
+                               Style="background: white; min-width: 80px;">
+                        <MudSelectItem T="int" Value="@(10)">10</MudSelectItem>
+                        <MudSelectItem T="int" Value="@(25)">25</MudSelectItem>
+                        <MudSelectItem T="int" Value="@(50)">50</MudSelectItem>
+                        <MudSelectItem T="int" Value="@(100)">100</MudSelectItem>
+                    </MudSelect>
+                    <MudText Typo="Typo.caption">rekod / halaman</MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="10" Class="d-flex justify-end">
+                    <MudTextField T="string"
+                                  Label="Cari"
+                                  @bind-Value="_searchText"
+                                  Adornment="Adornment.End"
+                                  AdornmentIcon="Icons.Material.Filled.Search"
+                                  Style="max-width: 320px; background: white;"
+                                  Variant="Variant.Outlined"
+                                  Immediate="true"
+                                  OnKeyDown="OnSearchKeyDown" />
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Data Table -->
+    <MudCard Class="mb-4">
+        <MudCardContent>
+            @if (_isLoading)
+            {
+                <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            }
+            else
+            {
+                <MudTable Items="_pagedList" Hover="true" Striped="true" Dense="true" T="PenyelenggaraanLejarDTO">
+                    <HeaderContent>
+                        <MudTh>Akaun</MudTh>
+                        <MudTh>Keterangan</MudTh>
+                        <MudTh>Paras</MudTh>
+                        <MudTh>Kategori</MudTh>
+                        <MudTh>Jenis Akaun</MudTh>
+                        <MudTh>Jenis Akaun Paras 2</MudTh>
+                        <MudTh>Jenis Aliran</MudTh>
+                        <MudTh>Jenis Kedudukan Penyata</MudTh>
+                        <MudTh></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Akaun">@context.KodAkaun</MudTd>
+                        <MudTd DataLabel="Keterangan">@context.Keterangan</MudTd>
+                        <MudTd DataLabel="Paras">@context.Paras</MudTd>
+                        <MudTd DataLabel="Kategori">@context.Kategori</MudTd>
+                        <MudTd DataLabel="Jenis Akaun">@context.JenisAkaun</MudTd>
+                        <MudTd DataLabel="Jenis Akaun Paras 2">@context.JenisAkaunParas2</MudTd>
+                        <MudTd DataLabel="Jenis Aliran">@context.JenisAliran</MudTd>
+                        <MudTd DataLabel="Jenis Kedudukan Penyata">@context.JenisKedudukanPenyata</MudTd>
+                        <MudTd>
+                            <MudButton Color="Color.Primary" Size="Size.Small" OnClick="@(() => EditItem(context))">Edit</MudButton>
+                            <MudButton Color="Color.Error" Size="Size.Small" OnClick="@(async () => await DeleteItem(context.ID))">Hapus</MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudAlert Severity="Severity.Info">Tiada data.</MudAlert>
+                    </NoRecordsContent>
+                </MudTable>
+
+                <!-- Pagination -->
+                <MudStack Row="true" AlignItems="AlignItems.Center" Class="mt-3" Spacing="2">
+                    <MudText Typo="Typo.caption">
+                        Menunjukkan @(Math.Min(_totalItems, ((_currentPage - 1) * _pageSize) + 1))
+                        hingga @((Math.Min(_currentPage * _pageSize, _totalItems)))
+                        daripada @_totalItems rekod
+                    </MudText>
+
+                    <MudSpacer />
+
+                    <MudPagination Count="@TotalPages"
+                                   Selected="@_currentPage"
+                                   SelectedChanged="OnPageChanged"
+                                   ShowFirstButton="true"
+                                   ShowLastButton="true" />
+                </MudStack>
+            }
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Form (Create/Update) -->
+    <MudCard Style="background: linear-gradient(135deg, #00bcd4 0%, #4caf50 100%); color: white;">
+        <MudCardContent>
+            <MudText Typo="Typo.h6" Class="mb-4">🔧 Borang Kod Lejar</MudText>
+
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField T="string"
+                                  Label="Kod Akaun"
+                                  @bind-Value="_form.KodAkaun"
+                                  Variant="Variant.Outlined"
+                                  Style="background: white;"
+                                  Required="true" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <!-- Paras nullable (int?) -->
+                    <MudSelect T="int?" Label="Paras"
+                               @bind-Value="_form.Paras"
+                               Variant="Variant.Outlined"
+                               Style="background: white;">
+                        <MudSelectItem T="int?" Value="@((int?)null)">Pilih…</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)1)">Paras 1</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)2)">Paras 2</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)3)">Paras 3</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)4)">Paras 4</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField T="string"
+                                  Label="Keterangan"
+                                  @bind-Value="_form.Keterangan"
+                                  Variant="Variant.Outlined"
+                                  Lines="3"
+                                  Style="background: white;" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" Label="Kategori"
+                               @bind-Value="_form.Kategori"
+                               Variant="Variant.Outlined"
+                               Style="background: white;">
+                        <MudSelectItem T="string" Value="@("")">Pilih…</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("ASET")">ASET</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("LIABILITI")">LIABILITI</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("EKUITI")">EKUITI</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("PENDAPATAN")">PENDAPATAN</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("PERBELANJAAN")">PERBELANJAAN</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" Label="Jenis Akaun"
+                               @bind-Value="_form.JenisAkaun"
+                               Variant="Variant.Outlined"
+                               Style="background: white;">
+                        <MudSelectItem T="string" Value="@("")">Pilih…</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("SEMASA")">SEMASA</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("TETAP")">TETAP</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("JANGKA PANJANG")">JANGKA PANJANG</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("JANGKA PENDEK")">JANGKA PENDEK</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" Label="Jenis Akaun Paras 2"
+                               @bind-Value="_form.JenisAkaunParas2"
+                               Variant="Variant.Outlined"
+                               Style="background: white;">
+                        <MudSelectItem T="string" Value="@("")">Pilih…</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("OPERASI")">OPERASI</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("PELABURAN")">PELABURAN</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("PEMBIAYAAN")">PEMBIAYAAN</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" Label="Jenis Aliran"
+                               @bind-Value="_form.JenisAliran"
+                               Variant="Variant.Outlined"
+                               Style="background: white;">
+                        <MudSelectItem T="string" Value="@("")">Pilih…</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("MASUK")">MASUK</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("KELUAR")">KELUAR</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("NEUTRAL")">NEUTRAL</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" Label="Jenis Kedudukan Penyata"
+                               @bind-Value="_form.JenisKedudukanPenyata"
+                               Variant="Variant.Outlined"
+                               Style="background: white;">
+                        <MudSelectItem T="string" Value="@("")">Pilih…</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("DEBIT")">DEBIT</MudSelectItem>
+                        <MudSelectItem T="string" Value="@("KREDIT")">KREDIT</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-4" />
+
+            <MudStack Row="true" Spacing="2">
+                <MudButton Color="Color.Success"
+                           StartIcon="Icons.Material.Filled.Save"
+                           OnClick="SaveItem"
+                           Loading="@_isSaving">
+                    @(_isEdit ? "Simpan Perubahan" : "Tambah")
+                </MudButton>
+
+                <MudButton Color="Color.Default"
+                           StartIcon="Icons.Material.Filled.Refresh"
+                           OnClick="ResetForm">
+                    Set Semula
+                </MudButton>
+
+                <MudButton Color="Color.Error"
+                           StartIcon="Icons.Material.Filled.Delete"
+                           Disabled="@(!_isEdit)"
+                           OnClick="@(async () => await DeleteItem(_form.ID))">
+                    Padam
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+</MudPaper>
+
+@code {
+    private List<PenyelenggaraanLejarDTO> _all = new();
+
+    private List<PenyelenggaraanLejarDTO> _pagedList => _all
+        .Where(x => string.IsNullOrWhiteSpace(_searchText)
+            || (x.KodAkaun?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (x.Keterangan?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (x.Kategori?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (x.JenisAkaun?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false))
+        .Skip((_currentPage - 1) * _pageSize)
+        .Take(_pageSize)
+        .ToList();
+
+    private int _pageSize = 10;
+    private int _currentPage = 1;
+
+    private int _totalItems => string.IsNullOrWhiteSpace(_searchText)
+        ? _all.Count
+        : _all.Count(x =>
+            (x.KodAkaun?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (x.Keterangan?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (x.Kategori?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (x.JenisAkaun?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling((double)_totalItems / Math.Max(1, _pageSize)));
+
+    private string _searchText = string.Empty;
+    private bool _isLoading = false;
+    private bool _isSaving = false;
+    private bool _isEdit = false;
+
+    private PenyelenggaraanLejarDTO _form = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        try
+        {
+            _all = await PenyelenggaraanLejarService.GetAllPenyelenggaraanLejar() ?? new();
+            _currentPage = 1;
+        }
+        catch (Exception ex)
+        {
+            _all = new();
+            Snackbar.Add($"Gagal memuatkan data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private Task OnPageSizeChanged(int size)
+    {
+        _pageSize = size;
+        _currentPage = 1;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task OnPageChanged(int page)
+    {
+        _currentPage = page;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private Task OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            _currentPage = 1;
+            StateHasChanged();
+        }
+        return Task.CompletedTask;
+    }
+
+    private void EditItem(PenyelenggaraanLejarDTO item)
+    {
+        _form = new PenyelenggaraanLejarDTO
+        {
+            ID = item.ID,
+            KodAkaun = item.KodAkaun,
+            Keterangan = item.Keterangan,
+            Paras = item.Paras,
+            Kategori = item.Kategori,
+            JenisAkaun = item.JenisAkaun,
+            JenisAkaunParas2 = item.JenisAkaunParas2,
+            JenisAliran = item.JenisAliran,
+            JenisKedudukanPenyata = item.JenisKedudukanPenyata
+        };
+        _isEdit = true;
+    }
+
+    private async Task SaveItem()
+    {
+        if (string.IsNullOrWhiteSpace(_form.KodAkaun))
+        {
+            Snackbar.Add("Kod Akaun wajib diisi.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            if (_isEdit)
+            {
+                await PenyelenggaraanLejarService.UpdatePenyelenggaraanLejar(_form.ID, _form);
+                Snackbar.Add("Rekod berjaya dikemaskini.", Severity.Success);
+            }
+            else
+            {
+                _form.ID = Guid.Empty; // backend generates ID
+                await PenyelenggaraanLejarService.CreatePenyelenggaraanLejar(_form);
+                Snackbar.Add("Rekod berjaya ditambah.", Severity.Success);
+            }
+
+            await LoadData();
+            ResetForm();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal simpan rekod: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteItem(Guid id)
+    {
+        if (id == Guid.Empty) return;
+
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Pasti?",
+            "Anda pasti mahu menghapuskan rekod ini?",
+            yesText: "Ya",
+            cancelText: "Batal"
+        );
+
+        if (confirm == true)
+        {
+            try
+            {
+                var resp = await PenyelenggaraanLejarService.DeletePenyelenggaraanLejar(id);
+                if (!resp.IsSuccessStatusCode)
+                    throw new Exception($"Kod {resp.StatusCode}");
+
+                Snackbar.Add("Rekod berjaya dihapus.", Severity.Success);
+                await LoadData();
+                ResetForm();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Gagal menghapus rekod: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private void ResetForm()
+    {
+        _form = new();
+        _isEdit = false;
+    }
+}

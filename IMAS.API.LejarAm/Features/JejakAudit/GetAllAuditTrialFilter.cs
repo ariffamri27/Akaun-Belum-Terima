@@ -4,13 +4,13 @@ using IMAS.API.LejarAm.Shared.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace IMAS.API.LejarAm.Features.JejakAudit
+namespace IMAS.API.LejarAm.Features.AuditTrailFilter
 {
-    public class GetAllJejakAudit
+    public class GetAllAuditTrailFilter
     {
-        public record Query : IRequest<List<JejakAuditDTO>>;
+        public record Query : IRequest<List<AuditTrailFilterDTO>>;
 
-        public class Handler : IRequestHandler<Query, List<JejakAuditDTO>>
+        public class Handler : IRequestHandler<Query, List<AuditTrailFilterDTO>>
         {
             private readonly FinancialDbContext _context;
 
@@ -19,10 +19,10 @@ namespace IMAS.API.LejarAm.Features.JejakAudit
                 _context = context;
             }
 
-            public async Task<List<JejakAuditDTO>> Handle(Query request, CancellationToken cancellationToken)
+            public async Task<List<AuditTrailFilterDTO>> Handle(Query request, CancellationToken cancellationToken)
             {
-                return await _context.JejakAudit
-                    .Select(j => new JejakAuditDTO
+                return await _context.AuditTrailFilter
+                    .Select(j => new AuditTrailFilterDTO
                     {
                         ID = j.ID,
                         TahunKewangan = j.TahunKewangan,

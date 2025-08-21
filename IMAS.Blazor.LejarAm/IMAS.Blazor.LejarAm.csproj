@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
 	<PropertyGroup>
 		<TargetFramework>net9.0</TargetFramework>
@@ -16,13 +16,6 @@
 
 	<ItemGroup>
 		<Compile Include="..\IMAS.API.LejarAm\Shared\Models\*.cs" Link="SharedModels\%(Filename)%(Extension)" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Pages\AuditTrial\" />
-	  <Folder Include="Pages\JejakAudit\" />
-	  <Folder Include="Pages\Jurnal\" />
-	  <Folder Include="Pages\PenyelenggaraanLejar\" />
 	</ItemGroup>
 
 </Project>

@@ -2,9 +2,9 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace IMAS.API.LejarAm.Features.JejakAudit
+namespace IMAS.API.LejarAm.Features.AuditTrailFilter
 {
-    public class DeleteJejakAudit
+    public class DeleteAuditTrailFilter
     {
         public record Command : IRequest<bool>
         {
@@ -22,10 +22,10 @@ namespace IMAS.API.LejarAm.Features.JejakAudit
 
             public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
             {
-                var entity = await _context.JejakAudit.FindAsync(new object[] { request.Id }, cancellationToken);
+                var entity = await _context.AuditTrailFilter.FindAsync(new object[] { request.Id }, cancellationToken);
                 if (entity == null) return false;
 
-                _context.JejakAudit.Remove(entity);
+                _context.AuditTrailFilter.Remove(entity);
                 await _context.SaveChangesAsync(cancellationToken);
 
                 return true;

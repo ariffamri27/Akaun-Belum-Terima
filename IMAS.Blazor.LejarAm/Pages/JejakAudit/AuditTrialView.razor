@@ -1,0 +1,239 @@
+﻿@page "/audit-trail"
+@using IMAS.API.LejarAm.Shared.Models
+@using IMAS.Blazor.LejarAm.Services.Refit
+@using MudBlazor
+@inject IAuditTrailApi AuditTrailService
+@inject IDialogService DialogService
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-2">Laporan Audit Trail</MudText>
+
+    <!-- Filter Section -->
+    <MudCard Class="mb-4">
+        <MudCardContent>
+            <MudGrid>
+                <MudItem xs="12" md="3">
+                    <MudSelect T="int?" Label="Tahun Kewangan" @bind-Value="_filter.TahunKewangan" Clearable="true">
+                        <MudSelectItem Value="2023">2023</MudSelectItem>
+                        <MudSelectItem Value="2024">2024</MudSelectItem>
+                        <MudSelectItem Value="2025">2025</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="3">
+                    <MudSelect T="string" Label="Status Dokumen" @bind-Value="_filter.StatusDokumen" Clearable="true">
+                        <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
+                        <MudSelectItem Value="@("Approved")">Approved</MudSelectItem>
+                        <MudSelectItem Value="@("Rejected")">Rejected</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+
+                <MudItem xs="12" md="2">
+                    <MudTextField Label="No Mula" @bind-Value="_filter.NoMula" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField Label="No Akhir" @bind-Value="_filter.NoAkhir" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudDatePicker Label="Tarikh Mula" @bind-Date="_filter.TarikhMula" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudDatePicker Label="Tarikh Akhir" @bind-Date="_filter.TarikhAkhir" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-3" />
+
+            <MudButton Color="Color.Primary" StartIcon="Icons.Material.Filled.Search" OnClick="LoadData">
+                Cari
+            </MudButton>
+            <MudButton Color="Color.Secondary" StartIcon="Icons.Material.Filled.Clear" OnClick="ClearFilters">
+                Kosongkan
+            </MudButton>
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Results Table -->
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+    }
+    else
+    {
+        <MudTable Items="_auditTrailList" Hover="true" Striped="true">
+            <HeaderContent>
+                <MudTh>No Doc</MudTh>
+                <MudTh>Tarikh Doc</MudTh>
+                <MudTh>Nama Penghutang</MudTh>
+                <MudTh>Butiran</MudTh>
+                <MudTh>Kod Akaun</MudTh>
+                <MudTh>Keterangan Akaun</MudTh>
+                <MudTh Style="text-align:right;">Debit</MudTh>
+                <MudTh Style="text-align:right;">Kredit</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.NoDoc</MudTd>
+                <MudTd>@(context.TarikhDoc?.ToString("dd/MM/yyyy"))</MudTd>
+                <MudTd>@context.NamaPenghutang</MudTd>
+                <MudTd>@context.Butiran</MudTd>
+                <MudTd>@context.KodAkaun</MudTd>
+                <MudTd>@context.KeteranganAkaun</MudTd>
+                <MudTd Style="text-align:right;">@(context.Debit?.ToString("N2") ?? "0.00")</MudTd>
+                <MudTd Style="text-align:right;">@(context.Kredit?.ToString("N2") ?? "0.00")</MudTd>
+                <MudTd>
+                    <MudButton Color="Color.Primary" Size="Size.Small" OnClick="@(() => EditAuditTrail(context))">Edit</MudButton>
+                    <MudButton Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAuditTrail(context.ID))">Hapus</MudButton>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudAlert Severity="Severity.Info">
+                    Tiada rekod dijumpai. Sila ubah kriteria carian.
+                </MudAlert>
+            </NoRecordsContent>
+        </MudTable>
+    }
+
+    <MudDivider Class="my-4" />
+
+    <!-- Create/Update Form -->
+    <MudText Typo="Typo.h6">@(_isEdit ? "Kemaskini Rekod" : "Tambah Rekod")</MudText>
+    <MudGrid Class="mb-2">
+        <MudItem xs="12" md="3">
+            <MudTextField Label="No Doc" @bind-Value="_form.NoDoc" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudDatePicker Label="Tarikh Doc" @bind-Date="_form.TarikhDoc" />
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudTextField Label="Nama Penghutang" @bind-Value="_form.NamaPenghutang" />
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudTextField Label="Butiran" @bind-Value="_form.Butiran" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudTextField Label="Kod Akaun" @bind-Value="_form.KodAkaun" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudTextField Label="Keterangan Akaun" @bind-Value="_form.KeteranganAkaun" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudNumericField T="decimal?" Label="Debit" @bind-Value="_form.Debit" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudNumericField T="decimal?" Label="Kredit" @bind-Value="_form.Kredit" />
+        </MudItem>
+    </MudGrid>
+
+    <MudButton Color="Color.Success" OnClick="SaveAuditTrail">Simpan</MudButton>
+    <MudButton Color="Color.Default" OnClick="ResetForm">Batal</MudButton>
+</MudPaper>
+
+@code {
+    private List<AuditTrailDTO> _auditTrailList = new();
+    private AuditTrailDTO _form = new();
+    private bool _isEdit = false;
+    private bool _isLoading = false;
+
+    // Filters grouped into a DTO (matches API contract)
+    private AuditTrailFilterDTO _filter = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        try
+        {
+            _auditTrailList = await AuditTrailService.SearchAsync(_filter);
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowMessageBox("Ralat", $"Gagal memuatkan data. {ex.Message}");
+            _auditTrailList = new();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void ClearFilters()
+    {
+        _filter = new();
+    }
+
+    private void EditAuditTrail(AuditTrailDTO a)
+    {
+        _form = new AuditTrailDTO
+        {
+            ID = a.ID,
+            NoDoc = a.NoDoc,
+            TarikhDoc = a.TarikhDoc,
+            NamaPenghutang = a.NamaPenghutang,
+            Butiran = a.Butiran,
+            KodAkaun = a.KodAkaun,
+            KeteranganAkaun = a.KeteranganAkaun,
+            Debit = a.Debit,
+            Kredit = a.Kredit,
+            AuditTrailFilterEntitiesID = a.AuditTrailFilterEntitiesID
+        };
+        _isEdit = true;
+    }
+
+    private async Task SaveAuditTrail()
+    {
+        try
+        {
+            if (_isEdit)
+            {
+                await AuditTrailService.UpdateAsync(_form.ID, _form);
+            }
+            else
+            {
+                _form.ID = Guid.Empty; // backend generates ID
+                await AuditTrailService.CreateAsync(_form);
+            }
+
+            await LoadData();
+            ResetForm();
+        }
+        catch (Exception ex)
+        {
+            await DialogService.ShowMessageBox("Ralat", $"Gagal simpan rekod. {ex.Message}");
+        }
+    }
+
+    private async Task DeleteAuditTrail(Guid id)
+    {
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Pasti?",
+            "Anda pasti mahu hapus rekod ini?",
+            yesText: "Ya",
+            cancelText: "Batal"
+        );
+
+        if (confirm == true)
+        {
+            try
+            {
+                await AuditTrailService.DeleteAsync(id);
+                await LoadData();
+            }
+            catch (Exception ex)
+            {
+                await DialogService.ShowMessageBox("Ralat", $"Gagal menghapuskan rekod. {ex.Message}");
+            }
+        }
+    }
+
+    private void ResetForm()
+    {
+        _form = new();
+        _isEdit = false;
+    }
+}

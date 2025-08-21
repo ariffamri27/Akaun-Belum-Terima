@@ -16,21 +16,21 @@ namespace IMAS.API.LejarAm.Shared.Domain.Entities
         public string? Keterangan { get; set; }
 
         [Required]
-        public int Paras { get; set; }  // Contoh: 1, 2, 3
+        public int? Paras { get; set; }  // Contoh: 1, 2, 3
 
         [Required]
-        public string Kategori { get; set; } = string.Empty;
+        public string? Kategori { get; set; } = string.Empty;
 
         [Required]
-        public string JenisAkaun { get; set; } = string.Empty;
+        public string? JenisAkaun { get; set; } = string.Empty;
 
         public string? JenisAkaunParas2 { get; set; }
 
         [Required]
-        public string JenisAliran { get; set; } = string.Empty;
+        public string? JenisAliran { get; set; } = string.Empty;
 
         [Required]
-        public string JenisKedudukanPenyata { get; set; } = string.Empty;
+        public string? JenisKedudukanPenyata { get; set; } = string.Empty;
 
         // Additional properties for foreign key relationships, if applicable.
     }

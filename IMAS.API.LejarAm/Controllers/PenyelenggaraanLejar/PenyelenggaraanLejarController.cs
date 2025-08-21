@@ -30,7 +30,7 @@ namespace IMAS.API.LejarAm.Controllers
             {
                 KodAkaun = dto.KodAkaun,
                 Keterangan = dto.Keterangan,
-                Paras = dto.Paras,
+                Paras = dto.Paras.Value,
                 Kategori = dto.Kategori,
                 JenisAkaun = dto.JenisAkaun,
                 JenisAkaunParas2 = dto.JenisAkaunParas2,
@@ -48,7 +48,7 @@ namespace IMAS.API.LejarAm.Controllers
                 Id = id,
                 KodAkaun = dto.KodAkaun,
                 Keterangan = dto.Keterangan,
-                Paras = dto.Paras,
+                Paras = dto.Paras.Value,
                 Kategori = dto.Kategori,
                 JenisAkaun = dto.JenisAkaun,
                 JenisAkaunParas2 = dto.JenisAkaunParas2,

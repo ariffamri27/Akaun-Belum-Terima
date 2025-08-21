@@ -28,14 +28,14 @@ namespace IMAS.API.LejarAm.Controllers
             var command = new CreateAuditTrail.Command
             {
                 NoDoc = dto.NoDoc,
-                TarikhDoc = dto.TarikhDoc,
+                TarikhDoc = dto.TarikhDoc.Value,
                 NamaPenghutang = dto.NamaPenghutang,
                 Butiran = dto.Butiran,
                 KodAkaun = dto.KodAkaun,
                 KeteranganAkaun = dto.KeteranganAkaun,
-                Debit = dto.Debit,
-                Kredit = dto.Kredit,
-                JejakAuditEntitiesID = dto.JejakAuditEntitiesID
+                Debit = dto.Debit.Value,
+                Kredit = dto.Kredit.Value,
+                AuditTrailFilterEntitiesID = dto.AuditTrailFilterEntitiesID
             };
             return Ok(await _mediator.Send(command));
         }
@@ -47,14 +47,14 @@ namespace IMAS.API.LejarAm.Controllers
             {
                 Id = id,
                 NoDoc = dto.NoDoc,
-                TarikhDoc = dto.TarikhDoc,
+                TarikhDoc = dto.TarikhDoc.Value,
                 NamaPenghutang = dto.NamaPenghutang,
                 Butiran = dto.Butiran,
                 KodAkaun = dto.KodAkaun,
                 KeteranganAkaun = dto.KeteranganAkaun,
-                Debit = dto.Debit,
-                Kredit = dto.Kredit,
-                JejakAuditEntitiesID = dto.JejakAuditEntitiesID
+                Debit = dto.Debit.Value,
+                Kredit = dto.Kredit.Value,
+                AuditTrailFilterEntitiesID = dto.AuditTrailFilterEntitiesID
             };
             return Ok(await _mediator.Send(command));
         }

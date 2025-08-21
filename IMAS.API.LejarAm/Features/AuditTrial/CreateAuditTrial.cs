@@ -12,12 +12,12 @@ namespace IMAS.API.LejarAm.Features.AuditTrail
             public string NoDoc { get; init; } = default!;
             public DateTime TarikhDoc { get; init; }
             public string NamaPenghutang { get; init; } = default!;
-            public decimal Butiran { get; init; }
+            public string Butiran { get; init; }
             public string KodAkaun { get; init; } = default!;
             public string KeteranganAkaun { get; init; } = default!;
             public decimal Debit { get; init; }
             public decimal Kredit { get; init; }
-            public Guid? JejakAuditEntitiesID { get; init; }
+            public Guid? AuditTrailFilterEntitiesID { get; init; }
         }
 
         public class Handler : IRequestHandler<Command, AuditTrailDTO>
@@ -42,7 +42,7 @@ namespace IMAS.API.LejarAm.Features.AuditTrail
                     KeteranganAkaun = request.KeteranganAkaun,
                     Debit = request.Debit,
                     Kredit = request.Kredit,
-                    JejakAuditEntitiesID = request.JejakAuditEntitiesID,
+                    AuditTrailFilterEntitiesID = request.AuditTrailFilterEntitiesID,
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = "system" // replace with current user if available
                 };
@@ -61,7 +61,7 @@ namespace IMAS.API.LejarAm.Features.AuditTrail
                     KeteranganAkaun = entity.KeteranganAkaun,
                     Debit = entity.Debit,
                     Kredit = entity.Kredit,
-                    JejakAuditEntitiesID = entity.JejakAuditEntitiesID
+                    AuditTrailFilterEntitiesID = entity.AuditTrailFilterEntitiesID
                 };
             }
         }
