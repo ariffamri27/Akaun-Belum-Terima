@@ -3,34 +3,33 @@
 @using IMAS.API.LejarAm.Shared.Infrastructure.Refit
 @using Microsoft.AspNetCore.Components.Web
 @using MudBlazor
+
 @inject IJurnalApi JurnalService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
 <MudPaper Class="pa-4">
-    <!-- Status Filter Section -->
+    <!-- Filter Section -->
     <MudCard Class="mb-4" Style="background: linear-gradient(135deg, #00bcd4 0%, #4caf50 100%); color: white;">
         <MudCardContent>
             <MudText Typo="Typo.h6" Class="mb-3">📊 Status Jurnal</MudText>
 
             <MudSelect T="string"
-                       Label="Status Dokumen"
+                       Label="Status Pos"
                        Value="_selectedStatus"
                        ValueChanged="OnStatusChanged"
                        ValueExpression="@(() => _selectedStatus)"
                        Variant="Variant.Outlined"
                        Style="background: white;">
-                <MudSelectItem Value="@string.Empty">Semua Status</MudSelectItem>
-                <MudSelectItem Value="@("BARU")">BARU</MudSelectItem>
-                <MudSelectItem Value="@("DRAFT")">DRAFT</MudSelectItem>
-                <MudSelectItem Value="@("POS")">POS</MudSelectItem>
-                <MudSelectItem Value="@("HAPUS")">HAPUS</MudSelectItem>
+                <MudSelectItem Value="@string.Empty">Semua</MudSelectItem>
+                <MudSelectItem Value=@("BELUM POS")>BELUM POS</MudSelectItem>
+                <MudSelectItem Value=@("POS")>POS</MudSelectItem>
             </MudSelect>
         </MudCardContent>
     </MudCard>
 
-    <!-- Search Results Section -->
+    <!-- Search + page size -->
     <MudCard Class="mb-4" Style="background: linear-gradient(135deg, #00bcd4 0%, #4caf50 100%); color: white;">
         <MudCardContent>
             <MudText Typo="Typo.h6" Class="mb-3">🔍 Keputusan Carian</MudText>
@@ -49,7 +48,7 @@
                         <MudSelectItem Value="@(50)">50</MudSelectItem>
                         <MudSelectItem Value="@(100)">100</MudSelectItem>
                     </MudSelect>
-                    <MudText Typo="Typo.caption">records</MudText>
+                    <MudText Typo="Typo.caption">rekod</MudText>
                 </MudItem>
                 <MudItem xs="12" md="10" Class="d-flex justify-end">
                     <MudTextField T="string"
@@ -86,25 +85,19 @@
                         </MudTableSortLabel>
                     </MudTh>
                     <MudTh>Keterangan</MudTh>
-                    <MudTh>Status</MudTh>
+                    <MudTh>Status Pos</MudTh>
                     <MudTh>Tindakan</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="No. Jurnal" Style="vertical-align: top;">
-                        @context.NoJurnal
-                    </MudTd>
-                    <MudTd DataLabel="Tarikh" Style="vertical-align: top;">
-                        @context.TarikhJurnal.ToString("dd/MM/yyyy")
-                    </MudTd>
-                    <MudTd DataLabel="Keterangan" Style="vertical-align: top;">
-                        @context.Keterangan
-                    </MudTd>
-                    <MudTd DataLabel="Status" Style="vertical-align: top;">
-                        <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">
-                            @context.Status
+                    <MudTd DataLabel="No. Jurnal">@context.NoJurnal</MudTd>
+                    <MudTd DataLabel="Tarikh">@context.TarikhJurnal.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd DataLabel="Keterangan">@context.Keterangan</MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Color="@GetPosColor(context.StatusPos)" Size="Size.Small">
+                            @context.StatusPos
                         </MudChip>
                     </MudTd>
-                    <MudTd DataLabel="Tindakan" Style="vertical-align: top;">
+                    <MudTd DataLabel="Tindakan">
                         <MudButton Color="Color.Info"
                                    Size="Size.Small"
                                    Variant="Variant.Filled"
@@ -143,28 +136,21 @@
 </MudPaper>
 
 @code {
-    // Data
     private List<JurnalDTO> _all = new();
-
-    // UI state
     private bool _loading = false;
     private string _searchText = string.Empty;
     private string? _selectedStatus = string.Empty;
     private int _pageSize = 10;
     private int _currentPage = 1;
 
-    // Derived
     private IEnumerable<JurnalDTO> Filtered => _all.Where(j =>
-        // Status filter
-        (string.IsNullOrWhiteSpace(_selectedStatus) || string.Equals(j.Status, _selectedStatus, StringComparison.OrdinalIgnoreCase))
-        // Search filter
+        (string.IsNullOrWhiteSpace(_selectedStatus) || string.Equals(j.StatusPos, _selectedStatus, StringComparison.OrdinalIgnoreCase))
         && (string.IsNullOrWhiteSpace(_searchText)
             || (j.NoJurnal?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
             || (j.NoRujukan?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
             || (j.Keterangan?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
             || (j.SumberTransaksi?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
-            || (j.JenisJurnal?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false))
-    );
+            || (j.JenisJurnal?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)));
 
     private int _totalItems => Filtered.Count();
 
@@ -174,10 +160,7 @@
         .Take(_pageSize)
         .ToList();
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadAll();
-    }
+    protected override async Task OnInitializedAsync() => await LoadAll();
 
     private async Task LoadAll()
     {
@@ -231,29 +214,13 @@
         return Task.CompletedTask;
     }
 
-    private Color GetStatusColor(string? status) => (status ?? "").ToUpperInvariant() switch
+    private Color GetPosColor(string? status) => (status ?? "").ToUpperInvariant() switch
     {
-        "BARU" => Color.Info,
-        "DRAFT" => Color.Warning,
+        "BELUM POS" => Color.Info,
         "POS" => Color.Success,
         "HAPUS" => Color.Error,
         _ => Color.Default
     };
 
-    private async Task ViewDetails(JurnalDTO j)
-    {
-        var parameters = new DialogParameters
-        {
-            { "JournalId", j.ID },
-            { "JournalNo", j.NoJurnal }
-        };
-
-        var options = new DialogOptions
-        {
-            MaxWidth = MaxWidth.Large,
-            FullWidth = true
-        };
-
-        // await DialogService.ShowAsync<JurnalStatusDetailDialog>("Butiran Status Jurnal", parameters, options);
-    }
+    private void ViewDetails(JurnalDTO j) => Navigation.NavigateTo($"/journal-form/{j.ID}");
 }

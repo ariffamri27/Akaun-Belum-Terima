@@ -24,7 +24,7 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Pr
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBlazorApp",
-        builder => builder.WithOrigins("https://localhost:9002") // The URL of your Blazor app
+        policy => policy.WithOrigins("https://localhost:9004", "http://localhost:5004")
             .AllowAnyMethod()
             .AllowAnyHeader());
 });

@@ -4,6 +4,7 @@
 @using IMAS.API.LejarAm.Shared.Infrastructure.Refit
 @using MudBlazor
 @using Microsoft.AspNetCore.Components
+
 @inject IJurnalApi JurnalService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -45,7 +46,7 @@
 
             <MudForm @ref="_form">
                 <MudGrid>
-                    <!-- No. Jurnal (auto) -->
+                    <!-- No. Jurnal -->
                     <MudItem xs="12" md="6">
                         <MudTextField Label="No. Jurnal"
                                       @bind-Value="_model.NoJurnal"
@@ -56,7 +57,7 @@
                                       Style="background: white;" />
                     </MudItem>
 
-                    <!-- Tarikh Jurnal (DateTime? binder) -->
+                    <!-- Tarikh Jurnal -->
                     <MudItem xs="12" md="6">
                         <MudDatePicker Label="Tarikh Jurnal"
                                        @bind-Date="_tarikhJurnal"
@@ -74,17 +75,16 @@
                                       Style="background: white;" />
                     </MudItem>
 
-                    <!-- Status -->
+                    <!-- Status Pos -->
                     <MudItem xs="12" md="6">
                         <MudSelect T="string"
-                                   Label="Status"
-                                   @bind-Value="_model.Status"
+                                   Label="Status Pos"
+                                   @bind-Value="_model.StatusPos"
                                    Variant="Variant.Outlined"
                                    Style="background: white;"
                                    Required="true">
-                            <MudSelectItem Value="@("BARU")">BARU</MudSelectItem>
-                            <MudSelectItem Value="@("POS")">POS</MudSelectItem>
-                            <MudSelectItem Value="@("HAPUS")">HAPUS</MudSelectItem>
+                            <MudSelectItem Value=@("BELUM POS")>BELUM POS</MudSelectItem>
+                            <MudSelectItem Value=@("POS")>POS</MudSelectItem>
                         </MudSelect>
                     </MudItem>
 
@@ -96,8 +96,8 @@
                                    Variant="Variant.Outlined"
                                    Style="background: white;"
                                    Required="true">
-                            <MudSelectItem Value="@("MANUAL")">MANUAL</MudSelectItem>
-                            <MudSelectItem Value="@("AUTO")">AUTO</MudSelectItem>
+                            <MudSelectItem Value=@("MANUAL")>MANUAL</MudSelectItem>
+                            <MudSelectItem Value=@("AUTO")>AUTO</MudSelectItem>
                         </MudSelect>
                     </MudItem>
 
@@ -109,10 +109,10 @@
                                    Variant="Variant.Outlined"
                                    Style="background: white;"
                                    Required="true">
-                            <MudSelectItem Value="@("GENERAL LEDGER")">GENERAL LEDGER</MudSelectItem>
-                            <MudSelectItem Value="@("ACCOUNTS PAYABLE")">ACCOUNTS PAYABLE</MudSelectItem>
-                            <MudSelectItem Value="@("ACCOUNTS RECEIVABLE")">ACCOUNTS RECEIVABLE</MudSelectItem>
-                            <MudSelectItem Value="@("CASH MANAGEMENT")">CASH MANAGEMENT</MudSelectItem>
+                            <MudSelectItem Value=@("GENERAL LEDGER")>GENERAL LEDGER</MudSelectItem>
+                            <MudSelectItem Value=@("ACCOUNTS PAYABLE")>ACCOUNTS PAYABLE</MudSelectItem>
+                            <MudSelectItem Value=@("ACCOUNTS RECEIVABLE")>ACCOUNTS RECEIVABLE</MudSelectItem>
+                            <MudSelectItem Value=@("CASH MANAGEMENT")>CASH MANAGEMENT</MudSelectItem>
                         </MudSelect>
                     </MudItem>
 
@@ -153,20 +153,20 @@
     private bool _isEdit = false;
     private bool _saving = false;
 
-    // DTO used directly
     private JurnalDTO _model = new()
     {
         ID = Guid.Empty,
         NoJurnal = string.Empty,
         NoRujukan = null,
         TarikhJurnal = DateTime.Today,
-        Status = "BARU",
+        StatusPos = "BELUM POS",
+        StatusSemak = "BELUM SEMAK",
+        StatusSah = "BELUM SAH",
         JenisJurnal = "MANUAL",
         SumberTransaksi = "GENERAL LEDGER",
         Keterangan = string.Empty
     };
 
-    // MudDatePicker binds to nullable
     private DateTime? _tarikhJurnal = DateTime.Today;
 
     protected override async Task OnInitializedAsync()
@@ -178,7 +178,6 @@
         }
         else
         {
-            // fresh form default already set; keep _tarikhJurnal in sync
             _tarikhJurnal = _model.TarikhJurnal;
         }
     }
@@ -200,7 +199,9 @@
                 NoJurnal = j.NoJurnal,
                 NoRujukan = j.NoRujukan,
                 TarikhJurnal = j.TarikhJurnal,
-                Status = j.Status,
+                StatusPos = j.StatusPos,
+                StatusSemak = j.StatusSemak,
+                StatusSah = j.StatusSah,
                 JenisJurnal = j.JenisJurnal,
                 SumberTransaksi = j.SumberTransaksi,
                 Keterangan = j.Keterangan
@@ -215,15 +216,14 @@
 
     private async Task SaveJournal()
     {
-        // Ensure mandatory fields
         if (_tarikhJurnal is null)
         {
             Snackbar.Add("Tarikh Jurnal wajib diisi.", Severity.Warning);
             return;
         }
-        if (string.IsNullOrWhiteSpace(_model.Status))
+        if (string.IsNullOrWhiteSpace(_model.StatusPos))
         {
-            Snackbar.Add("Status wajib diisi.", Severity.Warning);
+            Snackbar.Add("Status Pos wajib diisi.", Severity.Warning);
             return;
         }
         if (string.IsNullOrWhiteSpace(_model.JenisJurnal))
@@ -237,7 +237,6 @@
             return;
         }
 
-        // sync date back to DTO
         _model.TarikhJurnal = _tarikhJurnal ?? DateTime.Today;
 
         _saving = true;
@@ -250,10 +249,10 @@
             }
             else
             {
-                _model.ID = Guid.Empty; // let backend generate
+                _model.ID = Guid.Empty;
                 var created = await JurnalService.CreateJurnal(_model);
                 _model.ID = created.ID;
-                _model.NoJurnal = created.NoJurnal; // if backend assigns number
+                _model.NoJurnal = created.NoJurnal;
                 _isEdit = true;
                 Snackbar.Add("Jurnal berjaya disimpan.", Severity.Success);
             }
@@ -279,18 +278,17 @@
             cancelText: "Batal"
         );
 
-        if (confirm == true)
+        if (confirm != true) return;
+
+        try
         {
-            try
-            {
-                await JurnalService.DeleteJurnal(_model.ID);
-                Snackbar.Add("Jurnal berjaya dihapus.", Severity.Success);
-                GoBack();
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Ralat menghapus jurnal: {ex.Message}", Severity.Error);
-            }
+            await JurnalService.DeleteJurnal(_model.ID);
+            Snackbar.Add("Jurnal berjaya dihapus.", Severity.Success);
+            GoBack();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Ralat menghapus jurnal: {ex.Message}", Severity.Error);
         }
     }
 
@@ -302,7 +300,9 @@
             NoJurnal = string.Empty,
             NoRujukan = null,
             TarikhJurnal = DateTime.Today,
-            Status = "BARU",
+            StatusPos = "BELUM POS",
+            StatusSemak = "BELUM SEMAK",
+            StatusSah = "BELUM SAH",
             JenisJurnal = "MANUAL",
             SumberTransaksi = "GENERAL LEDGER",
             Keterangan = string.Empty

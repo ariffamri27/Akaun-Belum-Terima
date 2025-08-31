@@ -17,7 +17,6 @@ namespace IMAS.API.LejarAm.Shared.Infrastructure.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            // Add model configurations here if needed
         }
     }
 }

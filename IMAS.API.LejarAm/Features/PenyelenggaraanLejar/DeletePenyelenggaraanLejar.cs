@@ -1,34 +1,27 @@
-﻿using IMAS.API.LejarAm.Shared.Infrastructure.Persistence;
-using IMAS.API.LejarAm.Shared.Models;
+﻿using IMAS.API.LejarAm.Shared.Domain.Entities;
+using IMAS.API.LejarAm.Shared.Infrastructure.Persistence;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace IMAS.API.LejarAm.Features.PenyelenggaraanLejar
 {
-    public class DeletePenyelenggaraanLejar
+    public static class DeletePenyelenggaraanLejar
     {
-        public record Command : IRequest<bool>
+        public record Command : IRequest<bool> { public Guid Id { get; init; } }
+
+        public sealed class Handler : IRequestHandler<Command, bool>
         {
-            public Guid Id { get; init; }
-        }
+            private readonly FinancialDbContext _db;
+            public Handler(FinancialDbContext db) => _db = db;
 
-        public class Handler : IRequestHandler<Command, bool>
-        {
-            private readonly FinancialDbContext _context;
-
-            public Handler(FinancialDbContext context)
+            public async Task<bool> Handle(Command req, CancellationToken ct)
             {
-                _context = context;
-            }
+                var entity = await _db.PenyelenggaraanLejar.FirstOrDefaultAsync(x => x.ID == req.Id, ct);
+                if (entity is null) return false;
 
-            public async Task<bool> Handle(Command request, CancellationToken cancellationToken)
-            {
-                var entity = await _context.PenyelenggaraanLejar.FindAsync(new object[] { request.Id }, cancellationToken);
-                if (entity == null) return false;
-
-                _context.PenyelenggaraanLejar.Remove(entity);
-                await _context.SaveChangesAsync(cancellationToken);
-
+                _db.PenyelenggaraanLejar.Remove(entity);
+                await _db.SaveChangesAsync(ct);
                 return true;
             }
         }

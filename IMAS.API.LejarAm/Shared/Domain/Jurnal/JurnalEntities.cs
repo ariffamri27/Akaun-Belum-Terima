@@ -14,19 +14,18 @@ namespace IMAS.API.LejarAm.Shared.Domain.Entities
 
         public string? NoRujukan { get; set; }
 
-        [Required]
         public DateTime TarikhJurnal { get; set; }
 
-        [Required]
-        public string Status { get; set; } = "BARU";  // Default is "BARU"
+        public string StatusPos { get; set; } = "BELUM POS";
 
-        [Required]
+        public string StatusSemak { get; set; } = "BELUM SEMAK";
+
+        public string StatusSah { get; set; } = "BELUM SAH";
+
         public string JenisJurnal { get; set; } = "MANUAL";  // Default is "MANUAL"
 
-        [Required]
         public string SumberTransaksi { get; set; } = "GENERAL LEDGER";  // Default is "GENERAL LEDGER"
 
-        [Required]
         public string Keterangan { get; set; } = string.Empty;
 
        

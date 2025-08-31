@@ -10,22 +10,17 @@ namespace IMAS.API.LejarAm.Shared.Domain.Entities
         [Key]
         public Guid ID { get; set; }
 
-        [Required]
         public int? TahunKewangan { get; set; } 
 
-        [Required]
         public string? StatusDokumen { get; set; } = string.Empty;
 
-        [Required]
         public string? NoMula { get; set; } = string.Empty;
 
-        [Required]
         public string? NoAkhir { get; set; } = string.Empty;
 
-        [Required]
+        
         public DateTime? TarikhMula { get; set; }
 
-        [Required]
         public DateTime? TarikhAkhir { get; set; }
 
         // Audit Trail Data

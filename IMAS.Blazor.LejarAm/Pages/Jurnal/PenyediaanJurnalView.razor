@@ -3,6 +3,7 @@
 @using IMAS.API.LejarAm.Shared.Infrastructure.Refit
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Web
+
 @inject IJurnalApi JurnalService
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
@@ -16,42 +17,34 @@
         </MudCardContent>
     </MudCard>
 
-    <!-- Action Buttons (use selection or form) -->
+    <!-- Toolbar -->
     <MudButtonGroup Class="mb-4">
-        <MudButton Color="Color.Success"
-                   StartIcon="Icons.Material.Filled.Add"
-                   OnClick="AddNewJournal">
+        <MudButton Color="Color.Success" StartIcon="Icons.Material.Filled.Add" OnClick="AddNewJournal">
             Tambah
         </MudButton>
-        <MudButton Color="Color.Primary"
-                   StartIcon="Icons.Material.Filled.Edit"
-                   OnClick="EditSelectedJournal"
-                   Disabled="@(_selectedJournal == null)">
+        <MudButton Color="Color.Primary" StartIcon="Icons.Material.Filled.Edit" OnClick="EditSelectedJournal" Disabled="@(_selectedSingle is null)">
             Ubah
         </MudButton>
-        <MudButton Color="Color.Error"
-                   StartIcon="Icons.Material.Filled.Delete"
-                   OnClick="DeleteSelectedJournal"
-                   Disabled="@(_selectedJournal == null)">
-            Buang
+        <MudButton Color="Color.Error" StartIcon="Icons.Material.Filled.Delete" OnClick="DeleteSelectedJournal" Disabled="@(_selectedSingle is null)">
+            Hapus
         </MudButton>
     </MudButtonGroup>
 
-    <!-- Filter Tabs -->
+    <!-- Tabs -->
     <MudTabs Class="mb-4"
              Elevation="0"
              Color="Color.Primary"
              ActivePanelIndex="@_activeTab"
              ActivePanelIndexChanged="OnTabChanged">
-        <MudTabPanel Text="Belum Pos"></MudTabPanel>
-        <MudTabPanel Text="Pos"></MudTabPanel>
+        <MudTabPanel Text="Belum Pos" />
+        <MudTabPanel Text="Pos" />
     </MudTabs>
 
-    <!-- Records per page and Search -->
+    <!-- Paging + Search -->
     <MudGrid Class="mb-3" AlignItems="AlignItems.Center">
-        <MudItem xs="6" md="2">
-            <!-- Use Value/ValueChanged to avoid @bind ValueChanged duplication -->
-            <MudSelect T="int" Label="Records"
+        <MudItem xs="12" md="2">
+            <MudSelect T="int"
+                       Label="Rekod/halaman"
                        Value="@_pageSize"
                        ValueChanged="OnPageSizeChanged"
                        ValueExpression="@(() => _pageSize)"
@@ -61,46 +54,36 @@
                 <MudSelectItem Value="@(50)">50</MudSelectItem>
                 <MudSelectItem Value="@(100)">100</MudSelectItem>
             </MudSelect>
-            <MudText Typo="Typo.caption">records</MudText>
         </MudItem>
-        <MudItem xs="6" md="10" Class="d-flex justify-end">
+        <MudItem xs="12" md="10" Class="d-flex justify-end">
             <MudTextField T="string"
-                          Label="Search"
+                          Label="Carian"
                           @bind-Value="_searchText"
                           Adornment="Adornment.End"
                           AdornmentIcon="Icons.Material.Filled.Search"
-                          Style="max-width: 300px;"
+                          Style="max-width: 320px;"
+                          Immediate="true"
                           OnKeyDown="OnSearchKeyDown" />
         </MudItem>
     </MudGrid>
 
-    <!-- Data Table -->
-    <MudTable Items="_pagedList"
+    <!-- Table -->
+    <MudTable T="JurnalDTO"
+              Items="_pagedList"
               Hover="true"
               Striped="true"
-              Loading="_loading"
-              SelectedItem="_selectedJournal"
-              SelectedItemChanged="OnSelectedItemChanged"
               Dense="true"
-              T="JurnalDTO">
+              Loading="_loading"
+              MultiSelection="true"
+              @bind-SelectedItems="_selected"
+              SelectedItem="_selectedSingle"
+              SelectedItemChanged="@(j => _selectedSingle = j)">
         <HeaderContent>
-            <MudTh>
-                <MudTableSortLabel T="JurnalDTO" SortBy="j => j.NoJurnal">
-                    No. Jurnal
-                </MudTableSortLabel>
-            </MudTh>
-            <MudTh>
-                <MudTableSortLabel T="JurnalDTO" SortBy="j => j.TarikhJurnal">
-                    Tarikh Jurnal
-                </MudTableSortLabel>
-            </MudTh>
-            <MudTh>
-                <MudTableSortLabel T="JurnalDTO" SortBy="j => j.Keterangan">
-                    Keterangan
-                </MudTableSortLabel>
-            </MudTh>
+            <MudTh>No. Jurnal</MudTh>
+            <MudTh>Tarikh Jurnal</MudTh>
+            <MudTh>Keterangan</MudTh>
             <MudTh>Sumber Transaksi</MudTh>
-            <MudTh>Status</MudTh>
+            <MudTh>Status Pos</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
         <RowTemplate>
@@ -109,21 +92,18 @@
             <MudTd DataLabel="Keterangan">@context.Keterangan</MudTd>
             <MudTd DataLabel="Sumber Transaksi">@context.SumberTransaksi</MudTd>
             <MudTd DataLabel="Status">
-                <MudChip T="string"
-                         Color="@GetStatusColor(context.Status)"
-                         Size="Size.Small">
-                    @context.Status
+                <MudChip T="string" Color="@ChipColor(context.StatusPos)" Size="Size.Small">
+                    @context.StatusPos
                 </MudChip>
             </MudTd>
-            <MudTd DataLabel="Tindakan">
-                <MudButton Color="Color.Primary" Size="Size.Small" OnClick="@(() => EditFromRow(context))">Edit</MudButton>
+            <MudTd DataLabel="Tindakan" Class="d-flex gap-2">
+                <MudButton Color="Color.Info" Size="Size.Small" OnClick="@(() => PickRow(context))">Pilih</MudButton>
+                <MudButton Color="Color.Success" Size="Size.Small" Disabled="@IsAlreadyPos(context)" OnClick="@(() => Poskan(context))">Pos</MudButton>
                 <MudButton Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteFromRow(context.ID))">Hapus</MudButton>
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>
-            <MudAlert Severity="Severity.Info">
-                Tiada rekod dijumpai.
-            </MudAlert>
+            <MudAlert Severity="Severity.Info">Tiada rekod dijumpai.</MudAlert>
         </NoRecordsContent>
     </MudTable>
 
@@ -132,31 +112,32 @@
     <MudGrid AlignItems="AlignItems.Center">
         <MudItem xs="12" md="6">
             <MudText Typo="Typo.body2">
-                Menunjukkan @(Math.Min(_totalItems, ((_currentPage-1) * _pageSize) + 1))
-                hingga @((Math.Min(_currentPage * _pageSize, _totalItems))) daripada @_totalItems rekod
+                Menunjukkan @(Math.Min(_totalItems, ((_currentPage - 1) * _pageSize) + 1))
+                hingga @((Math.Min(_currentPage * _pageSize, _totalItems)))
+                daripada @_totalItems rekod
             </MudText>
         </MudItem>
         <MudItem xs="12" md="6" Class="d-flex justify-end">
             <MudPagination Page="@_currentPage"
-                           Count="@((int)Math.Ceiling((double)_totalItems / _pageSize))"
+                           Count="@((int)Math.Ceiling((double)_totalItems / Math.Max(1,_pageSize)))"
                            OnPageChanged="OnPageChanged"
                            ShowFirstButton="true"
                            ShowLastButton="true" />
         </MudItem>
     </MudGrid>
 
-    <!-- Inline Form (Create/Update) -->
+    <!-- CRUD Form -->
     <MudDivider Class="my-4" />
     <MudCard Style="background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%); color: white;">
         <MudCardContent>
-            <MudText Typo="Typo.h6" Class="mb-3">@( _isEdit ? "Ubah Jurnal" : "Tambah Jurnal" )</MudText>
+            <MudText Typo="Typo.h6" Class="mb-3">@(_isEdit ? "Ubah Jurnal" : "Tambah Jurnal")</MudText>
 
             <MudGrid>
                 <MudItem xs="12" md="4">
                     <MudTextField Label="No Jurnal"
                                   @bind-Value="_form.NoJurnal"
                                   Variant="Variant.Outlined"
-                                  Style="background: white;"
+                                  Style="background:white;"
                                   Required="true" />
                 </MudItem>
 
@@ -164,35 +145,29 @@
                     <MudTextField Label="No Rujukan"
                                   @bind-Value="_form.NoRujukan"
                                   Variant="Variant.Outlined"
-                                  Style="background: white;" />
+                                  Style="background:white;" />
                 </MudItem>
 
                 <MudItem xs="12" md="4">
                     <MudDatePicker Label="Tarikh Jurnal"
-                                   @bind-Date="_tarikhJurnal"
+                                   @bind-Date="_tarikh"
                                    DateFormat="dd/MM/yyyy"
                                    Variant="Variant.Outlined"
-                                   Style="background: white;"
+                                   Style="background:white;"
                                    Required="true" />
                 </MudItem>
 
                 <MudItem xs="12" md="4">
-                    <MudSelect T="string" Label="Status"
-                               @bind-Value="_form.Status"
-                               Variant="Variant.Outlined"
-                               Style="background: white;">
-                        <MudSelectItem Value="@("BARU")">BARU</MudSelectItem>
-                        <MudSelectItem Value="@("POS")">POS</MudSelectItem>
-                        <MudSelectItem Value="@("HAPUS")">HAPUS</MudSelectItem>
+                    <MudSelect T="string" Label="Status Pos" @bind-Value="_form.StatusPos" Variant="Variant.Outlined" Style="background:white;">
+                        <MudSelectItem Value="@STATUS_POS_BELUM">BELUM POS</MudSelectItem>
+                        <MudSelectItem Value="@STATUS_POS_POS">POS</MudSelectItem>
+                        <MudSelectItem Value="@STATUS_HAPUS">HAPUS</MudSelectItem>
                     </MudSelect>
                 </MudItem>
 
                 <MudItem xs="12" md="4">
-                    <MudSelect T="string" Label="Jenis Jurnal"
-                               @bind-Value="_form.JenisJurnal"
-                               Variant="Variant.Outlined"
-                               Style="background: white;">
-                        <MudSelectItem Value="@("MANUAL")">MANUAL</MudSelectItem>
+                    <MudSelect T="string" Label="Jenis Jurnal" @bind-Value="_form.JenisJurnal" Variant="Variant.Outlined" Style="background:white;">
+                        <MudSelectItem Value=@("MANUAL")>MANUAL</MudSelectItem>
                         <MudSelectItem Value="@("AUTO")">AUTO</MudSelectItem>
                     </MudSelect>
                 </MudItem>
@@ -201,7 +176,7 @@
                     <MudTextField Label="Sumber Transaksi"
                                   @bind-Value="_form.SumberTransaksi"
                                   Variant="Variant.Outlined"
-                                  Style="background: white;" />
+                                  Style="background:white;" />
                 </MudItem>
 
                 <MudItem xs="12">
@@ -209,99 +184,92 @@
                                   @bind-Value="_form.Keterangan"
                                   Variant="Variant.Outlined"
                                   Lines="3"
-                                  Style="background: white;" />
+                                  Style="background:white;" />
                 </MudItem>
             </MudGrid>
 
             <MudDivider Class="my-3" />
 
             <MudStack Row="true" Spacing="2">
-                <MudButton Color="Color.Success"
-                           StartIcon="Icons.Material.Filled.Save"
-                           OnClick="SaveJournal"
-                           Disabled="@_saving"
-                           Loading="@_saving">
+                <MudButton Color="Color.Success" StartIcon="Icons.Material.Filled.Save" OnClick="SaveJournal" Loading="@_saving" Disabled="@_saving">
                     Simpan
                 </MudButton>
-                <MudButton Color="Color.Default"
-                           StartIcon="Icons.Material.Filled.Refresh"
-                           OnClick="ResetForm">
+                <MudButton Color="Color.Default" StartIcon="Icons.Material.Filled.Refresh" OnClick="ResetForm">
                     Set Semula
                 </MudButton>
-                <MudButton Color="Color.Error"
-                           StartIcon="Icons.Material.Filled.Delete"
-                           Disabled="@(!_isEdit)"
-                           OnClick="@(() => DeleteFromRow(_form.ID))">
+                <MudButton Color="Color.Error" StartIcon="Icons.Material.Filled.Delete" Disabled="@(!_isEdit)" OnClick="@(() => DeleteFromRow(_form.ID))">
                     Padam
                 </MudButton>
             </MudStack>
         </MudCardContent>
     </MudCard>
 
-    <!-- Bottom Action -->
+    <!-- Bottom action -->
     <MudDivider Class="my-4" />
-    <MudButton Color="Color.Secondary"
-               StartIcon="Icons.Material.Filled.ArrowBack"
-               OnClick="GoBack">
-        Pos Bersekumpuk
+    <MudButton Color="Color.Secondary" StartIcon="Icons.Material.Filled.DoneAll" OnClick="PosBerkelompok" Disabled="@(!_selected.Any())">
+        Pos Berkelompok
     </MudButton>
 </MudPaper>
 
 @code {
-    // Data store
-    private List<JurnalDTO> _all = new();
-    private JurnalDTO? _selectedJournal;
-    private DateTime? _tarikhJurnal = DateTime.Today;
+    // ---------- Constants ----------
+    private const string STATUS_POS_BELUM = "BELUM POS";
+    private const string STATUS_POS_POS = "POS";
+    private const string STATUS_HAPUS = "HAPUS";
 
-    // UI state
+    // ---------- Data ----------
+    private List<JurnalDTO> _all = new();
+    private HashSet<JurnalDTO> _selected = new();
+    private JurnalDTO? _selectedSingle;
+
+    // ---------- UI state ----------
     private bool _loading = false;
     private bool _saving = false;
     private bool _isEdit = false;
-
-    private int _activeTab = 0; // 0: BARU, 1: POS
-    private string _statusFilter => _activeTab == 0 ? "BARU" : "POS";
+    private int _activeTab = 0; // 0 = BELUM POS, 1 = POS
 
     private string _searchText = string.Empty;
     private int _pageSize = 10;
     private int _currentPage = 1;
 
-    // Form model
+    // Form model + date
     private JurnalDTO _form = new()
     {
         ID = Guid.Empty,
         NoJurnal = string.Empty,
         NoRujukan = null,
         TarikhJurnal = DateTime.Today,
-        Status = "BARU",
+        StatusPos = STATUS_POS_BELUM,
+        StatusSemak = "BELUM SEMAK",
+        StatusSah = "BELUM SAH",
         JenisJurnal = "MANUAL",
         SumberTransaksi = "GENERAL LEDGER",
         Keterangan = string.Empty
     };
+    private DateTime? _tarikh = DateTime.Today;
 
-    // Computed
-    private IEnumerable<JurnalDTO> Filtered =>
-        _all.Where(j =>
-            // Status filter
-            (j.Status?.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase) ?? false)
-            // Search filter
-            && (string.IsNullOrWhiteSpace(_searchText)
-                || (j.NoJurnal?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (j.NoRujukan?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (j.Keterangan?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (j.SumberTransaksi?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false))
-        );
+    // ---------- Computed ----------
+    private string StatusFilter => _activeTab == 0 ? STATUS_POS_BELUM : STATUS_POS_POS;
+
+    private IEnumerable<JurnalDTO> Filtered => _all
+        .Where(j => (j.StatusPos?.Equals(StatusFilter, StringComparison.OrdinalIgnoreCase) ?? false))
+        .Where(j => string.IsNullOrWhiteSpace(_searchText)
+                    || (j.NoJurnal?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+                    || (j.NoRujukan?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+                    || (j.Keterangan?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false)
+                    || (j.SumberTransaksi?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false));
 
     private int _totalItems => Filtered.Count();
 
     private List<JurnalDTO> _pagedList => Filtered
+        .OrderByDescending(j => j.TarikhJurnal)
+        .ThenBy(j => j.NoJurnal)
         .Skip((_currentPage - 1) * _pageSize)
         .Take(_pageSize)
         .ToList();
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadAll();
-    }
+    // ---------- Init ----------
+    protected override async Task OnInitializedAsync() => await LoadAll();
 
     private async Task LoadAll()
     {
@@ -310,6 +278,8 @@
         {
             _all = await JurnalService.GetAllJurnals() ?? new();
             _currentPage = 1;
+            _selected.Clear();
+            _selectedSingle = null;
         }
         catch (Exception ex)
         {
@@ -322,19 +292,89 @@
         }
     }
 
-    // Tabs
-    private Task OnTabChanged(int index)
+    // ---------- Tabs ----------
+    private Task OnTabChanged(int idx)
     {
-        _activeTab = index;
+        _activeTab = idx;
         _currentPage = 1;
         StateHasChanged();
         return Task.CompletedTask;
     }
 
-    // Table selection
-    private void OnSelectedItemChanged(JurnalDTO? journal) => _selectedJournal = journal;
+    // ---------- Toolbar ----------
+    private void AddNewJournal()
+    {
+        ResetForm();
+        _isEdit = false;
+    }
 
-    // Search & paging
+    private void EditSelectedJournal()
+    {
+        if (_selectedSingle is null) return;
+        SetForm(_selectedSingle);
+        _isEdit = true;
+    }
+
+    private async Task DeleteSelectedJournal()
+    {
+        if (_selectedSingle is null) return;
+        await DeleteById(_selectedSingle.ID);
+    }
+
+    // ---------- Row actions ----------
+    private void PickRow(JurnalDTO j) => _selectedSingle = j;
+
+    private bool IsAlreadyPos(JurnalDTO j) =>
+        string.Equals(j.StatusPos, STATUS_POS_POS, StringComparison.OrdinalIgnoreCase);
+
+    private async Task Poskan(JurnalDTO j)
+    {
+        if (IsAlreadyPos(j)) return;
+
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Pasti?",
+            $"Poskan jurnal {j.NoJurnal}?",
+            yesText: "Pos", cancelText: "Batal");
+
+        if (confirm != true) return;
+
+        try
+        {
+            var upd = Copy(j, sPos: STATUS_POS_POS);
+            await JurnalService.UpdateJurnal(j.ID, upd);
+            Snackbar.Add($"Jurnal {j.NoJurnal} dipos.", Severity.Success);
+            await LoadAll();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Ralat mempos jurnal: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteFromRow(Guid id) => await DeleteById(id);
+
+    private async Task DeleteById(Guid id)
+    {
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Pasti?", "Anda pasti mahu menghapuskan jurnal ini?",
+            yesText: "Ya", cancelText: "Batal");
+
+        if (confirm != true) return;
+
+        try
+        {
+            await JurnalService.DeleteJurnal(id);
+            Snackbar.Add("Jurnal berjaya dihapus.", Severity.Success);
+            await LoadAll();
+            if (_form.ID == id) ResetForm();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Ralat hapus jurnal: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // ---------- Search + paging ----------
     private Task OnSearchKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
@@ -360,87 +400,20 @@
         return Task.CompletedTask;
     }
 
-    // Colors
-    private Color GetStatusColor(string? status) => status?.ToUpperInvariant() switch
+    // ---------- Colors ----------
+    private Color ChipColor(string? status) => (status ?? "").ToUpperInvariant() switch
     {
-        "BARU" => Color.Info,
+        "BELUM POS" => Color.Info,
         "POS" => Color.Success,
         "HAPUS" => Color.Error,
         _ => Color.Default
     };
 
-    // Top action buttons
-    private void AddNewJournal()
-    {
-        ResetForm();
-        _isEdit = false;
-    }
-
-    private void EditSelectedJournal()
-    {
-        if (_selectedJournal is null) return;
-        SetForm(_selectedJournal);
-        _isEdit = true;
-    }
-
-    private async Task DeleteSelectedJournal()
-    {
-        if (_selectedJournal is null) return;
-        await DeleteById(_selectedJournal.ID);
-    }
-
-    // Row actions
-    private void EditFromRow(JurnalDTO j)
-    {
-        SetForm(j);
-        _isEdit = true;
-    }
-
-    private async Task DeleteFromRow(Guid id) => await DeleteById(id);
-
-    private async Task DeleteById(Guid id)
-    {
-        bool? confirm = await DialogService.ShowMessageBox(
-            "Pasti?",
-            "Anda pasti mahu hapus jurnal ini?",
-            yesText: "Ya",
-            cancelText: "Batal"
-        );
-
-        if (confirm == true)
-        {
-            try
-            {
-                await JurnalService.DeleteJurnal(id);
-                Snackbar.Add("Jurnal berjaya dihapus.", Severity.Success);
-                await LoadAll();
-                _selectedJournal = null;
-                // If we were editing the same one, reset the form
-                if (_form.ID == id) ResetForm();
-            }
-            catch (Exception ex)
-            {
-                Snackbar.Add($"Ralat hapus jurnal: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-
-    // Form helpers
+    // ---------- Form helpers ----------
     private void SetForm(JurnalDTO j)
     {
-        _form = new JurnalDTO
-        {
-            ID = j.ID,
-            NoJurnal = j.NoJurnal,
-            NoRujukan = j.NoRujukan,
-            TarikhJurnal = j.TarikhJurnal,
-            Status = j.Status,
-            JenisJurnal = j.JenisJurnal,
-            SumberTransaksi = j.SumberTransaksi,
-            Keterangan = j.Keterangan
-        };
-
-        _tarikhJurnal = j.TarikhJurnal; // sync picker
+        _form = Copy(j);
+        _tarikh = j.TarikhJurnal;
     }
 
     private void ResetForm()
@@ -451,13 +424,14 @@
             NoJurnal = string.Empty,
             NoRujukan = null,
             TarikhJurnal = DateTime.Today,
-            Status = "BARU",
+            StatusPos = STATUS_POS_BELUM,
+            StatusSemak = "BELUM SEMAK",
+            StatusSah = "BELUM SAH",
             JenisJurnal = "MANUAL",
             SumberTransaksi = "GENERAL LEDGER",
             Keterangan = string.Empty
         };
-
-        _tarikhJurnal = _form.TarikhJurnal; // sync picker
+        _tarikh = _form.TarikhJurnal;
     }
 
     private async Task SaveJournal()
@@ -468,8 +442,7 @@
             return;
         }
 
-        // ensure DTO has a non-null value from the picker
-        _form.TarikhJurnal = _tarikhJurnal ?? DateTime.Today;
+        _form.TarikhJurnal = _tarikh ?? DateTime.Today;
 
         _saving = true;
         try
@@ -482,7 +455,9 @@
             else
             {
                 _form.ID = Guid.Empty;
-                await JurnalService.CreateJurnal(_form);
+                var created = await JurnalService.CreateJurnal(_form);
+                _form.ID = created.ID;
+                _form.NoJurnal = created.NoJurnal; // if server assigns
                 Snackbar.Add("Jurnal berjaya ditambah.", Severity.Success);
             }
 
@@ -499,5 +474,50 @@
         }
     }
 
-    private void GoBack() => Navigation.NavigateTo("/pos-bersekumpuk");
+    private async Task PosBerkelompok()
+    {
+        if (!_selected.Any()) return;
+
+        bool? confirm = await DialogService.ShowMessageBox(
+            "Pasti?",
+            $"Poskan {_selected.Count} jurnal terpilih?",
+            yesText: "Pos", cancelText: "Batal");
+
+        if (confirm != true) return;
+
+        try
+        {
+            var tasks = _selected
+                .Where(j => !IsAlreadyPos(j))
+                .Select(j => JurnalService.UpdateJurnal(j.ID, Copy(j, sPos: STATUS_POS_POS)));
+
+            await Task.WhenAll(tasks);
+            Snackbar.Add("Jurnal terpilih telah dipos.", Severity.Success);
+            await LoadAll();
+            _selected.Clear();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Ralat pos berkelompok: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // ---------- Utility: copy with optional overrides ----------
+    private static JurnalDTO Copy(JurnalDTO j,
+                                  string? sPos = null,
+                                  string? sSemak = null,
+                                  string? sSah = null)
+        => new()
+        {
+            ID = j.ID,
+            NoJurnal = j.NoJurnal,
+            NoRujukan = j.NoRujukan,
+            TarikhJurnal = j.TarikhJurnal,
+            StatusPos = sPos ?? j.StatusPos,
+            StatusSemak = sSemak ?? j.StatusSemak,
+            StatusSah = sSah ?? j.StatusSah,
+            JenisJurnal = j.JenisJurnal,
+            SumberTransaksi = j.SumberTransaksi,
+            Keterangan = j.Keterangan
+        };
 }

@@ -1,64 +1,62 @@
-﻿using IMAS.API.LejarAm.Shared.Infrastructure.Persistence;
+﻿using IMAS.API.LejarAm.Shared.Domain.Entities;
+using IMAS.API.LejarAm.Shared.Infrastructure.Persistence;
 using IMAS.API.LejarAm.Shared.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace IMAS.API.LejarAm.Features.PenyelenggaraanLejar
 {
-    public class UpdatePenyelenggaraanLejar
+    public static class UpdatePenyelenggaraanLejar
     {
         public record Command : IRequest<PenyelenggaraanLejarDTO>
         {
-            public Guid Id { get; set; }
-            public string KodAkaun { get; init; } = default!;
+            public Guid Id { get; init; }
+            public string KodAkaun { get; init; } = string.Empty;
             public string? Keterangan { get; init; }
-            public int Paras { get; init; }
-            public string Kategori { get; init; } = default!;
-            public string JenisAkaun { get; init; } = default!;
+            public int? Paras { get; init; }
+            public string? Kategori { get; init; } = string.Empty;
+            public string? JenisAkaun { get; init; } = string.Empty;
             public string? JenisAkaunParas2 { get; init; }
-            public string JenisAliran { get; init; } = default!;
-            public string JenisKedudukanPenyata { get; init; } = default!;
+            public string? JenisAliran { get; init; } = string.Empty;
+            public string? JenisKedudukanPenyata { get; init; } = string.Empty;
+            public int? Tahun { get; set; }
+            public int? Bulan { get; set; }
+            public string? Status { get; set; }
+            public DateTime? TarikhTutup { get; set; }
         }
 
-        public class Handler : IRequestHandler<Command, PenyelenggaraanLejarDTO>
+        public sealed class Handler : IRequestHandler<Command, PenyelenggaraanLejarDTO>
         {
-            private readonly FinancialDbContext _context;
+            private readonly FinancialDbContext _db;
+            public Handler(FinancialDbContext db) => _db = db;
 
-            public Handler(FinancialDbContext context)
+            public async Task<PenyelenggaraanLejarDTO> Handle(Command req, CancellationToken ct)
             {
-                _context = context;
-            }
+                var entity = await _db.PenyelenggaraanLejar.FirstOrDefaultAsync(x => x.ID == req.Id, ct);
+                if (entity is null)
+                    throw new KeyNotFoundException("Record not found");
 
-            public async Task<PenyelenggaraanLejarDTO?> Handle(Command request, CancellationToken cancellationToken)
-            {
-                var entity = await _context.PenyelenggaraanLejar.FirstOrDefaultAsync(x => x.ID == request.Id, cancellationToken);
-                if (entity == null) return null;
+                entity.KodAkaun = req.KodAkaun;
+                entity.Keterangan = req.Keterangan;
+                entity.Paras = req.Paras;
+                entity.Kategori = req.Kategori;
+                entity.JenisAkaun = req.JenisAkaun;
+                entity.JenisAkaunParas2 = req.JenisAkaunParas2;
+                entity.JenisAliran = req.JenisAliran;
+                entity.JenisKedudukanPenyata = req.JenisKedudukanPenyata;
+                entity.Tahun = req.Tahun;
+                entity.Bulan = req.Bulan;
+                entity.Status = req.Status;
+                entity.TarikhTutup = req.TarikhTutup;
 
-                entity.KodAkaun = request.KodAkaun;
-                entity.Keterangan = request.Keterangan;
-                entity.Paras = request.Paras;
-                entity.Kategori = request.Kategori;
-                entity.JenisAkaun = request.JenisAkaun;
-                entity.JenisAkaunParas2 = request.JenisAkaunParas2;
-                entity.JenisAliran = request.JenisAliran;
-                entity.JenisKedudukanPenyata = request.JenisKedudukanPenyata;
-                entity.UpdatedAt = DateTime.UtcNow;
-                entity.UpdatedBy = "system";
+                await _db.SaveChangesAsync(ct);
 
-                await _context.SaveChangesAsync(cancellationToken);
+                var saved = await _db.PenyelenggaraanLejar
+                    .AsNoTracking()
+                    .FirstAsync(x => x.ID == req.Id, ct);
 
-                return new PenyelenggaraanLejarDTO
-                {
-                    ID = entity.ID,
-                    KodAkaun = entity.KodAkaun,
-                    Keterangan = entity.Keterangan,
-                    Paras = entity.Paras,
-                    Kategori = entity.Kategori,
-                    JenisAkaun = entity.JenisAkaun,
-                    JenisAkaunParas2 = entity.JenisAkaunParas2,
-                    JenisAliran = entity.JenisAliran,
-                    JenisKedudukanPenyata = entity.JenisKedudukanPenyata
-                };
+                return saved.ToDto();
             }
         }
     }

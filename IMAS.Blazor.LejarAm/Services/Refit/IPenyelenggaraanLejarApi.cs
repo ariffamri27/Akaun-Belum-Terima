@@ -3,20 +3,20 @@ using Refit;
 
 namespace IMAS.Blazor.LejarAm.Services.Refit
 {
-    [Headers("Content-Type: application/json")]
+    [Headers("Accept: application/json", "Content-Type: application/json")]
     public interface IPenyelenggaraanLejarApi
     {
         [Get("/api/penyelenggaraanlejar")]
-        Task<List<PenyelenggaraanLejarDTO>> GetAllPenyelenggaraanLejar();
+        Task<ApiResponse<List<PenyelenggaraanLejarDTO>>> GetAllPenyelenggaraanLejar();
 
         [Get("/api/penyelenggaraanlejar/{id}")]
-        Task<PenyelenggaraanLejarDTO> GetPenyelenggaraanLejarById(Guid id);
+        Task<ApiResponse<PenyelenggaraanLejarDTO>> GetPenyelenggaraanLejarById(Guid id);
 
         [Post("/api/penyelenggaraanlejar")]
-        Task<PenyelenggaraanLejarDTO> CreatePenyelenggaraanLejar([Body] PenyelenggaraanLejarDTO penyelenggaraanLejar);
+        Task<ApiResponse<PenyelenggaraanLejarDTO>> CreatePenyelenggaraanLejar([Body] PenyelenggaraanLejarDTO body);
 
         [Put("/api/penyelenggaraanlejar/{id}")]
-        Task<PenyelenggaraanLejarDTO> UpdatePenyelenggaraanLejar(Guid id, [Body] PenyelenggaraanLejarDTO penyelenggaraanLejar);
+        Task<ApiResponse<PenyelenggaraanLejarDTO>> UpdatePenyelenggaraanLejar(Guid id, [Body] PenyelenggaraanLejarDTO body);
 
         [Delete("/api/penyelenggaraanlejar/{id}")]
         Task<ApiResponse<string>> DeletePenyelenggaraanLejar(Guid id);
