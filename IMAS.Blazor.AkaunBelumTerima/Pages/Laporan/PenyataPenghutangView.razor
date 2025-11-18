@@ -1,0 +1,230 @@
+﻿@page "/PenyataPenghutang"
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+    <MudCard>
+
+        <MudCardHeader Class="bg-primary text-white">
+            <MudText Typo="Typo.h6" Class="text-white">Laporan Penyata Penghutang</MudText>
+        </MudCardHeader>
+
+        <MudCardContent>
+
+            <!-- FILTERS -->
+            <MudGrid Class="mt-4">
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Tahun Kewangan" @bind-Value="TahunKewangan">
+                        @foreach (var t in TahunList)
+                        {
+                            <MudSelectItem Value="t">@t</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Tarikh Mula" InputType="InputType.Date" @bind-Value="TarikhMula" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Tarikh Akhir" InputType="InputType.Date" @bind-Value="TarikhAkhir" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Kategori Penghutang" @bind-Value="KategoriPenghutang">
+                        @foreach (var c in KategoriList)
+                        {
+                            <MudSelectItem Value="c">@c</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Nama Penghutang" @bind-Value="NamaPenghutang">
+                        @foreach (var n in NamaList)
+                        {
+                            <MudSelectItem Value="n">@n</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <!-- MPOB HEADER -->
+            <MudGrid Justify="Justify.Center" Class="text-center">
+
+                <MudItem xs="12" sm="6">
+                    <img src="/images/mpob_logo.png" style="width:180px;" />
+
+                    <MudText Typo="Typo.subtitle1" Class="mt-2"><b>LEMBAGA MINYAK SAWIT MALAYSIA</b></MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mb-4">MALAYSIAN PALM OIL BOARD</MudText>
+
+                    <MudText Typo="Typo.body2">
+                        6, Persiaran Institusi<br />
+                        Bandar Baru Bangi<br />
+                        43000 Kajang, Selangor.
+                    </MudText>
+
+                    <MudText Typo="Typo.body2" Class="mt-2">
+                        Tel : +603-8769 4400<br />
+                        Fax : +603-8925 9446
+                    </MudText>
+
+                    <MudText Typo="Typo.body2" Class="mb-6">
+                        Website : www.mpob.gov.my
+                    </MudText>
+
+                    <MudText Typo="Typo.h6"><b>SISTEM PENGURUSAN KEWANGAN</b></MudText>
+                    <MudText Typo="Typo.body1">PENYATA PENGHUTANG BAGI TAHUN</MudText>
+                </MudItem>
+
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <!-- SUMMARY SECTION -->
+            <MudText Typo="Typo.subtitle2"><b>Penyata Penghutang</b></MudText>
+
+            <MudText Typo="Typo.body2" Class="mt-2">
+                <b>JENIS PENGHUTANG :</b> @KategoriPenghutang<br />
+                <b>KOD PENGHUTANG :</b> @NamaPenghutang<br />
+                <b>TARIKH :</b> @TarikhAkhir?.ToString("dd/MM/yyyy")
+            </MudText>
+
+            <MudDivider Class="my-4" />
+
+            <!-- TABLE -->
+            <MudTable T="PenyataRow" Items="PenyataList" Hover="true" Dense="true" Bordered="true">
+
+                <HeaderContent>
+                    <MudTh>#</MudTh>
+                    <MudTh>No</MudTh>
+                    <MudTh>Nama</MudTh>
+
+                    <MudTh colspan="5" Class="text-center">
+                        JUMLAH DALAM MATA WANG TEMPATAN (MYR)
+                    </MudTh>
+
+                    <MudTh colspan="5" Class="text-center">
+                        JUMLAH DALAM MATA WANG ASLI
+                    </MudTh>
+                </HeaderContent>
+
+                <HeaderContent>
+                    <MudTh></MudTh>
+                    <MudTh></MudTh>
+                    <MudTh></MudTh>
+
+                    <MudTh>Tarikh</MudTh>
+                    <MudTh>Jenis</MudTh>
+                    <MudTh>No Rujukan</MudTh>
+                    <MudTh>Debit</MudTh>
+                    <MudTh>Kredit</MudTh>
+
+                    <MudTh>Baki</MudTh>
+                    <MudTh>Matawang</MudTh>
+                    <MudTh>Kadar</MudTh>
+                    <MudTh>Debit</MudTh>
+                    <MudTh>Kredit</MudTh>
+                    <MudTh>Baki</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>@context.Id</MudTd>
+                    <MudTd>@context.No</MudTd>
+                    <MudTd>@context.Nama</MudTd>
+
+                    <MudTd>@context.Tarikh?.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd>@context.Jenis</MudTd>
+                    <MudTd>@context.NoRujukan</MudTd>
+                    <MudTd>@context.Debit.ToString("N2")</MudTd>
+                    <MudTd>@context.Kredit.ToString("N2")</MudTd>
+
+                    <MudTd>@context.Baki.ToString("N2")</MudTd>
+                    <MudTd>@context.Matawang</MudTd>
+                    <MudTd>@context.Kadar</MudTd>
+                    <MudTd>@context.DebitAsal.ToString("N2")</MudTd>
+                    <MudTd>@context.KreditAsal.ToString("N2")</MudTd>
+                    <MudTd>@context.BakiAsal.ToString("N2")</MudTd>
+                </RowTemplate>
+
+            </MudTable>
+
+            <MudDivider Class="my-4" />
+
+            <!-- BUTTONS -->
+            <MudGrid Justify="Justify.Center" Class="mb-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-2">Cetak</MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.FileDownload"
+                           Class="mx-2">
+                    Export Excel
+                </MudButton>
+            </MudGrid>
+
+        </MudCardContent>
+    </MudCard>
+</MudPaper>
+
+@code {
+    public string TahunKewangan { get; set; }
+    public DateTime? TarikhMula { get; set; }
+    public DateTime? TarikhAkhir { get; set; }
+
+    public string KategoriPenghutang { get; set; }
+    public string NamaPenghutang { get; set; }
+
+    public List<string> TahunList { get; set; } =
+        new() { "2023", "2024", "2025" };
+
+    public List<string> KategoriList { get; set; } =
+        new() { "Semua", "Kerajaan", "Swasta", "Individu" };
+
+    public List<string> NamaList { get; set; } =
+        new() { "FGV Trading", "Sawit Co", "MPOB Staff" };
+
+    public class PenyataRow
+    {
+        public int Id { get; set; }
+        public string No { get; set; }
+        public string Nama { get; set; }
+
+        public DateTime? Tarikh { get; set; }
+        public string Jenis { get; set; }
+        public string NoRujukan { get; set; }
+        public decimal Debit { get; set; }
+        public decimal Kredit { get; set; }
+        public decimal Baki { get; set; }
+
+        public string Matawang { get; set; }
+        public decimal Kadar { get; set; }
+        public decimal DebitAsal { get; set; }
+        public decimal KreditAsal { get; set; }
+        public decimal BakiAsal { get; set; }
+    }
+
+    public List<PenyataRow> PenyataList { get; set; } =
+        new()
+        {
+            new PenyataRow
+            {
+                Id = 1,
+                No = "INV-001",
+                Nama = "FGV Trading",
+                Tarikh = DateTime.Today,
+                Jenis = "Invois",
+                NoRujukan = "RUJ-88",
+                Debit = 500.00M,
+                Kredit = 0M,
+                Baki = 500.00M,
+                Matawang = "MYR",
+                Kadar = 1.00M,
+                DebitAsal = 500.00M,
+                KreditAsal = 0M,
+                BakiAsal = 500.00M
+            }
+        };
+}

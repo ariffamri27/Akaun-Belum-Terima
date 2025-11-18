@@ -1,0 +1,135 @@
+﻿@page "/PengesahanNota"
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+
+    <MudCard>
+
+        <MudCardHeader Class="bg-primary text-white">
+            <MudText Typo="Typo.h6" Class="text-white">Pengesahan Nota</MudText>
+        </MudCardHeader>
+
+        <MudCardContent>
+
+            <!-- BUTTON KEMBALI -->
+            <MudGrid Class="mt-3">
+                <MudItem xs="12" Class="d-flex justify-end">
+                    <MudButton Variant="Variant.Filled" Color="Color.Warning">
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Class="mr-2" />
+                        Kembali
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+
+            <!-- TAB -->
+            <MudTabs Rounded="true" Elevation="0" Border="true" Class="mt-4">
+
+                <!-- TAB 1: BELUM DISAHKAN -->
+                <MudTabPanel Text="Senarai Nota Belum Disahkan">
+                    @* TABLE *@
+
+                    <MudTable T="NotaRow" Items="EmptyList" Hover="true" Dense="true" Bordered="true">
+
+                        <HeaderContent>
+                            <MudTh>
+                                <MudCheckBox T="bool" />
+                            </MudTh>
+                            <MudTh>No. Nota</MudTh>
+                            <MudTh>Tarikh</MudTh>
+                            <MudTh>Nama Penghutang</MudTh>
+                            <MudTh>Butiran Nota</MudTh>
+                            <MudTh></MudTh>
+                        </HeaderContent>
+
+                        <!-- NO DATA -->
+                        <NoRecordsContent>
+                            <MudText Class="pa-4">Tiada rekod untuk dipaparkan.</MudText>
+                        </NoRecordsContent>
+
+                        <!-- ROW TEMPLATE (KOSONG TANPA DATA) -->
+                        <RowTemplate>
+                            <MudCheckBox T="bool" />
+                            <MudTd></MudTd>
+                            <MudTd></MudTd>
+                            <MudTd></MudTd>
+                            <MudTd></MudTd>
+
+                            <MudTd>
+                                <MudButton Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Class="mr-1">
+                                    Papar Butiran
+                                </MudButton>
+
+                                <MudButton Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" Class="mr-1">
+                                    Sahkan
+                                </MudButton>
+
+                                <MudButton Color="Color.Error" Variant="Variant.Outlined" Size="Size.Small">
+                                    Batalkan
+                                </MudButton>
+                            </MudTd>
+                        </RowTemplate>
+
+                    </MudTable>
+
+                    <!-- SAH BERKELOMPOK -->
+                    <MudGrid Class="mt-4">
+                        <MudItem xs="12">
+                            <MudButton Color="Color.Success" Variant="Variant.Filled">
+                                Sah Berkelompok
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+
+                </MudTabPanel>
+
+                <!-- TAB 2: TELAH DISAHKAN -->
+                <MudTabPanel Text="Senarai Nota Telah Disahkan">
+
+                    <MudTable T="NotaRow" Items="EmptyList" Hover="true" Dense="true" Bordered="true">
+
+                        <HeaderContent>
+                            <MudTh>No. Nota</MudTh>
+                            <MudTh>Tarikh</MudTh>
+                            <MudTh>Nama Penghutang</MudTh>
+                            <MudTh>Butiran Nota</MudTh>
+                        </HeaderContent>
+
+                        <NoRecordsContent>
+                            <MudText Class="pa-4">Tiada rekod untuk dipaparkan.</MudText>
+                        </NoRecordsContent>
+
+                        <RowTemplate>
+                            <MudTd></MudTd>
+                            <MudTd></MudTd>
+                            <MudTd></MudTd>
+                            <MudTd></MudTd>
+                        </RowTemplate>
+
+                    </MudTable>
+
+                </MudTabPanel>
+
+            </MudTabs>
+
+        </MudCardContent>
+
+    </MudCard>
+
+</MudPaper>
+
+@code {
+    // checkbox
+    public bool SelectAll { get; set; }
+
+    // EMPTY LIST
+    public List<NotaRow> EmptyList { get; set; } = new();
+
+    // Row model (tanpa data)
+    public class NotaRow
+    {
+        public string NoNota { get; set; }
+        public DateTime? Tarikh { get; set; }
+        public string Penghutang { get; set; }
+        public string Butiran { get; set; }
+    }
+}

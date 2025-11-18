@@ -1,0 +1,271 @@
+﻿@page "/definisi-kategori-penghutang"
+@using IMAS.API.AkaunBelumTerima.Shared.Models
+@using IMAS.Blazor.AkaunBelumTerima.Services.Refit
+@using MudBlazor
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IPenyelenggaraanPenghutangApi PenyelenggaraanPenghutangService
+
+<MudPaper Class="pa-4">
+
+    <!-- ======================= Senarai Kategori Penghutang ======================= -->
+    <MudCard Class="mb-4" Style="border-left:6px solid #2c7be5;">
+        <MudCardHeader Class="py-2" Style="background:#2c7be5; color:white;">
+            <MudText Typo="Typo.subtitle1" Class="pl-2">Senarai Kategori Penghutang</MudText>
+        </MudCardHeader>
+
+        <MudCardContent>
+
+            <!-- Controls: page size + search -->
+            <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
+                <MudItem xs="12" md="3">
+                    <MudSelect T="int" Value="_pageSize" ValueChanged="(v)=>{ _pageSize = v; _page = 1; }"
+                               Dense="true" Variant="Variant.Outlined"
+                               Style="background:white; width:100px;">
+                        <MudSelectItem T="int" Value="10">10</MudSelectItem>
+                        <MudSelectItem T="int" Value="25">25</MudSelectItem>
+                        <MudSelectItem T="int" Value="50">50</MudSelectItem>
+                        <MudSelectItem T="int" Value="100">100</MudSelectItem>
+                    </MudSelect>
+                    <MudText Typo="Typo.caption">records</MudText>
+                </MudItem>
+
+                <MudItem xs="12" md="9" Class="d-flex justify-end">
+                    <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
+                    <MudTextField T="string" @bind-Value="_search" Immediate="true"
+                                  Variant="Variant.Outlined" Dense="true"
+                                  Style="background:white; max-width:260px;" />
+                </MudItem>
+            </MudGrid>
+
+            <!-- Table -->
+            @if (_isLoading)
+            {
+                <MudProgressLinear Indeterminate />
+            }
+            else
+            {
+                <MudTable Items="_paged" Dense="true" Hover="true" Striped="true"
+                          Bordered="true" Elevation="0"
+                          T="PenyelenggaraanPenghutangDTO">
+                    <HeaderContent>
+                        <MudTh width="28%">Kod</MudTh>
+                        <MudTh>Keterangan Kod</MudTh>
+                        <MudTh width="10%">Status</MudTh>
+                        <MudTh width="10%"></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Kod">@context.Kod</MudTd>
+                        <MudTd DataLabel="Keterangan Kod">@context.KeteranganKod</MudTd>
+                        <MudTd DataLabel="Status">@context.Status</MudTd>
+                        <MudTd>
+                            <MudButton Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small"
+                                       OnClick="@(()=>EditItem(context))">
+                                Ubah
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Typo="Typo.caption">No data available in table</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+
+                <!-- Footer count -->
+                <MudGrid AlignItems="AlignItems.Center" Class="mt-2">
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption">
+                            Showing @(_total == 0 ? 0 : ((_page - 1) * _pageSize + 1))
+                            to @((Math.Min(_page * _pageSize, _total)))
+                            of @_total entries
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="6" Class="d-flex justify-end">
+                        <MudPagination Page="@_page" PageChanged="(p)=>_page=p"
+                                       HidePrevNext="false"
+                                       Disabled="_total<=_pageSize"
+                                       Class="my-0"
+                                       Count="@(Math.Max(1, (int)Math.Ceiling((double)_total/_pageSize)))"/>
+                    </MudItem>
+                </MudGrid>
+            }
+        </MudCardContent>
+    </MudCard>
+
+    <!-- ======================= Borang (Tambah/Ubah) ======================= -->
+    <MudCard Style="border-left:6px solid #16a085;">
+        <MudCardHeader Class="py-2" Style="background:#16a085; color:white;">
+            <MudText Typo="Typo.subtitle1" Class="pl-2">
+                @( _model.ID == Guid.Empty ? "Tambah Kategori Penghutang" : "Ubah Kategori Penghutang")
+            </MudText>
+        </MudCardHeader>
+        <MudCardContent>
+
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <MudText Typo="Typo.caption">Kod *</MudText>
+                    <MudTextField T="string" @bind-Value="_model.Kod" Dense="true" Variant="Variant.Outlined"
+                                  Style="background:white;" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudText Typo="Typo.caption">Keterangan Kod</MudText>
+                    <MudTextField T="string" @bind-Value="_model.KeteranganKod" Dense="true" Variant="Variant.Outlined"
+                                  Style="background:white;" />
+                </MudItem>
+                <MudSwitch T="bool" @bind-Checked="_aktif" Color="Color.Success" Class="mt-5">
+                    Aktif
+                </MudSwitch>
+
+            </MudGrid>
+
+            <MudDivider Class="my-3" />
+
+            <MudStack Row="true" Spacing="2">
+                <MudButton Color="Color.Success" OnClick="SaveItem" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save">
+                    Simpan
+                </MudButton>
+                <MudButton Color="Color.Info" OnClick="ResetForm" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Restore">
+                    Reset
+                </MudButton>
+                <MudButton Color="Color.Error" Disabled="@(_model.ID == Guid.Empty)" OnClick="DeleteItem"
+                           Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Delete">
+                    Padam
+                </MudButton>
+            </MudStack>
+
+        </MudCardContent>
+    </MudCard>
+
+</MudPaper>
+
+@code {
+    // ===== State
+    private bool _isLoading;
+    private int _page = 1;
+    private int _pageSize = 10;
+    private string _search = string.Empty;
+
+    private List<PenyelenggaraanPenghutangDTO> _all = new();
+    private PenyelenggaraanPenghutangDTO _model = NewModel();
+    private bool _aktif
+    {
+        get => string.Equals(_model.Status, "Aktif", StringComparison.OrdinalIgnoreCase);
+        set => _model.Status = value ? "Aktif" : "Tidak Aktif";
+    }
+
+    // ===== Derived lists
+    private IEnumerable<PenyelenggaraanPenghutangDTO> _filtered =>
+        _all
+            .Where(x => string.IsNullOrWhiteSpace(_search)
+                || (x.Kod?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (x.KeteranganKod?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (x.Status?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private List<PenyelenggaraanPenghutangDTO> _paged => _filtered
+        .OrderBy(x => x.Kod)
+        .Skip((_page - 1) * _pageSize)
+        .Take(_pageSize)
+        .ToList();
+
+    private int _total => _filtered.Count();
+
+    // ===== Lifecycle
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    // ===== Actions
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        try
+        {
+            // Refit baru: terus dapat List<PenyelenggaraanPenghutangDTO>
+            var list = await PenyelenggaraanPenghutangService.GetAllAsync();
+            _all = list ?? new();
+            _page = 1;
+        }
+        catch (Exception ex)
+        {
+            _all = new();
+            Snackbar.Add($"Gagal memuatkan data: {ex.Message}", Severity.Error);
+        }
+        finally { _isLoading = false; }
+    }
+
+    private static PenyelenggaraanPenghutangDTO NewModel() => new()
+    {
+        ID = Guid.Empty,
+        Kod = string.Empty,
+        KeteranganKod = string.Empty,
+        Status = "Aktif"
+    };
+
+    private void EditItem(PenyelenggaraanPenghutangDTO row)
+    {
+        _model = new PenyelenggaraanPenghutangDTO
+        {
+            ID = row.ID,
+            Kod = row.Kod,
+            KeteranganKod = row.KeteranganKod,
+            Status = row.Status
+        };
+        StateHasChanged();
+    }
+
+    private async Task SaveItem()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_model.Kod))
+            {
+                Snackbar.Add("Kod wajib diisi.", Severity.Warning);
+                return;
+            }
+
+            if (_model.ID == Guid.Empty)
+            {
+                // CREATE – Refit baru return DTO terus
+                var created = await PenyelenggaraanPenghutangService.CreateAsync(_model);
+                Snackbar.Add("Rekod berjaya ditambah.", Severity.Success);
+            }
+            else
+            {
+                // UPDATE – Refit baru return DTO terus
+                var updated = await PenyelenggaraanPenghutangService.UpdateAsync(_model.ID, _model);
+                Snackbar.Add("Rekod berjaya dikemaskini.", Severity.Success);
+            }
+
+            ResetForm();
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal menyimpan: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void ResetForm() => _model = NewModel();
+
+    private async Task DeleteItem()
+    {
+        if (_model.ID == Guid.Empty) return;
+
+        var confirm = await DialogService.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Padam rekod <b>{_model.Kod}</b>?",
+            yesText: "Padam", cancelText: "Batal", options: new DialogOptions { CloseOnEscapeKey = true });
+
+        if (confirm is not true) return;
+
+        try
+        {
+            var del = await PenyelenggaraanPenghutangService.DeleteAsync(_model.ID);
+            if (!del.IsSuccessStatusCode) throw new Exception(del.Error?.Message ?? $"HTTP {(int)del.StatusCode}");
+            Snackbar.Add("Rekod berjaya dipadam.", Severity.Success);
+            ResetForm();
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memadam: {ex.Message}", Severity.Error);
+        }
+    }
+}

@@ -1,0 +1,80 @@
+﻿@page "/LaporanSenaraiPenghutang"
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+    <MudCard>
+        <MudCardHeader Class="bg-primary text-white">
+            <MudText Typo="Typo.h6" Class="text-white">Laporan Senarai Penghutang</MudText>
+        </MudCardHeader>
+
+        <MudCardContent>
+            <MudGrid Class="mt-4">
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Tahun Kewangan" @bind-Value="SelectedYear">
+                        @foreach (var year in FinancialYears)
+                        {
+                            <MudSelectItem Value="year">@year</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Tarikh Mula" @bind-Value="StartDate" InputType="InputType.Date" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Tarikh Akhir" @bind-Value="EndDate" InputType="InputType.Date" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Kategori Penghutang" @bind-Value="SelectedCategory">
+                        @foreach (var c in Categories)
+                        {
+                            <MudSelectItem Value="c">@c</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <MudGrid Justify="Justify.Center" Class="text-center">
+                <MudItem xs="12" sm="6">
+                    <img src="/images/mpob_logo.png" style="width:180px;" />
+                    <MudText Typo="Typo.subtitle1" Class="mt-2"><b>LEMBAGA MINYAK SAWIT MALAYSIA</b></MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mb-4">MALAYSIAN PALM OIL BOARD</MudText>
+
+                    <MudText Typo="Typo.body2">6, Persiaran Institusi<br />Bandar Baru Bangi<br />43000 Kajang, Selangor.</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2">Tel : +603-8769 4400<br />Fax : +603-8925 9446</MudText>
+                    <MudText Typo="Typo.body2" Class="mb-6">Website : www.mpob.gov.my</MudText>
+
+                    <MudText Typo="Typo.h6" Class="mt-4"><b>SISTEM PENGURUSAN KEWANGAN</b></MudText>
+                    <MudText Typo="Typo.body1">SENARAI PENGHUTANG</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <MudGrid Justify="Justify.Center" Class="mb-4">
+                <MudItem>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-2">Cetak</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.FileDownload" Class="mx-2">Export Excel</MudButton>
+                </MudItem>
+            </MudGrid>
+
+        </MudCardContent>
+    </MudCard>
+</MudPaper>
+
+@code {
+    public string SelectedYear { get; set; }
+    public List<string> FinancialYears { get; set; } = new() { "2023", "2024", "2025" };
+
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+
+    public string SelectedCategory { get; set; }
+    public List<string> Categories { get; set; } = new() { "Semua", "Kerajaan", "Swasta", "Individu" };
+}

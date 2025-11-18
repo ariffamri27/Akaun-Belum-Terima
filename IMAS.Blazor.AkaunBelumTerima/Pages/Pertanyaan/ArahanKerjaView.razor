@@ -1,0 +1,125 @@
+﻿@page "/arahan-kerja"
+
+<MudPaper Class="pa-4">
+
+    <!-- Header Section -->
+    <MudText Typo="Typo.h6" Class="mb-3">
+        📘 Jenis Carian
+    </MudText>
+
+    <!-- FILTER PANEL -->
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+
+        <MudGrid>
+
+            <!-- Tahun -->
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Tahun" @bind-Value="SelectedYear">
+                    @foreach (var year in TahunList)
+                    {
+                        <MudSelectItem T="string" Value="@year">@year</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <!-- Bulan -->
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Bulan" @bind-Value="SelectedMonth">
+                    @foreach (var b in BulanList)
+                    {
+                        <MudSelectItem T="string" Value="@b">@b</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <!-- Jenis Bil -->
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Jenis Bil" @bind-Value="SelectedJenisBil">
+                    @foreach (var jenis in JenisBilList)
+                    {
+                        <MudSelectItem T="string" Value="@jenis">@jenis</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+        </MudGrid>
+
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Search"
+                   Class="mt-3"
+                   OnClick="Carian">
+            Carian
+        </MudButton>
+
+    </MudPaper>
+
+
+
+    <!-- RESULT SECTION -->
+    <MudText Typo="Typo.h6" Class="mb-3">
+        📄 Senarai Arahan Kerja
+    </MudText>
+
+    <MudPaper Class="pa-4" Elevation="2">
+
+        <MudTable Items="ArahanList" Dense="true" Hover="true">
+
+            <HeaderContent>
+                <MudTh>No. Arahan</MudTh>
+                <MudTh>Tarikh</MudTh>
+                <MudTh>Jenis Arahan</MudTh>
+                <MudTh>Jenis Bil</MudTh>
+                <MudTh>Penghutang</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>@context.NoArahan</MudTd>
+                <MudTd>@context.Tarikh</MudTd>
+                <MudTd>@context.JenisArahan</MudTd>
+                <MudTd>@context.JenisBil</MudTd>
+                <MudTd>@context.Penghutang</MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <MudText Class="pa-4">No data available in table</MudText>
+            </NoRecordsContent>
+
+        </MudTable>
+
+    </MudPaper>
+
+</MudPaper>
+
+
+@code {
+
+    // FILTERS
+    string? SelectedYear;
+    string? SelectedMonth;
+    string? SelectedJenisBil;
+
+    // DROPDOWN DATA (EMPTY, tiada dummy data)
+    List<string> TahunList = new();
+    List<string> BulanList = new();
+    List<string> JenisBilList = new();
+
+    // TABLE MODEL
+    public class ArahanModel
+    {
+        public string? NoArahan { get; set; }
+        public string? Tarikh { get; set; }
+        public string? JenisArahan { get; set; }
+        public string? JenisBil { get; set; }
+        public string? Penghutang { get; set; }
+    }
+
+    List<ArahanModel> ArahanList = new();
+
+    // CARIAN FUNCTION
+    void Carian()
+    {
+        // bila ada API nanti, masukkan logik di sini
+        // skrg biarkan kosong seperti permintaan
+    }
+}

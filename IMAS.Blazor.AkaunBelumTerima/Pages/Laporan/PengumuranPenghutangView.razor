@@ -1,0 +1,164 @@
+﻿@page "/LaporanPengurumanBil"
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+    <MudCard>
+        <MudCardHeader Class="bg-primary text-white">
+            <MudText Typo="Typo.h6" Class="text-white">Laporan Penguruman Bil</MudText>
+        </MudCardHeader>
+
+        <MudCardContent>
+
+            <!-- FILTERS -->
+            <MudGrid Class="mt-4">
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Tarikh Mula" @bind-Value="TarikhMula" InputType="InputType.Date" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Tarikh Akhir" @bind-Value="TarikhAkhir" InputType="InputType.Date" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Kategori Penghutang" @bind-Value="KategoriPenghutang">
+                        @foreach (var c in KategoriList)
+                        {
+                            <MudSelectItem Value="c">@c</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Dana" @bind-Value="Dana">
+                        @foreach (var d in DanaList)
+                        {
+                            <MudSelectItem Value="d">@d</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <!-- LOGO & HEADER SECTION -->
+            <MudGrid Justify="Justify.Center" Class="text-center">
+                <MudItem xs="12" sm="6">
+                    <img src="/images/mpob_logo.png" style="width:180px;" />
+
+                    <MudText Typo="Typo.subtitle1" Class="mt-2"><b>LEMBAGA MINYAK SAWIT MALAYSIA</b></MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mb-4">MALAYSIAN PALM OIL BOARD</MudText>
+
+                    <MudText Typo="Typo.body2">
+                        6, Persiaran Institusi<br />
+                        Bandar Baru Bangi<br />
+                        43000 Kajang, Selangor.
+                    </MudText>
+
+                    <MudText Typo="Typo.body2" Class="mt-2">
+                        Tel : +603-8769 4400<br />
+                        Fax : +603-8925 9446
+                    </MudText>
+
+                    <MudText Typo="Typo.body2" Class="mb-6">
+                        Website : www.mpob.gov.my
+                    </MudText>
+
+                    <MudText Typo="Typo.h6"><b>SISTEM PENGURUSAN KEWANGAN</b></MudText>
+                    <MudText Typo="Typo.body1">LAPORAN SENARAI PENGURUMAN BIL</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <!-- TABLE -->
+            <MudTable T="PengurumanRecord" Items="DataList" Hover="true" Bordered="true" Dense="true">
+                <HeaderContent>
+                    <MudTh>#</MudTh>
+                    <MudTh>Debtor</MudTh>
+                    <MudTh>Date</MudTh>
+                    <MudTh>Document</MudTh>
+                    <MudTh>Current</MudTh>
+                    <MudTh>1 Month</MudTh>
+                    <MudTh>2 Month</MudTh>
+                    <MudTh>3 Month</MudTh>
+                    <MudTh>4 Month</MudTh>
+                    <MudTh>5 Month</MudTh>
+                    <MudTh>&gt;= 6 Month</MudTh>
+                    <MudTh>Open Credit</MudTh>
+                    <MudTh>Total</MudTh>
+                    <MudTh>Extended Amount</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>@context.Id</MudTd>
+                    <MudTd>@context.Debtor</MudTd>
+                    <MudTd>@context.Date.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd>@context.Document</MudTd>
+                    <MudTd>@context.Current</MudTd>
+                    <MudTd>@context.M1</MudTd>
+                    <MudTd>@context.M2</MudTd>
+                    <MudTd>@context.M3</MudTd>
+                    <MudTd>@context.M4</MudTd>
+                    <MudTd>@context.M5</MudTd>
+                    <MudTd>@context.M6Plus</MudTd>
+                    <MudTd>@context.OpenCredit</MudTd>
+                    <MudTd>@context.Total</MudTd>
+                    <MudTd>@context.Extended</MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <MudDivider Class="my-4" />
+
+            <!-- BUTTON BAR -->
+            <MudGrid Justify="Justify.Center" Class="mb-4">
+                <MudItem>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-2">
+                        Cetak
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Success"
+                               StartIcon="@Icons.Material.Filled.FileDownload"
+                               Class="mx-2">
+                        Export Excel
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+
+        </MudCardContent>
+    </MudCard>
+</MudPaper>
+
+@code {
+    public DateTime? TarikhMula { get; set; }
+    public DateTime? TarikhAkhir { get; set; }
+
+    public string KategoriPenghutang { get; set; }
+    public string Dana { get; set; }
+
+    public List<string> KategoriList { get; set; } =
+        new() { "Semua", "Kerajaan", "Swasta", "Individu" };
+
+    public List<string> DanaList { get; set; } =
+        new() { "Semua", "Dana Am", "Dana Khusus" };
+
+    // Data model
+    public class PengurumanRecord
+    {
+        public int Id { get; set; }
+        public string Debtor { get; set; }
+        public DateTime Date { get; set; }
+        public string Document { get; set; }
+        public decimal Current { get; set; }
+        public decimal M1 { get; set; }
+        public decimal M2 { get; set; }
+        public decimal M3 { get; set; }
+        public decimal M4 { get; set; }
+        public decimal M5 { get; set; }
+        public decimal M6Plus { get; set; }
+        public decimal OpenCredit { get; set; }
+        public decimal Total { get; set; }
+        public decimal Extended { get; set; }
+    }
+
+    public List<PengurumanRecord> DataList { get; set; } = new();
+}

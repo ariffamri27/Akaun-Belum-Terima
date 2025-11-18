@@ -1,0 +1,121 @@
+﻿@page "/PenyataPenghutangTertunggak"
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+    <MudCard>
+
+        <MudCardHeader Class="bg-primary text-white">
+            <MudText Typo="Typo.h6" Class="text-white">Laporan Penyata Penghutang</MudText>
+        </MudCardHeader>
+
+        <MudCardContent>
+
+            <!-- FILTER SECTION -->
+            <MudGrid Class="mt-4">
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Tarikh" InputType="InputType.Date" @bind-Value="Tarikh" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Kategori Penghutang" @bind-Value="KategoriPenghutang">
+                        <MudSelectItem Value="@((string)null)">Select...</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Nama Penghutang" @bind-Value="NamaPenghutang">
+                        <MudSelectItem Value="@((string)null)">Select...</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <!-- TABLE IS BLANK (NO ROWS) -->
+            <MudTable T="PenyataRow" Items="EmptyList" Hover="true" Dense="true" Bordered="true">
+
+                <HeaderContent>
+                    <MudTh>#</MudTh>
+                    <MudTh>No</MudTh>
+                    <MudTh>Nama</MudTh>
+
+                    <MudTh colspan="5" Class="text-center">
+                        JUMLAH DALAM MATA WANG TEMPATAN (MYR)
+                    </MudTh>
+
+                    <MudTh colspan="5" Class="text-center">
+                        JUMLAH DALAM MATA WANG ASLI
+                    </MudTh>
+                </HeaderContent>
+
+                <HeaderContent>
+                    <MudTh></MudTh>
+                    <MudTh></MudTh>
+                    <MudTh></MudTh>
+
+                    <MudTh>Tarikh</MudTh>
+                    <MudTh>Jenis</MudTh>
+                    <MudTh>No Rujukan</MudTh>
+                    <MudTh>Debit</MudTh>
+                    <MudTh>Kredit</MudTh>
+
+                    <MudTh>Baki</MudTh>
+                    <MudTh>Matawang</MudTh>
+                    <MudTh>Kadar</MudTh>
+                    <MudTh>Debit</MudTh>
+                    <MudTh>Kredit</MudTh>
+                    <MudTh>Baki</MudTh>
+                </HeaderContent>
+
+                <!-- NO ROW CONTENT (EMPTY TABLE) -->
+                <RowTemplate>
+                    <MudTd></MudTd>
+                    <MudTd></MudTd>
+                    <MudTd></MudTd>
+
+                    <MudTd></MudTd>
+                    <MudTd></MudTd>
+                    <MudTd></MudTd>
+                    <MudTd></MudTd>
+                    <MudTd></MudTd>
+
+                    <MudTd></MudTd>
+                    <MudTd></MudTd>
+                    <MudTd></MudTd>
+                    <MudTd></MudTd>
+                    <MudTd></MudTd>
+                    <MudTd></MudTd>
+                </RowTemplate>
+
+                <NoRecordsContent>
+                    <!-- BIAR KOSONG TANPA TEKS -->
+                </NoRecordsContent>
+
+            </MudTable>
+
+            <MudDivider Class="my-4" />
+
+            <!-- BUTTON -->
+            <MudGrid Justify="Justify.Center" Class="mb-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-2">
+                    Cetak
+                </MudButton>
+            </MudGrid>
+
+        </MudCardContent>
+    </MudCard>
+</MudPaper>
+
+@code {
+    // FILTERS
+    public DateTime? Tarikh { get; set; }
+    public string KategoriPenghutang { get; set; }
+    public string NamaPenghutang { get; set; }
+
+    // EMPTY TABLE DATA
+    public class PenyataRow { }
+
+    public List<PenyataRow> EmptyList { get; set; } = new();  // kosong total
+}

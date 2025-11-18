@@ -1,0 +1,167 @@
+﻿@page "/status-bil"
+
+<MudPaper Class="pa-4">
+
+    <!-- Header -->
+    <MudText Typo="Typo.h6" Class="mb-2">
+        📌 Pertanyaan Transaksi Bil
+    </MudText>
+
+    <!-- Search Filter -->
+    <MudPaper Class="pa-4 mb-4" Elevation="3">
+        <MudRadioGroup T="string" @bind-SelectedOption="CarianJenis" Row="true">
+            <MudRadio T="string" Option="NoBil">No. Bil</MudRadio>
+            <MudRadio T="string" Option="Nama">Nama</MudRadio>
+            <MudRadio T="string" Option="Kategori">Kategori Penghutang</MudRadio>
+
+        </MudRadioGroup>
+
+        <MudTextField @bind-Value="CarianText" Label="Masukkan carian..." Class="mt-2" />
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" Class="mt-3"
+                   OnClick="Carian">
+            Carian
+        </MudButton>
+    </MudPaper>
+
+
+    <!-- Section: Bil -->
+    <MudPaper Class="pa-4 mb-6" Elevation="2">
+        <MudText Typo="Typo.h6" Class="mb-3">📑 Bil</MudText>
+
+        <MudTable Items="BilList" Dense="true" Hover="true">
+            <HeaderContent>
+                <MudTh>No. Bil</MudTh>
+                <MudTh>Tarikh Bil</MudTh>
+                <MudTh>Nama Penghutang</MudTh>
+                <MudTh>Amaun Bil</MudTh>
+                <MudTh>Status</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>@context.NoBil</MudTd>
+                <MudTd>@context.TarikhBil</MudTd>
+                <MudTd>@context.NamaPenghutang</MudTd>
+                <MudTd>@context.AmaunBil</MudTd>
+                <MudTd>@context.Status</MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <MudText Class="pa-4">No data available in table</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+
+
+
+    <!-- Section: Nota bagi Bil -->
+    <MudPaper Class="pa-4 mb-6" Elevation="2">
+        <MudText Typo="Typo.h6" Class="mb-3">📝 Nota Bagi Bil</MudText>
+
+        <MudTable Items="NotaList" Dense="true" Hover="true">
+            <HeaderContent>
+                <MudTh>No. Nota</MudTh>
+                <MudTh>Tarikh Nota</MudTh>
+                <MudTh>No. Bil</MudTh>
+                <MudTh>Tarikh Bil</MudTh>
+                <MudTh>Kod Penghutang</MudTh>
+                <MudTh>Amaun Total</MudTh>
+                <MudTh>Amaun Tax</MudTh>
+                <MudTh>Amaun</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>@context.NoNota</MudTd>
+                <MudTd>@context.TarikhNota</MudTd>
+                <MudTd>@context.NoBil</MudTd>
+                <MudTd>@context.TarikhBil</MudTd>
+                <MudTd>@context.KodPenghutang</MudTd>
+                <MudTd>@context.AmaunTotal</MudTd>
+                <MudTd>@context.AmaunTax</MudTd>
+                <MudTd>@context.Amaun</MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <MudText Class="pa-4">No data available in table</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+
+
+
+    <!-- Section: Resit bagi Bil -->
+    <MudPaper Class="pa-4 mb-6" Elevation="2">
+        <MudText Typo="Typo.h6" Class="mb-3">🧾 Resit Bagi Bil</MudText>
+
+        <MudTable Items="ResitList" Dense="true" Hover="true">
+            <HeaderContent>
+                <MudTh>No. Resit</MudTh>
+                <MudTh>No. Bank Slip</MudTh>
+                <MudTh>Amaun Resit</MudTh>
+                <MudTh>Tarikh Resit</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>@context.NoResit</MudTd>
+                <MudTd>@context.NoBankSlip</MudTd>
+                <MudTd>@context.AmaunResit</MudTd>
+                <MudTd>@context.TarikhResit</MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <MudText Class="pa-4">No data available in table</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+
+</MudPaper>
+
+
+@code {
+
+    string CarianJenis = "";
+    string CarianText = "";
+
+    // EMPTY table models (NO dummy data)
+    public class BilModel
+    {
+        public string? NoBil { get; set; }
+        public string? TarikhBil { get; set; }
+        public string? NamaPenghutang { get; set; }
+        public string? AmaunBil { get; set; }
+        public string? Status { get; set; }
+    }
+
+    public class NotaModel
+    {
+        public string? NoNota { get; set; }
+        public string? TarikhNota { get; set; }
+        public string? NoBil { get; set; }
+        public string? TarikhBil { get; set; }
+        public string? KodPenghutang { get; set; }
+        public string? AmaunTotal { get; set; }
+        public string? AmaunTax { get; set; }
+        public string? Amaun { get; set; }
+    }
+
+    public class ResitModel
+    {
+        public string? NoResit { get; set; }
+        public string? NoBankSlip { get; set; }
+        public string? AmaunResit { get; set; }
+        public string? TarikhResit { get; set; }
+    }
+
+
+    // EMPTY lists (❗No dummy data)
+    List<BilModel> BilList = new();
+    List<NotaModel> NotaList = new();
+    List<ResitModel> ResitList = new();
+
+
+    void Carian()
+    {
+        // Logic API boleh ditambah di sini
+        // Untuk sekarang: table kekal kosong
+    }
+}

@@ -1,0 +1,82 @@
+﻿@page "/SenaraiHutangRaguLapuk"
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+    <MudExpansionPanels>
+        <MudExpansionPanel Text="Senarai Hutang Ragu dan Lapuk">
+
+            <MudGrid Class="mb-4">
+                <MudItem xs="12" sm="2">
+                    <MudSelect Label="Show" @bind-Value="RowsPerPage">
+                        <MudSelectItem Value="10">10</MudSelectItem>
+                        <MudSelectItem Value="25">25</MudSelectItem>
+                        <MudSelectItem Value="50">50</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Search" @bind-Value="SearchText" Immediate="true" />
+                </MudItem>
+            </MudGrid>
+
+            <MudTable Items="pagedData" Hover="true" Bordered="true" Dense="true">
+                <HeaderContent>
+                    <MudCheckBox T="bool" />
+                    <MudTh>No. Bil</MudTh>
+                    <MudTh>Tarikh</MudTh>
+                    <MudTh>Nama Penghutang</MudTh>
+                    <MudTh>Status</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudCheckBox T="bool" />
+                    <MudTd>@context.BillNo</MudTd>
+                    <MudTd>@context.Date.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd>@context.DebtorName</MudTd>
+                    <MudTd>
+                        <MudChip T="string" Color="Color.Success" Class="mr-2">Aktif Bil</MudChip>
+                        <MudChip T="string" Color="Color.Error">Lapuk</MudChip>
+
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <MudTablePager PageSize="RowsPerPage" @bind-Page="PageNumber" />
+
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+</MudPaper>
+
+@code {
+    public string SearchText { get; set; } = string.Empty;
+    public int RowsPerPage { get; set; } = 10;
+    public int PageNumber { get; set; } = 0;
+
+    public List<HutangRecord> AllData = new()
+    {
+        new() { BillNo="BILFM/DD/0524/00002", Date=new(2024,05,15), DebtorName="NORAIDA BINTI JUSOH" },
+        new() { BillNo="BILFM/DD/0524/00003", Date=new(2024,05,15), DebtorName="MUHAMMAD ZAMIRUDDIN BIN SAHAR" },
+        new() { BillNo="BILFM/DD/0524/00004", Date=new(2024,05,15), DebtorName="FOZIYAH BINTI MAMAD" },
+        new() { BillNo="BILFM/DD/0524/00005", Date=new(2024,05,15), DebtorName="MOHD FARIS BIN MUSTAFA" },
+        new() { BillNo="BILFM/DD/0524/00006", Date=new(2024,05,15), DebtorName="AFIQAH BINTI ABDUL RAHIM" },
+        new() { BillNo="BILFM/DD/0524/00007", Date=new(2024,05,15), DebtorName="RAMACHANDRAN A/L BATUMALAI" },
+        new() { BillNo="BILFM/DD/0524/00008", Date=new(2024,01,05), DebtorName="KABONG OIL PALM STATION SDN BHD" },
+        new() { BillNo="BILFM/DD/0524/00009", Date=new(2024,01,05), DebtorName="KOPERASI PENANAM SAWIT MAMPAN DAERAH PEKAN BERHAD" },
+        new() { BillNo="BILFM/DD/0524/00010", Date=new(2024,01,05), DebtorName="CHAI HING ENTERPRISE" },
+        new() { BillNo="BILFM/DD/0524/00011", Date=new(2024,01,05), DebtorName="FGV TRADING SDN BHD" },
+    };
+
+    public IEnumerable<HutangRecord> pagedData => AllData
+        .Where(x => string.IsNullOrWhiteSpace(SearchText) ||
+                    x.BillNo.Contains(SearchText, StringComparison.OrdinalIgnoreCase) ||
+                    x.DebtorName.Contains(SearchText, StringComparison.OrdinalIgnoreCase))
+        .Skip(PageNumber * RowsPerPage)
+        .Take(RowsPerPage);
+
+    public class HutangRecord
+    {
+        public string BillNo { get; set; }
+        public DateTime Date { get; set; }
+        public string DebtorName { get; set; }
+    }
+}

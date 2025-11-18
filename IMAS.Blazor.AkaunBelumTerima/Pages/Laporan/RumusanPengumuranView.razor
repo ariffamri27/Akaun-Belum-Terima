@@ -1,0 +1,146 @@
+﻿@page "/RumusanPengumuranBil"
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+    <MudCard>
+        <MudCardHeader Class="bg-primary text-white">
+            <MudText Typo="Typo.h6" Class="text-white">Laporan Pengumuran Bil</MudText>
+        </MudCardHeader>
+
+        <MudCardContent>
+
+            <!-- FILTER SECTION -->
+            <MudGrid Class="mt-4">
+                <MudItem xs="12" sm="6">
+                    <MudCheckBox T="bool" @bind-Checked="IsFromAkhir"
+                                 Label="Bermula dari tarikh akhir tempoh bayaran." />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Tarikh Sehingga" @bind-Value="TarikhSehingga" InputType="InputType.Date" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <!-- MPOB HEADER -->
+            <MudGrid Justify="Justify.Center" Class="text-center">
+                <MudItem xs="12" sm="6">
+                    <img src="/images/mpob_logo.png" style="width:180px;" />
+
+                    <MudText Typo="Typo.subtitle1" Class="mt-2"><b>LEMBAGA MINYAK SAWIT MALAYSIA</b></MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mb-4">MALAYSIAN PALM OIL BOARD</MudText>
+
+                    <MudText Typo="Typo.body2">
+                        6, Persiaran Institusi<br />
+                        Bandar Baru Bangi<br />
+                        43000 Kajang, Selangor.
+                    </MudText>
+
+                    <MudText Typo="Typo.body2" Class="mt-2">
+                        Tel : +603-8769 4400<br />
+                        Fax : +603-8925 9446
+                    </MudText>
+
+                    <MudText Typo="Typo.body2" Class="mb-6">
+                        Website : www.mpob.gov.my
+                    </MudText>
+
+                    <MudText Typo="Typo.h6" Class="mt-4"><b>SISTEM PENGURUSAN KEWANGAN</b></MudText>
+                    <MudText Typo="Typo.body1">LAPORAN RINGKASAN PENGUMURAN BIL/NOTA TERTUNGGAK</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <!-- SUMMARY AGING TABLE (2 layers header) -->
+            <MudTable T="RumusanRow" Items="SummaryList" Hover="true" Dense="true" Bordered="true">
+
+                <HeaderContent>
+                    <MudTr>
+                        <MudTh rowspan="2"><b>PERBELANJAAN</b></MudTh>
+                        <MudTh colspan="2"><b>>2 MINGGU &lt; 1 BULAN<br />(1–30 HARI)</b></MudTh>
+                        <MudTh colspan="2"><b>>1 &lt; 2 BULAN<br />(31–60 HARI)</b></MudTh>
+                        <MudTh colspan="2"><b>>2 &lt; 3 BULAN<br />(61–90 HARI)</b></MudTh>
+                        <MudTh colspan="2"><b>>3 BULAN<br />(>90 HARI)</b></MudTh>
+                        <MudTh colspan="2"><b>>1 TAHUN<br />(>360 HARI)</b></MudTh>
+                        <MudTh colspan="2"><b>JUMLAH</b></MudTh>
+                    </MudTr>
+
+                    <MudTr>
+                        <MudTh>BIL</MudTh><MudTh>RM</MudTh>
+                        <MudTh>BIL</MudTh><MudTh>RM</MudTh>
+                        <MudTh>BIL</MudTh><MudTh>RM</MudTh>
+                        <MudTh>BIL</MudTh><MudTh>RM</MudTh>
+                        <MudTh>BIL</MudTh><MudTh>RM</MudTh>
+                        <MudTh>BIL</MudTh><MudTh>RM</MudTh>
+                    </MudTr>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>@context.ItemName</MudTd>
+                    <MudTd>@context.W1_Bil</MudTd><MudTd>@context.W1_RM.ToString("N2")</MudTd>
+                    <MudTd>@context.W2_Bil</MudTd><MudTd>@context.W2_RM.ToString("N2")</MudTd>
+                    <MudTd>@context.W3_Bil</MudTd><MudTd>@context.W3_RM.ToString("N2")</MudTd>
+                    <MudTd>@context.W4_Bil</MudTd><MudTd>@context.W4_RM.ToString("N2")</MudTd>
+                    <MudTd>@context.W5_Bil</MudTd><MudTd>@context.W5_RM.ToString("N2")</MudTd>
+                    <MudTd>@context.Total_Bil</MudTd><MudTd>@context.Total_RM.ToString("N2")</MudTd>
+                </RowTemplate>
+
+            </MudTable>
+
+
+            <MudDivider Class="my-4" />
+
+            <!-- BUTTONS -->
+            <MudGrid Justify="Justify.Center" Class="mb-4">
+                <MudItem>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-2">Cetak</MudButton>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Success"
+                               StartIcon="@Icons.Material.Filled.FileDownload"
+                               Class="mx-2">
+                        Export Excel
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+
+        </MudCardContent>
+    </MudCard>
+</MudPaper>
+
+@code {
+    public bool IsFromAkhir { get; set; }
+    public DateTime? TarikhSehingga { get; set; }
+
+    // Data model for summary rows
+    public class RumusanRow
+    {
+        public string ItemName { get; set; }
+        public int W1_Bil { get; set; }
+        public decimal W1_RM { get; set; }
+        public int W2_Bil { get; set; }
+        public decimal W2_RM { get; set; }
+        public int W3_Bil { get; set; }
+        public decimal W3_RM { get; set; }
+        public int W4_Bil { get; set; }
+        public decimal W4_RM { get; set; }
+        public int W5_Bil { get; set; }
+        public decimal W5_RM { get; set; }
+        public int Total_Bil { get; set; }
+        public decimal Total_RM { get; set; }
+    }
+
+    public List<RumusanRow> SummaryList { get; set; } = new()
+    {
+        new RumusanRow {
+            ItemName = "PERBELANJAAN",
+            W1_Bil = 10, W1_RM = 5000,
+            W2_Bil = 7, W2_RM = 3000,
+            W3_Bil = 5, W3_RM = 2000,
+            W4_Bil = 3, W4_RM = 1800,
+            W5_Bil = 2, W5_RM = 1500,
+            Total_Bil = 27, Total_RM = 13300
+        }
+    };
+}

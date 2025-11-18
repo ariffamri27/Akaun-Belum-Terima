@@ -1,0 +1,87 @@
+﻿@page "/janaan-penghutang"
+
+<MudPaper Class="pa-4">
+
+    <!-- Header -->
+    <MudText Typo="Typo.h6" Class="mb-3">
+        📘 Jana Penghutang
+    </MudText>
+
+    <!-- Filter Section -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudSelect Label="Tahun Kewangan" T="string" @bind-Value="SelectedYear">
+                @foreach (var year in TahunList)
+                {
+                    <MudSelectItem T="string" Value="@year">@year</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="4">
+            <MudSelect Label="Nama Penghutang" T="string" @bind-Value="SelectedPenghutang">
+                @foreach (var p in PenghutangList)
+                {
+                    <MudSelectItem T="string" Value="@p">@p</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Table -->
+    <MudTable Items="PenghutangTable" Hover="true" Elevation="0" Dense="true">
+        <HeaderContent>
+            <MudTh>Pilih</MudTh>
+            <MudTh>Kod Jenis Penghutang</MudTh>
+            <MudTh>Keterangan</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd>
+                <MudCheckBox T="bool" @bind-Checked="context.IsChecked" />
+            </MudTd>
+            <MudTd>@context.KodPenghutang</MudTd>
+            <MudTd>@context.Keterangan</MudTd>
+        </RowTemplate>
+
+        <NoRecordsContent>
+            <MudText Class="pa-4">Tiada rekod.</MudText>
+        </NoRecordsContent>
+    </MudTable>
+
+    <!-- Button -->
+    <div class="d-flex justify-end mt-4">
+        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="Jana">
+            Jana
+        </MudButton>
+    </div>
+
+</MudPaper>
+
+@code {
+
+    // Filter values
+    string? SelectedYear;
+    string? SelectedPenghutang;
+
+    // Dropdown source (empty dulu)
+    List<string> TahunList = new();
+    List<string> PenghutangList = new();
+
+    // Table Model - kosong
+    public class PenghutangRow
+    {
+        public bool IsChecked { get; set; }
+        public string KodPenghutang { get; set; } = "";
+        public string Keterangan { get; set; } = "";
+    }
+
+    // Table data - TIADA dummy data
+    List<PenghutangRow> PenghutangTable = new();
+
+    void Jana()
+    {
+        // Letak logic API di sini kalau perlu
+        // Sekarang kosong sahaja
+    }
+}

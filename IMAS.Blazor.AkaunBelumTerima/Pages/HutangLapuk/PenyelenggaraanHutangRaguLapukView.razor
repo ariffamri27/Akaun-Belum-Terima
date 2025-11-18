@@ -1,0 +1,91 @@
+﻿@page "/PenyelenggaraanHutangRaguLapuk"
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+    <MudExpansionPanels>
+        <MudExpansionPanel Text="Penyelenggaraan Hutang Ragu dan Lapuk">
+
+            <MudGrid Class="mb-4">
+                <MudItem xs="12" sm="2">
+                    <MudSelect Label="Records" @bind-Value="RowsPerPage">
+                        <MudSelectItem Value="10">10</MudSelectItem>
+                        <MudSelectItem Value="25">25</MudSelectItem>
+                        <MudSelectItem Value="50">50</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Search" @bind-Value="SearchText" Immediate="true" />
+                </MudItem>
+            </MudGrid>
+
+            <MudTable Items="pagedData" Hover="true" Bordered="true" Dense="true">
+                <HeaderContent>
+                    <MudTh>Bulan</MudTh>
+                    <MudTh>Peratusan (%)</MudTh>
+                    <MudTh>Tindakan</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>@context.Month</MudTd>
+                    <MudTd>@context.Percentage</MudTd>
+                    <MudTd>
+                        <MudButton Variant="Variant.Filled" Color="Color.Error" Size="Size.Small">Hapus</MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <MudTablePager PageSize="RowsPerPage" @bind-Page="PageNumber" />
+
+        </MudExpansionPanel>
+
+        <MudExpansionPanel Text="Definisi Hutang Ragu Dan Lapuk">
+            <MudGrid>
+                <MudItem xs="12" sm="3">
+                    <MudTextField Label="Bulan" @bind-Value="NewMonth" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Peratusan" @bind-Value="NewPercentage" />
+                </MudItem>
+            </MudGrid>
+
+            <div class="mt-4 d-flex gap-2">
+                <MudButton Variant="Variant.Filled" Color="Color.Success">Tambah</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error">Batal</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Warning">Simpan</MudButton>
+            </div>
+        </MudExpansionPanel>
+    </MudExpansionPanels>
+</MudPaper>
+
+@code {
+    public string SearchText { get; set; } = string.Empty;
+    public int RowsPerPage { get; set; } = 10;
+    public int PageNumber { get; set; } = 0;
+
+    public string NewMonth { get; set; }
+    public string NewPercentage { get; set; }
+
+    public List<RaguLapukSetting> AllData = new()
+    {
+        new() { Month = 12, Percentage = 20 },
+        new() { Month = 24, Percentage = 40 },
+        new() { Month = 36, Percentage = 60 },
+        new() { Month = 48, Percentage = 80 },
+        new() { Month = 60, Percentage = 100 }
+    };
+
+    public IEnumerable<RaguLapukSetting> pagedData => AllData
+        .Where(x => string.IsNullOrWhiteSpace(SearchText) ||
+                    x.Month.ToString().Contains(SearchText) ||
+                    x.Percentage.ToString().Contains(SearchText))
+        .Skip(PageNumber * RowsPerPage)
+        .Take(RowsPerPage);
+
+    public class RaguLapukSetting
+    {
+        public int Month { get; set; }
+        public int Percentage { get; set; }
+    }
+}

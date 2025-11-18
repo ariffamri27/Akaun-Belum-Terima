@@ -1,0 +1,187 @@
+﻿@page "/pengesahan-bil"
+@using IMAS.API.AkaunBelumTerima.Shared.Models
+@using IMAS.Blazor.AkaunBelumTerima.Services.Refit
+@using MudBlazor
+@inject IBillApi BillApi
+
+<MudPaper Class="pa-4">
+
+    <MudText Typo="Typo.h5">Pengesahan Bil</MudText>
+
+    <MudTabs @bind-ActivePanelIndex="_activeTab"
+             OnActivePanelIndexChanged="OnTabChanged"
+             Class="mt-2 mb-2">
+        <MudTabPanel Text="Bil Belum Disahkan" />
+        <MudTabPanel Text="Bil Telah Disahkan" />
+    </MudTabs>
+
+    <MudTextField Value="@_search"
+                  OnActivePanelIndexChanged="@OnTabChanged"
+                  Placeholder="Cari No Bil / Penyedia / Keterangan"
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Class="my-3"
+                  Margin="Margin.Dense"
+                  Immediate="true" />
+
+    <MudTable T="BillDTO"
+              @ref="_table"
+              ServerData="LoadServerData"
+              Hover="true"
+              Bordered="true"
+              Striped="true"
+              Dense="true">
+
+        <HeaderContent>
+            <MudTh>No Bil</MudTh>
+            <MudTh>Penyedia</MudTh>
+            <MudTh>Tarikh</MudTh>
+            <MudTh>Keterangan</MudTh>
+            <MudTh class="text-end">Jumlah</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Aksi</MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd>@context.NoBil</MudTd>
+            <MudTd>@context.Penyedia</MudTd>
+            <MudTd>@(context.Tarikh?.ToString("dd/MM/yyyy"))</MudTd>
+            <MudTd>@context.Keterangan</MudTd>
+            <MudTd Class="text-end">@context.Jumlah?.ToString("N2")</MudTd>
+            <MudTd>
+                <MudChip T="string"
+                         Color="@GetStatusColor(context.StatusSah)"
+                         Text="@context.StatusSah" />
+            </MudTd>
+            <MudTd>
+                <MudStack Direction="Row" Spacing="1">
+                    <MudButton Size="Size.Small"
+                               Color="Color.Info"
+                               Variant="Variant.Outlined"
+                               OnClick="@(() => ViewDetail(context))">
+                        Papar Butiran
+                    </MudButton>
+
+                    <MudButton Size="Size.Small"
+                               Color="Color.Success"
+                               Disabled="@(!IsBelumSah(context))"
+                               OnClick="@(() => ConfirmBill(context))">
+                        Sahkan
+                    </MudButton>
+
+                    <MudButton Size="Size.Small"
+                               Color="Color.Error"
+                               Disabled="@(!IsBelumSah(context))"
+                               OnClick="@(() => CancelBill(context))">
+                        Batalkan
+                    </MudButton>
+                </MudStack>
+            </MudTd>
+        </RowTemplate>
+
+    </MudTable>
+
+</MudPaper>
+
+@code {
+    private List<BillDTO> _bills = new();
+    private MudTable<BillDTO>? _table;
+    private int _activeTab = 0;   // 0 = Belum Sah, 1 = Telah Sah
+    private string _search = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _bills = await BillApi.GetAllAsync();
+    }
+
+    // dipanggil oleh MudTable (server data mode)
+    private Task<TableData<BillDTO>> LoadServerData(
+    TableState state,
+    CancellationToken token)
+    {
+        IEnumerable<BillDTO> query = _bills;
+
+        // Tab filter
+        if (_activeTab == 0)
+            query = query.Where(b => b.StatusSah?.ToUpper() == "BELUM SAH");
+        else
+            query = query.Where(b => b.StatusSah?.ToUpper() == "SAH");
+
+        // Search
+        if (!string.IsNullOrWhiteSpace(_search))
+        {
+            query = query.Where(x =>
+                (x.NoBil ?? "").Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                (x.Penyedia ?? "").Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+                (x.Keterangan ?? "").Contains(_search, StringComparison.OrdinalIgnoreCase)
+            );
+        }
+
+        // Paging
+        var total = query.Count();
+        var items = query
+            .Skip(state.Page * state.PageSize)
+            .Take(state.PageSize)
+            .ToList();
+
+        return Task.FromResult(new TableData<BillDTO>
+        {
+            TotalItems = total,
+            Items = items
+        });
+    }
+
+
+    private void OnTabChanged(int index)
+    {
+        _activeTab = index;
+        _ = ReloadTable();
+    }
+
+    private Task OnSearchChanged(string value)
+    {
+        _search = value ?? string.Empty;
+        return ReloadTable();
+    }
+
+    private async Task ReloadTable()
+    {
+        if (_table is not null)
+            await _table.ReloadServerData();
+    }
+
+    private bool IsBelumSah(BillDTO bill)
+        => string.Equals(bill.StatusSah, "BELUM SAH", StringComparison.OrdinalIgnoreCase);
+
+    private Color GetStatusColor(string? status)
+    {
+        return status?.ToUpperInvariant() switch
+        {
+            "SAH" => Color.Success,
+            "BELUM SAH" => Color.Warning,
+            "BATAL" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private void ViewDetail(BillDTO bill)
+    {
+        // TODO: navigate ke page butiran / buka dialog
+    }
+
+    private async Task ConfirmBill(BillDTO bill)
+    {
+        bill.StatusSah = "SAH";
+        await BillApi.UpdateAsync(bill.ID, bill);
+        _bills = await BillApi.GetAllAsync();
+        await ReloadTable();
+    }
+
+    private async Task CancelBill(BillDTO bill)
+    {
+        bill.StatusSah = "BATAL";
+        await BillApi.UpdateAsync(bill.ID, bill);
+        _bills = await BillApi.GetAllAsync();
+        await ReloadTable();
+    }
+}

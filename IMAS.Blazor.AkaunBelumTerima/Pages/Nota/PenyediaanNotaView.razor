@@ -1,0 +1,126 @@
+﻿@page "/NotaDebitKredit"
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+    <MudCard>
+
+        <MudCardHeader Class="bg-primary text-white">
+            <MudText Typo="Typo.h6" Class="text-white">Penyediaan Nota</MudText>
+        </MudCardHeader>
+
+        <MudCardContent>
+
+            <!-- ACTION BUTTONS -->
+            <MudGrid Class="mt-4 mb-2">
+                <MudItem>
+                    <MudButton Color="Color.Success" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Class="mr-2">
+                        Tambah
+                    </MudButton>
+
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Class="mr-2">
+                        Ubah
+                    </MudButton>
+
+                    <MudButton Color="Color.Error" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete">
+                        Batal
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+
+            <!-- TAB -->
+            <MudTabs Rounded="true" Elevation="0" Border="true">
+                <MudTabPanel Text="Belum Pos">
+
+                    <!-- TABLE -->
+                    <MudTable T="NotaRow" Items="EmptyList" Hover="true" Dense="true" Bordered="true">
+
+                        <HeaderContent>
+                            <MudTh><MudCheckBox T="bool" @bind-Checked="SelectAll" /></MudTh>
+                            <MudTh>No. Nota</MudTh>
+                            <MudTh>Tarikh</MudTh>
+                            <MudTh>Nama Penghutang</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh>Aksi</MudTh>
+                        </HeaderContent>
+
+                        <NoRecordsContent>
+                            <MudText Class="pa-4">Tiada rekod untuk dipaparkan.</MudText>
+                        </NoRecordsContent>
+
+                        <!-- EMPTY ROW TEMPLATE (NO DATA) -->
+                        <RowTemplate>
+                            <MudTd><MudCheckBox T="bool" /></MudTd>
+                            <MudTd></MudTd>
+                            <MudTd></MudTd>
+                            <MudTd></MudTd>
+                            <MudTd><MudChip T="string" Color="Color.Info">Baru</MudChip></MudTd>
+
+                            <MudTd>
+                                <MudButton Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Class="mr-1">
+                                    Pilih
+                                </MudButton>
+                                <MudButton Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" Class="mr-1">
+                                    Pos
+                                </MudButton>
+                                <MudButton Color="Color.Error" Variant="Variant.Outlined" Size="Size.Small">
+                                    Hapus
+                                </MudButton>
+                            </MudTd>
+                        </RowTemplate>
+
+                    </MudTable>
+
+                    <!-- POS BERKELOMPOK -->
+                    <MudButton Color="Color.Success" Variant="Variant.Filled" Class="mt-3">
+                        Pos Berkelompok
+                    </MudButton>
+
+                </MudTabPanel>
+
+                <!-- TAB 2: SUDAH POS -->
+                <MudTabPanel Text="Sudah Pos">
+
+                    <MudTable T="NotaRow" Items="EmptyList" Hover="true" Dense="true" Bordered="true">
+
+                        <HeaderContent>
+                            <MudTh>No. Nota</MudTh>
+                            <MudTh>Tarikh</MudTh>
+                            <MudTh>Nama Penghutang</MudTh>
+                            <MudTh>Status</MudTh>
+                        </HeaderContent>
+
+                        <NoRecordsContent>
+                            <MudText Class="pa-4">Tiada rekod untuk dipaparkan.</MudText>
+                        </NoRecordsContent>
+
+                        <RowTemplate>
+                            <MudTd></MudTd>
+                            <MudTd></MudTd>
+                            <MudTd></MudTd>
+                            <MudTd><MudChip T="string" Color="Color.Success">Pos</MudChip></MudTd>
+                        </RowTemplate>
+
+                    </MudTable>
+
+                </MudTabPanel>
+            </MudTabs>
+
+        </MudCardContent>
+
+    </MudCard>
+</MudPaper>
+
+@code
+{
+    public bool SelectAll { get; set; }
+
+    public class NotaRow
+    {
+        public string NoNota { get; set; }
+        public DateTime? Tarikh { get; set; }
+        public string NamaPenghutang { get; set; }
+        public string Status { get; set; }
+    }
+
+    public List<NotaRow> EmptyList { get; set; } = new();
+}

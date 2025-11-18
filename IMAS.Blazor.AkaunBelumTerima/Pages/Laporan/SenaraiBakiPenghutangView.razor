@@ -1,0 +1,146 @@
+﻿@page "/LaporanSenaraiBakiPenghutang"
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+    <MudCard>
+        <MudCardHeader Class="bg-primary text-white">
+            <MudText Typo="Typo.h6" Class="text-white">Laporan Senarai Baki Penghutang</MudText>
+        </MudCardHeader>
+
+        <MudCardContent>
+
+            <MudGrid Class="mt-4">
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Tahun Kewangan" @bind-Value="SelectedYear">
+                        @foreach (var year in FinancialYears)
+                        {
+                            <MudSelectItem Value="year">@year</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Tarikh Mula" @bind-Value="StartDate" InputType="InputType.Date" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Tarikh Akhir" @bind-Value="EndDate" InputType="InputType.Date" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Kategori Penghutang" @bind-Value="SelectedCategory">
+                        @foreach (var c in Categories)
+                        {
+                            <MudSelectItem Value="c">@c</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <MudGrid Justify="Justify.Center" Class="text-center">
+                <MudItem xs="12" sm="6">
+                    <img src="/images/mpob_logo.png" style="width:180px;" />
+                    <MudText Typo="Typo.subtitle1" Class="mt-2"><b>LEMBAGA MINYAK SAWIT MALAYSIA</b></MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mb-4">MALAYSIAN PALM OIL BOARD</MudText>
+
+                    <MudText Typo="Typo.body2">
+                        6, Persiaran Institusi<br />
+                        Bandar Baru Bangi<br />
+                        43000 Kajang, Selangor.
+                    </MudText>
+
+                    <MudText Typo="Typo.body2" Class="mt-2">
+                        Tel: +603-8769 4400<br />
+                        Fax: +603-8925 9446
+                    </MudText>
+
+                    <MudText Typo="Typo.body2" Class="mb-6">
+                        Website: www.mpob.gov.my
+                    </MudText>
+
+                    <MudText Typo="Typo.h6" Class="mt-4"><b>SISTEM PENGURUSAN KEWANGAN</b></MudText>
+                    <MudText Typo="Typo.body1">SENARAI BAKI PENGHUTANG</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <!-- FIXED TABLE (with correct T= ) -->
+            <MudTable T="BakiPenghutang" Items="ReportData" Hover="true" Bordered="true" Dense="true">
+                <HeaderContent>
+                    <MudTh>Bil</MudTh>
+                    <MudTh>Kategori</MudTh>
+                    <MudTh>Kod</MudTh>
+                    <MudTh>Nama</MudTh>
+                    <MudTh>Amaun (RM)</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>@context.Bil</MudTd>
+                    <MudTd>@context.Kategori</MudTd>
+                    <MudTd>@context.Kod</MudTd>
+                    <MudTd>@context.Nama</MudTd>
+                    <MudTd>@context.Amaun.ToString("N2")</MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <MudDivider Class="my-4" />
+
+            <MudGrid Justify="Justify.Center" Class="mb-4">
+                <MudItem>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-2">
+                        Cetak
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Success"
+                               StartIcon="@Icons.Material.Filled.FileDownload"
+                               Class="mx-2">
+                        Export Excel
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Warning"
+                               StartIcon="@Icons.Material.Filled.Refresh"
+                               Class="mx-2">
+                        Kemaskini Baki
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+
+        </MudCardContent>
+    </MudCard>
+</MudPaper>
+
+@code {
+    public string SelectedYear { get; set; }
+    public List<string> FinancialYears { get; set; } = new()
+    {
+        "2023", "2024", "2025"
+    };
+
+    public DateTime? StartDate { get; set; }
+    public DateTime? EndDate { get; set; }
+
+    public string SelectedCategory { get; set; }
+    public List<string> Categories { get; set; } = new()
+    {
+        "Semua", "Kerajaan", "Swasta", "Individu"
+    };
+
+    public class BakiPenghutang
+    {
+        public int Bil { get; set; }
+        public string Kategori { get; set; }
+        public string Kod { get; set; }
+        public string Nama { get; set; }
+        public decimal Amaun { get; set; }
+    }
+
+    public List<BakiPenghutang> ReportData { get; set; } = new()
+    {
+        new() { Bil = 1, Kategori = "Kerajaan", Kod = "KG001", Nama = "MAJLIS BANDARAYA", Amaun = 15000.50m },
+        new() { Bil = 2, Kategori = "Swasta", Kod = "SW010", Nama = "FGV TRADING SDN BHD", Amaun = 8200.00m },
+        new() { Bil = 3, Kategori = "Individu", Kod = "IND33", Nama = "AHMAD BIN SALLEH", Amaun = 500.75m }
+    };
+}

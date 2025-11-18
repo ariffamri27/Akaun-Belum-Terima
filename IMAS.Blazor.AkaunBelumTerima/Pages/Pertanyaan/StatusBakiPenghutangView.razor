@@ -1,0 +1,113 @@
+﻿@page "/status-baki-penghutang"
+
+<MudPaper Class="pa-4">
+
+    <!-- Header -->
+    <MudText Typo="Typo.h6" Class="mb-3">
+        📌 Pertanyaan Senarai Baki Penghutang
+    </MudText>
+
+    <!-- FILTER SECTION -->
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+
+        <MudGrid>
+
+            <!-- Tahun -->
+            <MudItem xs="12" md="3">
+                <MudSelect Label="Tahun" T="string" @bind-Value="SelectedYear">
+                    @foreach (var year in TahunList)
+                    {
+                        <MudSelectItem T="string" Value="@year">@year</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <!-- Jenis Penghutang -->
+            <MudItem xs="12" md="5">
+                <MudSelect Label="Jenis Penghutang" T="string" @bind-Value="SelectedJenisPenghutang">
+                    @foreach (var jenis in JenisPenghutangList)
+                    {
+                        <MudSelectItem T="string" Value="@jenis">@jenis</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <!-- Checkbox -->
+            <MudItem xs="12" md="4">
+                <MudCheckBox T="bool" @bind-Checked="PaparKosong">
+                    Papar penghutang berbaki kosong
+                </MudCheckBox>
+            </MudItem>
+
+        </MudGrid>
+
+        <!-- CARIAN BUTTON -->
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Search"
+                   Class="mt-3"
+                   OnClick="Carian">
+            Carian
+        </MudButton>
+
+    </MudPaper>
+
+
+
+    <!-- KEPUTUSAN TABLE -->
+    <MudPaper Class="pa-4" Elevation="2">
+
+        <MudText Typo="Typo.h6" Class="mb-3">📄 Keputusan Carian</MudText>
+
+        <MudTable Items="ResultList" Dense="true" Hover="true">
+
+            <HeaderContent>
+                <MudTh>Kod Penghutang</MudTh>
+                <MudTh>Nama Penghutang</MudTh>
+                <MudTh>Amaun (RM)</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>@context.KodPenghutang</MudTd>
+                <MudTd>@context.NamaPenghutang</MudTd>
+                <MudTd>@context.Amaun</MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <MudText Class="pa-4">No data available in table</MudText>
+            </NoRecordsContent>
+
+        </MudTable>
+
+    </MudPaper>
+
+</MudPaper>
+
+
+@code {
+
+    // FILTER VALUES
+    string? SelectedYear;
+    string? SelectedJenisPenghutang;
+    bool PaparKosong = false;
+
+    // DROPDOWN SOURCES (EMPTY – NO DUMMY DATA)
+    List<string> TahunList = new();
+    List<string> JenisPenghutangList = new();
+
+    // TABLE MODEL
+    public class ResultModel
+    {
+        public string? KodPenghutang { get; set; }
+        public string? NamaPenghutang { get; set; }
+        public string? Amaun { get; set; }
+    }
+
+    // EMPTY TABLE LIST (NO DUMMY DATA)
+    List<ResultModel> ResultList = new();
+
+    void Carian()
+    {
+        // Bila sedia, anda hanya panggil API di sini.
+        // Sekarang dibiarkan kosong mengikut permintaan.
+    }
+}

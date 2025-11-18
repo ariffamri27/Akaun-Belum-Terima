@@ -1,0 +1,178 @@
+﻿@page "/LaporanAuditTrail"
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+    <MudCard>
+
+        <MudCardHeader Class="bg-primary text-white">
+            <MudText Typo="Typo.h6" Class="text-white">
+                Laporan Audit Trail
+            </MudText>
+        </MudCardHeader>
+
+        <MudCardContent>
+
+            <!-- FILTER SECTION -->
+            <MudGrid Class="mt-4">
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Tahun Kewangan" @bind-Value="TahunKewangan">
+                        @foreach (var y in TahunList)
+                        {
+                            <MudSelectItem Value="y">@y</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Jenis Dokumen" @bind-Value="JenisDokumen">
+                        @foreach (var j in DokumenList)
+                        {
+                            <MudSelectItem Value="j">@j</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudSelect Label="Status Dokumen" @bind-Value="StatusDokumen">
+                        @foreach (var s in StatusList)
+                        {
+                            <MudSelectItem Value="s">@s</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="No. Mula" @bind-Value="NoMula" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="No. Akhir" @bind-Value="NoAkhir" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Tarikh Mula" InputType="InputType.Date" @bind-Value="TarikhMula" />
+                </MudItem>
+
+                <MudItem xs="12" sm="4">
+                    <MudTextField Label="Tarikh Akhir" InputType="InputType.Date" @bind-Value="TarikhAkhir" />
+                </MudItem>
+
+            </MudGrid>
+
+            <MudDivider Class="my-6" />
+
+            <!-- MPOB HEADER -->
+            <MudGrid Justify="Justify.Center" Class="text-center">
+                <MudItem xs="12" sm="6">
+
+                    <img src="/images/mpob_logo.png" style="width:180px;" />
+                    <MudText Typo="Typo.subtitle1" Class="mt-2"><b>LEMBAGA MINYAK SAWIT MALAYSIA</b></MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mb-4">MALAYSIAN PALM OIL BOARD</MudText>
+
+                    <MudText Typo="Typo.body2">
+                        6, Persiaran Institusi<br />
+                        Bandar Baru Bangi<br />
+                        43000 Kajang, Selangor.
+                    </MudText>
+
+                    <MudText Typo="Typo.body2" Class="mt-2">
+                        Tel: +603-8769 4400<br />
+                        Fax: +603-8925 9446
+                    </MudText>
+
+                    <MudText Typo="Typo.body2" Class="mb-6">
+                        Website: www.mpob.gov.my
+                    </MudText>
+
+                    <MudText Typo="Typo.h6"><b>SISTEM PENGURUSAN KEWANGAN</b></MudText>
+                    <MudText Typo="Typo.body1">LAPORAN SENARAI SEMAKAN DOKUMEN</MudText>
+
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-4" />
+
+            <!-- TABLE AUDIT TRAIL -->
+            <MudTable T="AuditRow" Items="AuditList" Hover="true" Dense="true" Bordered="true">
+                <HeaderContent>
+                    <MudTh>Bil</MudTh>
+                    <MudTh>No. Dokumen</MudTh>
+                    <MudTh>Tarikh Dokumen</MudTh>
+                    <MudTh>Nama Penghutang</MudTh>
+                    <MudTh>Butiran</MudTh>
+                    <MudTh>Kod Akaun</MudTh>
+                    <MudTh>Keterangan Akaun</MudTh>
+                    <MudTh>Debit</MudTh>
+                    <MudTh>Kredit</MudTh>
+                </HeaderContent>
+
+                <RowTemplate>
+                    <MudTd>@context.Bil</MudTd>
+                    <MudTd>@context.NoDokumen</MudTd>
+                    <MudTd>@context.TarikhDokumen.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd>@context.NamaPenghutang</MudTd>
+                    <MudTd>@context.Butiran</MudTd>
+                    <MudTd>@context.KodAkaun</MudTd>
+                    <MudTd>@context.KeteranganAkaun</MudTd>
+                    <MudTd>@context.Debit.ToString("N2")</MudTd>
+                    <MudTd>@context.Kredit.ToString("N2")</MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <MudDivider Class="my-4" />
+
+            <!-- SECTIONS -->
+            <MudText Typo="Typo.subtitle2"><b>RINGKASAN TERIMAAN MENGIKUT JENIS BAYARAN</b></MudText>
+            <MudDivider />
+
+            <MudText Typo="Typo.subtitle2" Class="mt-4"><b>RINGKASAN TERIMAAN MENGIKUT JENIS KOD BANK</b></MudText>
+            <MudDivider />
+
+        </MudCardContent>
+    </MudCard>
+</MudPaper>
+
+@code {
+    // Filters
+    public string TahunKewangan { get; set; }
+    public string JenisDokumen { get; set; }
+    public string StatusDokumen { get; set; }
+    public string NoMula { get; set; }
+    public string NoAkhir { get; set; }
+    public DateTime? TarikhMula { get; set; }
+    public DateTime? TarikhAkhir { get; set; }
+
+    public List<string> TahunList { get; set; } = new() { "2023", "2024", "2025" };
+    public List<string> DokumenList { get; set; } = new() { "Invois", "Resit", "Debit Note", "Credit Note" };
+    public List<string> StatusList { get; set; } = new() { "Semua", "Disahkan", "Draf", "Dibatalkan" };
+
+    // Table model
+    public class AuditRow
+    {
+        public int Bil { get; set; }
+        public string NoDokumen { get; set; }
+        public DateTime TarikhDokumen { get; set; }
+        public string NamaPenghutang { get; set; }
+        public string Butiran { get; set; }
+        public string KodAkaun { get; set; }
+        public string KeteranganAkaun { get; set; }
+        public decimal Debit { get; set; }
+        public decimal Kredit { get; set; }
+    }
+
+    public List<AuditRow> AuditList { get; set; } = new()
+    {
+        new AuditRow {
+            Bil = 1,
+            NoDokumen = "INV/1234",
+            TarikhDokumen = DateTime.Today,
+            NamaPenghutang = "FGV Trading Sdn Bhd",
+            Butiran = "Bayaran Bil",
+            KodAkaun = "1001",
+            KeteranganAkaun = "Akaun Penghutang",
+            Debit = 150.00m,
+            Kredit = 0m
+        }
+    };
+}

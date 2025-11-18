@@ -1,0 +1,122 @@
+﻿@* @page "/penyediaan-resit"
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+
+    <!-- TITLE -->
+    <MudPaper Class="pa-3 mb-4" Elevation="0" Style="background-color:#9C27B0; color:white;">
+        <MudText Typo="Typo.h6">Penyediaan Resit</MudText>
+    </MudPaper>
+
+    <!-- ACTION BUTTONS -->
+    <MudStack Row="true" Spacing="2" Class="mb-3">
+        <MudButton Variant="Filled" T="string" Color="Primary" StartIcon="@Icons.Material.Filled.Add">Tambah</MudButton>
+        <MudButton Variant="Filled" Color="Info" StartIcon="@Icons.Material.Filled.Edit">Ubah</MudButton>
+        <MudButton Variant="Filled" Color="Error" StartIcon="@Icons.Material.Filled.Delete">Batal</MudButton>
+    </MudStack>
+
+    <!-- TABS -->
+    <MudTabs Rounded="true" Elevated="true" Color="Color.Primary" Class="mb-4">
+        <MudTabPanel Text="Belum Pos">
+            @BelumPosTable()
+        </MudTabPanel>
+
+        <MudTabPanel Text="Sudah Pos">
+            @SudahPosTable()
+        </MudTabPanel>
+    </MudTabs>
+
+</MudPaper>
+
+@code {
+
+    // TABLE COLUMNS (NO DATA)
+    public class ResitItem
+    {
+        public bool Selected { get; set; }
+        public string NoResit { get; set; }
+        public string Tarikh { get; set; }
+        public string Penghutang { get; set; }
+        public string Status { get; set; }
+    }
+
+    private List<ResitItem> ListResit = new(); // EMPTY – NO DUMMY DATA
+
+
+    // ================================
+    // BELUM POS TABLE
+    // ================================
+    private RenderFragment BelumPosTable() => @<div>
+        <MudTable Items="ListResit" Hover="true" Dense="true" Bordered="true">
+
+            <HeaderContent>
+                <MudTh><MudCheckbox /></MudTh>
+                <MudTh>No. Resit</MudTh>
+                <MudTh>Tarikh</MudTh>
+                <MudTh>Nama Penghutang</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>Aksi</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd><MudCheckbox /></MudTd>
+                <MudTd>@context.NoResit</MudTd>
+                <MudTd>@context.Tarikh</MudTd>
+                <MudTd>@context.Penghutang</MudTd>
+                <MudTd>@context.Status</MudTd>
+
+                <MudTd>
+                    <MudStack Row="true" Spacing="1">
+                        <MudButton Variant="Filled" Color="Info" Size="Small">Pilih</MudButton>
+                        <MudButton Variant="Filled" Color="Success" Size="Small">Pos</MudButton>
+                        <MudButton Variant="Filled" Color="Error" Size="Small">Hapus</MudButton>
+                        <MudButton Variant="Filled" Color="Secondary" Size="Small">Ulasan Pembetulan</MudButton>
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <MudText Class="pa-3">Tiada rekod untuk dipaparkan.</MudText>
+            </NoRecordsContent>
+
+        </MudTable>
+
+        <div class="mt-3">
+            <MudButton Variant="Filled" Color="Success" StartIcon="@Icons.Material.Filled.CheckCircle">
+                Pos Berkelompok
+            </MudButton>
+        </div>
+    </div>;
+
+
+    // ================================
+    // SUDAH POS TABLE (SAME STRUCTURE)
+    // ================================
+    private RenderFragment SudahPosTable() => @<div>
+        <MudTable Items="ListResit" Hover="true" Dense="true" Bordered="true">
+
+            <HeaderContent>
+                <MudTh><MudCheckbox /></MudTh>
+                <MudTh>No. Resit</MudTh>
+                <MudTh>Tarikh</MudTh>
+                <MudTh>Nama Penghutang</MudTh>
+                <MudTh>Status</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd><MudCheckbox /></MudTd>
+                <MudTd>@context.NoResit</MudTd>
+                <MudTd>@context.Tarikh</MudTd>
+                <MudTd>@context.Penghutang</MudTd>
+                <MudTd>@context.Status</MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <MudText Class="pa-3">Tiada rekod untuk dipaparkan.</MudText>
+            </NoRecordsContent>
+
+        </MudTable>
+    </div>;
+
+}
+ *@

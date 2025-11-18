@@ -1,0 +1,126 @@
+﻿@page "/status-terimaan"
+
+<MudPaper Class="pa-4">
+
+    <!-- Header -->
+    <MudText Typo="Typo.h6" Class="mb-3">
+        📌 Jenis Carian
+    </MudText>
+
+    <!-- JENIS CARIAN -->
+    <MudPaper Class="pa-4 mb-4" Elevation="3">
+
+        <MudRadioGroup T="string" @bind-SelectedOption="JenisCarian" Row="true">
+            <MudRadio T="string" Option="CekDeraf">No Cek/Deraf</MudRadio>
+            <MudRadio T="string" Option="Nama">Nama</MudRadio>
+            <MudRadio T="string" Option="Amaun">Amaun</MudRadio>
+            <MudRadio T="string" Option="TarikhResit">Tarikh Resit</MudRadio>
+            <MudRadio T="string" Option="NoResit">No Resit</MudRadio>
+            <MudRadio T="string" Option="KodPenghutang">Kod Penghutang</MudRadio>
+        </MudRadioGroup>
+
+        <MudGrid Class="mt-3">
+            <MudItem xs="12" sm="4">
+                <MudSelect Label="Tahun" T="string" @bind-Value="TahunDipilih">
+                    @foreach (var thn in TahunList)
+                    {
+                        <MudSelectItem T="string" Value="@thn">@thn</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+
+            <MudItem xs="12" sm="8">
+                <MudTextField Label="Kata carian..." @bind-Value="CarianText" />
+            </MudItem>
+        </MudGrid>
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
+                   Class="mt-3" OnClick="Carian">
+            Carian
+        </MudButton>
+
+    </MudPaper>
+
+
+
+    <!-- KEPUTUSAN CARIAN -->
+    <MudPaper Class="pa-4" Elevation="2">
+
+        <MudText Typo="Typo.h6" Class="mb-3">📄 Keputusan Carian</MudText>
+
+        <MudTable Items="KeputusanList" Hover="true" Dense="true">
+
+            <HeaderContent>
+                <MudTh>No. Resit</MudTh>
+                <MudTh>Tarikh Resit</MudTh>
+                <MudTh>Amaun Resit (RM)</MudTh>
+                <MudTh>Penerima</MudTh>
+                <MudTh>No. Cek/Deraf</MudTh>
+                <MudTh>Amaun Cek/Deraf (RM)</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh>No. Slip (P)</MudTh>
+                <MudTh>Tarikh Slip (P)</MudTh>
+                <MudTh>No. Slip (N)</MudTh>
+                <MudTh>Tarikh Slip (N)</MudTh>
+                <MudTh>Di Tunai</MudTh>
+            </HeaderContent>
+
+            <RowTemplate>
+                <MudTd>@context.NoResit</MudTd>
+                <MudTd>@context.TarikhResit</MudTd>
+                <MudTd>@context.AmaunResit</MudTd>
+                <MudTd>@context.Penerima</MudTd>
+                <MudTd>@context.NoCekDeraf</MudTd>
+                <MudTd>@context.AmaunCekDeraf</MudTd>
+                <MudTd>@context.Status</MudTd>
+                <MudTd>@context.NoSlipP</MudTd>
+                <MudTd>@context.TarikhSlipP</MudTd>
+                <MudTd>@context.NoSlipN</MudTd>
+                <MudTd>@context.TarikhSlipN</MudTd>
+                <MudTd>@context.DiTunai</MudTd>
+            </RowTemplate>
+
+            <NoRecordsContent>
+                <MudText Class="pa-4">No data available in table</MudText>
+            </NoRecordsContent>
+
+        </MudTable>
+
+    </MudPaper>
+
+</MudPaper>
+
+@code {
+
+    // --- FILTER ---
+    string JenisCarian = "";
+    string? TahunDipilih;
+    string? CarianText;
+
+    List<string> TahunList = new(); // kosong, ikut permintaan
+
+    // --- TABLE MODEL (kosong tanpa dummy data) ---
+    public class KeputusanModel
+    {
+        public string? NoResit { get; set; }
+        public string? TarikhResit { get; set; }
+        public string? AmaunResit { get; set; }
+        public string? Penerima { get; set; }
+        public string? NoCekDeraf { get; set; }
+        public string? AmaunCekDeraf { get; set; }
+        public string? Status { get; set; }
+        public string? NoSlipP { get; set; }
+        public string? TarikhSlipP { get; set; }
+        public string? NoSlipN { get; set; }
+        public string? TarikhSlipN { get; set; }
+        public string? DiTunai { get; set; }
+    }
+
+    List<KeputusanModel> KeputusanList = new();
+
+    void Carian()
+    {
+        // Tambah logic API jika perlu
+        // Untuk sekarang, table dibiarkan kosong seperti permintaan
+    }
+}
