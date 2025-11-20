@@ -1,7 +1,6 @@
-﻿@* 
+﻿<MudNavMenu Dense="false" Class="nav-menu-style">
 
-<MudNavMenu Dense="false" Class="nav-menu-style">
-
+    <!-- Laman Utama -->
     <MudNavLink Href="/"
                 Match="NavLinkMatch.All"
                 Icon="@Icons.Material.Filled.Home"
@@ -9,233 +8,301 @@
         Laman Utama
     </MudNavLink>
 
+    <!-- Penyelenggaraan Penghutang -->
     <MudNavGroup Title="Penyelenggaraan Penghutang"
                  Icon="@Icons.Material.Filled.AccountBalance"
                  Expanded="true"
                  Class="nav-group-style">
-        <MudNavLink Href="/bahagian"
-                    Match="NavLinkMatch.All"
+
+        <MudNavLink Href="/definisi-kategori-penghutang"
+                    Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Business"
                     Class="nav-link-style">
-            Bahagian
+            Definisi Kategori Penghutang
         </MudNavLink>
-        <MudNavLink Href="/lokasi"
+
+        <MudNavLink Href="/definisi-kod-penghutang"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Place"
                     Class="nav-link-style">
-            Lokasi
+            Definisi Kod Penghutang
         </MudNavLink>
-        <MudNavLink Href="/dana"
+
+        <MudNavLink Href="/janaan-penghutang"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Money"
                     Class="nav-link-style">
-            Dana
+            Janaan Penghutang
         </MudNavLink>
-        <MudNavLink Href="/unit"
-                    Match="NavLinkMatch.Prefix"
-                    Icon="@Icons.Material.Filled.GridOn"
-                    Class="nav-link-style">
-            Unit
-        </MudNavLink>
+
     </MudNavGroup>
 
-    <MudNavGroup Title="Peruntukan"
+    <!-- Peruntukan -->
+    <MudNavGroup Title="Bil"
                  Icon="@Icons.Material.Filled.AttachMoney"
                  Expanded="true"
                  Class="nav-group-style">
-        <MudNavLink Href="/semakan-peruntukan"
+
+        <MudNavLink Href="/penyediaan-bil"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.ListAlt"
                     Class="nav-link-style">
-            Semakan Peruntukan
+            Penyediaan Bil
         </MudNavLink>
-        <MudNavLink Href="/pengesahan-peruntukan"
+
+        <MudNavLink Href="/fixed-billing"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Verified"
                     Class="nav-link-style">
-            Pengesahan Peruntukan
+            Fixed Billing
         </MudNavLink>
-        <MudNavLink Href="/kelulusan-peruntukan"
+
+        <MudNavLink Href="/pengesahan-bil"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.CheckCircle"
                     Class="nav-link-style">
-            Kelulusan Peruntukan
+            Pengesahan Bil
         </MudNavLink>
-        <MudNavLink Href="/tambah-kurang"
+
+        @* <MudNavLink Href="/tambah-kurang"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.AddCircleOutline"
                     Class="nav-link-style">
             Tambah Kurang
         </MudNavLink>
+
         <MudNavLink Href="/pelarasan-peruntukan"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Edit"
                     Class="nav-link-style">
             Pelarasan Peruntukan
         </MudNavLink>
+
         <MudNavLink Href="/penyediaan-peruntukan-tambah"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.AddBox"
                     Class="nav-link-style">
-            Penyediaan Peruntukkan Tambah
+            Penyediaan Peruntukan Tambah
         </MudNavLink>
+
         <MudNavLink Href="/penyediaan-peruntukan"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Add"
                     Class="nav-link-style">
-            Penyediaan Peruntukkan
-        </MudNavLink>
+            Penyediaan Peruntukan
+        </MudNavLink> *@
+
     </MudNavGroup>
 
-    <MudNavGroup Title="Anggaran Pendapatan"
+    <!-- Anggaran Pendapatan -->
+    <MudNavGroup Title="Nota Debit Kredit"
                  Icon="@Icons.Material.Filled.AttachMoney"
                  Expanded="true"
                  Class="nav-group-style">
-        <MudNavLink Href="/semakan-pendapatan"
+
+        <MudNavLink Href="/NotaDebitKredit"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Assessment"
                     Class="nav-link-style">
-            Semakan Pendapatan
+            Penyediaan Nota Debit Kredit
         </MudNavLink>
-        <MudNavLink Href="/penyediaan-pendapatan"
+
+        <MudNavLink Href="/PengesahanNota"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.List"
                     Class="nav-link-style">
-            Penyediaan Pendapatan
+            Pengesahan Nota
         </MudNavLink>
-        <MudNavLink Href="/kelulusan-pendapatan"
+
+        @* <MudNavLink Href="/kelulusan-pendapatan"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.CheckCircle"
                     Class="nav-link-style">
             Kelulusan Pendapatan
-        </MudNavLink>
+        </MudNavLink> *@
+
     </MudNavGroup>
 
-    <MudNavGroup Title="Agihan Peruntukan"
+    <!-- Agihan Peruntukan -->
+    <MudNavGroup Title="Resit"
                  Icon="@Icons.Material.Filled.Receipt"
                  Expanded="true"
                  Class="nav-group-style">
-        <MudNavLink Href="/agihan-peruntukan"
+
+        <MudNavLink Href="/penyediaan-resit"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.AllInbox"
                     Class="nav-link-style">
-            Agihan Peruntukan
+            Penyediaan Resit
         </MudNavLink>
-        <MudNavLink Href="/semakan-agihan-peruntukan"
+
+        <MudNavLink Href="/pengesahan-resit"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.ListAlt"
                     Class="nav-link-style">
-            Semakan Agihan Peruntukan
+            Rengesahan Resit
         </MudNavLink>
-        <MudNavLink Href="/pengesahan-agihan-peruntukan"
+
+      @*   <MudNavLink Href="/pengesahan-agihan-peruntukan"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.CheckCircle"
                     Class="nav-link-style">
             Pengesahan Agihan Peruntukan
         </MudNavLink>
+
         <MudNavLink Href="/kelulusan-agihan-peruntukan"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Check"
                     Class="nav-link-style">
             Kelulusan Agihan Peruntukan
-        </MudNavLink>
+        </MudNavLink> *@
+
     </MudNavGroup>
 
-    <MudNavGroup Title="Viremen"
+    <!-- Viremen -->
+    <MudNavGroup Title="Pertanyaan"
                  Icon="@Icons.Material.Filled.StarRate"
                  Expanded="true"
                  Class="nav-group-style">
-        <MudNavLink Href="/viremen"
+
+        <MudNavLink Href="/status-bil"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.ListAlt"
                     Class="nav-link-style">
-            Penyediaan Viremen
+            Status Bil
         </MudNavLink>
-        <MudNavLink Href="/pengesahan-viremen"
+
+        <MudNavLink Href="/status-terimaan"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Verified"
                     Class="nav-link-style">
-            Pengesahan Viremen
+            Status Terimaan
         </MudNavLink>
-        <MudNavLink Href="/kelulusan-viremen"
+
+        <MudNavLink Href="/status-baki-penghutang"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.CheckCircle"
                     Class="nav-link-style">
-            Kelulusan Viremen
+            Status Baki Penghutang
         </MudNavLink>
-    </MudNavGroup>
 
-    <MudNavGroup Title="Viremen Sekatan"
-                 Icon="@Icons.Material.Filled.Lock"
-                 Expanded="true"
-                 Class="nav-group-style">
-        <MudNavLink Href="/viremen-sekatan"
-                    Match="NavLinkMatch.Prefix"
-                    Icon="@Icons.Material.Filled.List"
-                    Class="nav-link-style">
-            Penyediaan Viremen Sekatan
-        </MudNavLink>
-        <MudNavLink Href="/semakan-viremen-sekatan"
+        <MudNavLink Href="/arahan-kerja"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Check"
                     Class="nav-link-style">
-            Semakan Viremen Sekatan
+            Arahan Kerja
         </MudNavLink>
-        <MudNavLink Href="/pengesahan-viremen-sekatan"
+
+    </MudNavGroup>
+
+    <!-- Viremen Sekatan -->
+    <MudNavGroup Title="Laporan"
+                 Icon="@Icons.Material.Filled.Lock"
+                 Expanded="true"
+                 Class="nav-group-style">
+
+        <MudNavLink Href="/laporan-senarai-penghutang"
+                    Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Filled.List"
+                    Class="nav-link-style">
+            Laporan Senarai Penghutang
+        </MudNavLink>
+
+        <MudNavLink Href="/LaporanSenaraiBakiPenghutang"
+                    Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Filled.Check"
+                    Class="nav-link-style">
+            Laporan Senarai Baki Penghutang
+        </MudNavLink>
+
+        <MudNavLink Href="/LaporanPengurumanBil"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Verified"
                     Class="nav-link-style">
-            Pengesahan Viremen Sekatan
+            Laporan Penguruman
         </MudNavLink>
-        <MudNavLink Href="/kelulusan-viremen-sekatan"
+
+        <MudNavLink Href="/RumusanPengumuranBil"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.LockOpen"
                     Class="nav-link-style">
-            Kelulusan Viremen Sekatan
+            Rumusan Pengumuran
+        </MudNavLink>
+
+        <MudNavLink Href="/LaporanAuditTrail"
+                    Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Filled.CheckCircle"
+                    Class="nav-link-style">
+            Laporan Audit Trail
+        </MudNavLink>
+
+        <MudNavLink Href="/PenyataPenghutang"
+                    Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Filled.Check"
+                    Class="nav-link-style">
+            Penyata Penghutang
+        </MudNavLink>
+
+        <MudNavLink Href="/PenyataPenghutangTertunggak"
+                    Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Filled.AddCircleOutline"
+                    Class="nav-link-style">
+            Penyata Penghutang Tertunggak
         </MudNavLink>
     </MudNavGroup>
 
-    <MudNavGroup Title="Pertanyaan"
+    <!-- Pertanyaan -->
+    <MudNavGroup Title="Hutang Lapuk"
                  Icon="@Icons.Material.Filled.Help"
                  Expanded="true"
                  Class="nav-group-style">
-        <MudNavLink Href="/pertanyaan-vot"
+
+        <MudNavLink Href="/HutangRaguLapuk"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.QuestionAnswer"
                     Class="nav-link-style">
-            Pertanyaan VOT
+            Hutang Ragu Lapuk
         </MudNavLink>
+
+        <MudNavLink Href="/SenaraiHutangRaguLapuk"
+                    Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Filled.Assessment"
+                    Class="nav-link-style">
+            SenaraiHutangRaguLapuk
+        </MudNavLink>
+
+        <MudNavLink Href="/PenyelenggaraanHutangRaguLapuk"
+                    Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Filled.Assessment"
+                    Class="nav-link-style">
+            PenyelenggaraanHutangRaguLapuk
+        </MudNavLink>
+
+
     </MudNavGroup>
 
+ @*    <!-- Laporan -->
     <MudNavGroup Title="Laporan"
                  Icon="@Icons.Material.Filled.Description"
                  Expanded="true"
                  Class="nav-group-style">
-        <MudNavLink Href="/laporan-belanjawan"
-                    Match="NavLinkMatch.Prefix"
-                    Icon="@Icons.Material.Filled.Assessment"
-                    Class="nav-link-style">
-            Laporan Belanjawan
-        </MudNavLink>
-        <MudNavLink Href="/laporan-anggaran-pendapatan"
-                    Match="NavLinkMatch.Prefix"
-                    Icon="@Icons.Material.Filled.Assessment"
-                    Class="nav-link-style">
-            Laporan Anggaran Pendapatan
-        </MudNavLink>
+
+      
     </MudNavGroup>
 
+    <!-- Had Siling -->
     <MudNavGroup Title="Had Siling"
                  Icon="@Icons.Material.Filled.AccountBalanceWallet"
                  Expanded="true"
                  Class="nav-group-style">
+
         <MudNavLink Href="/had-siling"
                     Match="NavLinkMatch.Prefix"
                     Icon="@Icons.Material.Filled.Payment"
                     Class="nav-link-style">
             Had Siling
         </MudNavLink>
-    </MudNavGroup>
+
+    </MudNavGroup> *@
 
 </MudNavMenu>
- *@

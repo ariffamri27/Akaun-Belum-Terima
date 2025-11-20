@@ -1,23 +1,23 @@
 ﻿using IMAS.API.AkaunBelumTerima.Shared.Models;
 using Refit;
 
-namespace IMAS.Blazor.AkaunBelumTerima.Services.Refit
+namespace IMAS.Blazor.AkaunBelumTerima.Services.Refit;
+
+public interface IBillApi
 {
-    public interface IBillApi
-    {
-        [Get("/api/bill")]
-        Task<List<BillDTO>> GetAllAsync();
+    [Get("/api/Bill")]
+    Task<List<BillDTO>> GetAllAsync();
 
-        [Get("/api/bill/{id}")]
-        Task<BillDTO> GetByIdAsync(Guid id);
+    [Get("/api/Bill/{id}")]
+    Task<BillDTO> GetByIdAsync(Guid id);
 
-        [Post("/api/bill")]
-        Task<BillDTO> CreateAsync([Body] BillDTO dto);
+    [Post("/api/Bill")]
+    Task<BillDTO> CreateAsync([Body] BillDTO dto);
 
-        [Put("/api/bill/{id}")]
-        Task<BillDTO> UpdateAsync(Guid id, [Body] BillDTO dto);
+    [Put("/api/Bill/{id}")]
+    Task<BillDTO> UpdateAsync(Guid id, [Body] BillDTO dto);
 
-        [Delete("/api/bill/{id}")]
-        Task<ApiResponse<string>> DeleteAsync(Guid id);
-    }
+    // Untuk delete kau memang expect IsSuccessStatusCode
+    [Delete("/api/Bill/{id}")]
+    Task<ApiResponse<string>> DeleteAsync(Guid id);
 }

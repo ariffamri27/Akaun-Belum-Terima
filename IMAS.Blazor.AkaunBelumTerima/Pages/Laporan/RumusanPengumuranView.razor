@@ -1,5 +1,9 @@
 ﻿@page "/RumusanPengumuranBil"
 @using MudBlazor
+@using IMAS.API.AkaunBelumTerima.Shared.Models
+@using IMAS.Blazor.AkaunBelumTerima.Services.Refit
+@inject ISnackbar Snackbar
+@inject IBillApi BillService
 
 <MudPaper Class="pa-4">
     <MudCard>
@@ -10,14 +14,26 @@
         <MudCardContent>
 
             <!-- FILTER SECTION -->
-            <MudGrid Class="mt-4">
+            <MudGrid Class="mt-4" AlignItems="AlignItems.Center">
                 <MudItem xs="12" sm="6">
-                    <MudCheckBox T="bool" @bind-Checked="IsFromAkhir"
+                    <MudCheckBox T="bool"
+                                 @bind-Checked="IsFromAkhir"
                                  Label="Bermula dari tarikh akhir tempoh bayaran." />
                 </MudItem>
 
                 <MudItem xs="12" sm="4">
-                    <MudTextField Label="Tarikh Sehingga" @bind-Value="TarikhSehingga" InputType="InputType.Date" />
+                    <MudTextField Label="Tarikh Sehingga"
+                                  @bind-Value="TarikhSehingga"
+                                  InputType="InputType.Date" />
+                </MudItem>
+
+                <MudItem xs="12" sm="2" Class="d-flex justify-end">
+                    <MudButton Color="Color.Primary"
+                               Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.Search"
+                               OnClick="Carian">
+                        Carian
+                    </MudButton>
                 </MudItem>
             </MudGrid>
 
@@ -47,57 +63,72 @@
                     </MudText>
 
                     <MudText Typo="Typo.h6" Class="mt-4"><b>SISTEM PENGURUSAN KEWANGAN</b></MudText>
-                    <MudText Typo="Typo.body1">LAPORAN RINGKASAN PENGUMURAN BIL/NOTA TERTUNGGAK</MudText>
+                    <MudText Typo="Typo.body1">
+                        LAPORAN RINGKASAN PENGUMURAN BIL/NOTA TERTUNGGAK
+                    </MudText>
                 </MudItem>
             </MudGrid>
 
             <MudDivider Class="my-6" />
 
-            <!-- SUMMARY AGING TABLE (2 layers header) -->
-            <MudTable T="RumusanRow" Items="SummaryList" Hover="true" Dense="true" Bordered="true">
+            @if (_isLoading)
+            {
+                <MudProgressLinear Indeterminate="true" />
+            }
+            else
+            {
+                <!-- SUMMARY AGING TABLE (2 layers header) -->
+                <MudTable T="RumusanRow" Items="SummaryList" Hover="true" Dense="true" Bordered="true">
 
-                <HeaderContent>
-                    <MudTr>
-                        <MudTh rowspan="2"><b>PERBELANJAAN</b></MudTh>
-                        <MudTh colspan="2"><b>>2 MINGGU &lt; 1 BULAN<br />(1–30 HARI)</b></MudTh>
-                        <MudTh colspan="2"><b>>1 &lt; 2 BULAN<br />(31–60 HARI)</b></MudTh>
-                        <MudTh colspan="2"><b>>2 &lt; 3 BULAN<br />(61–90 HARI)</b></MudTh>
-                        <MudTh colspan="2"><b>>3 BULAN<br />(>90 HARI)</b></MudTh>
-                        <MudTh colspan="2"><b>>1 TAHUN<br />(>360 HARI)</b></MudTh>
-                        <MudTh colspan="2"><b>JUMLAH</b></MudTh>
-                    </MudTr>
+                    <HeaderContent>
+                        <MudTr>
+                            <MudTh RowSpan="2"><b>PERBELANJAAN</b></MudTh>
+                            <MudTh ColSpan="2"><b>&gt;2 MINGGU &lt; 1 BULAN<br />(1–30 HARI)</b></MudTh>
+                            <MudTh ColSpan="2"><b>&gt;1 &lt; 2 BULAN<br />(31–60 HARI)</b></MudTh>
+                            <MudTh ColSpan="2"><b>&gt;2 &lt; 3 BULAN<br />(61–90 HARI)</b></MudTh>
+                            <MudTh ColSpan="2"><b>&gt;3 BULAN<br />(&gt;90 HARI)</b></MudTh>
+                            <MudTh ColSpan="2"><b>&gt;1 TAHUN<br />(&gt;360 HARI)</b></MudTh>
+                            <MudTh ColSpan="2"><b>JUMLAH</b></MudTh>
+                        </MudTr>
 
-                    <MudTr>
-                        <MudTh>BIL</MudTh><MudTh>RM</MudTh>
-                        <MudTh>BIL</MudTh><MudTh>RM</MudTh>
-                        <MudTh>BIL</MudTh><MudTh>RM</MudTh>
-                        <MudTh>BIL</MudTh><MudTh>RM</MudTh>
-                        <MudTh>BIL</MudTh><MudTh>RM</MudTh>
-                        <MudTh>BIL</MudTh><MudTh>RM</MudTh>
-                    </MudTr>
-                </HeaderContent>
+                        <MudTr>
+                            <MudTh>BIL</MudTh><MudTh>RM</MudTh>
+                            <MudTh>BIL</MudTh><MudTh>RM</MudTh>
+                            <MudTh>BIL</MudTh><MudTh>RM</MudTh>
+                            <MudTh>BIL</MudTh><MudTh>RM</MudTh>
+                            <MudTh>BIL</MudTh><MudTh>RM</MudTh>
+                            <MudTh>BIL</MudTh><MudTh>RM</MudTh>
+                        </MudTr>
+                    </HeaderContent>
 
-                <RowTemplate>
-                    <MudTd>@context.ItemName</MudTd>
-                    <MudTd>@context.W1_Bil</MudTd><MudTd>@context.W1_RM.ToString("N2")</MudTd>
-                    <MudTd>@context.W2_Bil</MudTd><MudTd>@context.W2_RM.ToString("N2")</MudTd>
-                    <MudTd>@context.W3_Bil</MudTd><MudTd>@context.W3_RM.ToString("N2")</MudTd>
-                    <MudTd>@context.W4_Bil</MudTd><MudTd>@context.W4_RM.ToString("N2")</MudTd>
-                    <MudTd>@context.W5_Bil</MudTd><MudTd>@context.W5_RM.ToString("N2")</MudTd>
-                    <MudTd>@context.Total_Bil</MudTd><MudTd>@context.Total_RM.ToString("N2")</MudTd>
-                </RowTemplate>
+                    <RowTemplate>
+                        <MudTd>@context.ItemName</MudTd>
+                        <MudTd>@context.W1_Bil</MudTd><MudTd>@context.W1_RM.ToString("N2")</MudTd>
+                        <MudTd>@context.W2_Bil</MudTd><MudTd>@context.W2_RM.ToString("N2")</MudTd>
+                        <MudTd>@context.W3_Bil</MudTd><MudTd>@context.W3_RM.ToString("N2")</MudTd>
+                        <MudTd>@context.W4_Bil</MudTd><MudTd>@context.W4_RM.ToString("N2")</MudTd>
+                        <MudTd>@context.W5_Bil</MudTd><MudTd>@context.W5_RM.ToString("N2")</MudTd>
+                        <MudTd>@context.Total_Bil</MudTd><MudTd>@context.Total_RM.ToString("N2")</MudTd>
+                    </RowTemplate>
 
-            </MudTable>
+                    <NoRecordsContent>
+                        <MudText Class="pa-4">No data available in table</MudText>
+                    </NoRecordsContent>
 
+                </MudTable>
+            }
 
             <MudDivider Class="my-4" />
 
             <!-- BUTTONS -->
             <MudGrid Justify="Justify.Center" Class="mb-4">
                 <MudItem>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-2">Cetak</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-2">
+                        Cetak
+                    </MudButton>
 
-                    <MudButton Variant="Variant.Filled" Color="Color.Success"
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
                                StartIcon="@Icons.Material.Filled.FileDownload"
                                Class="mx-2">
                         Export Excel
@@ -110,13 +141,16 @@
 </MudPaper>
 
 @code {
+    // --- Filter state ---
     public bool IsFromAkhir { get; set; }
     public DateTime? TarikhSehingga { get; set; }
 
-    // Data model for summary rows
+    private bool _isLoading;
+
+    // --- DTO view-model utk jadual ringkasan ---
     public class RumusanRow
     {
-        public string ItemName { get; set; }
+        public string ItemName { get; set; } = string.Empty;
         public int W1_Bil { get; set; }
         public decimal W1_RM { get; set; }
         public int W2_Bil { get; set; }
@@ -131,16 +165,90 @@
         public decimal Total_RM { get; set; }
     }
 
-    public List<RumusanRow> SummaryList { get; set; } = new()
+    public List<RumusanRow> SummaryList { get; set; } = new();
+
+    // =====================================
+    // Carian: guna BillDTO melalui IBillApi
+    // =====================================
+    private async Task Carian()
     {
-        new RumusanRow {
-            ItemName = "PERBELANJAAN",
-            W1_Bil = 10, W1_RM = 5000,
-            W2_Bil = 7, W2_RM = 3000,
-            W3_Bil = 5, W3_RM = 2000,
-            W4_Bil = 3, W4_RM = 1800,
-            W5_Bil = 2, W5_RM = 1500,
-            Total_Bil = 27, Total_RM = 13300
+        if (TarikhSehingga is null)
+        {
+            Snackbar.Add("Sila pilih Tarikh Sehingga.", Severity.Warning);
+            return;
         }
-    };
+
+        _isLoading = true;
+        SummaryList.Clear();
+
+        try
+        {
+            var bills = await BillService.GetAllAsync();
+
+            var cutoff = TarikhSehingga.Value.Date;
+
+            // tapis bil yg ada tarikh & sebelum / sama cutoff
+            var filtered = bills
+                .Where(b => b.Tarikh.HasValue && b.Tarikh.Value.Date <= cutoff)
+                .ToList();
+
+            int w1Bil = 0, w2Bil = 0, w3Bil = 0, w4Bil = 0, w5Bil = 0;
+            decimal w1RM = 0, w2RM = 0, w3RM = 0, w4RM = 0, w5RM = 0;
+
+            foreach (var bill in filtered)
+            {
+                var billDate = bill.Tarikh!.Value.Date;
+                var days = (cutoff - billDate).TotalDays;
+                var amt = bill.Jumlah ?? 0m;
+
+                // bucket ikut header: 1–30, 31–60, 61–90, >90–360, >360
+                if (days >= 1 && days <= 30)
+                {
+                    w1Bil++; w1RM += amt;
+                }
+                else if (days > 30 && days <= 60)
+                {
+                    w2Bil++; w2RM += amt;
+                }
+                else if (days > 60 && days <= 90)
+                {
+                    w3Bil++; w3RM += amt;
+                }
+                else if (days > 90 && days <= 360)
+                {
+                    w4Bil++; w4RM += amt;
+                }
+                else if (days > 360)
+                {
+                    w5Bil++; w5RM += amt;
+                }
+            }
+
+            var totalBil = w1Bil + w2Bil + w3Bil + w4Bil + w5Bil;
+            var totalRM = w1RM + w2RM + w3RM + w4RM + w5RM;
+
+            SummaryList = new()
+            {
+                new RumusanRow
+                {
+                    ItemName = "PERBELANJAAN",
+                    W1_Bil = w1Bil, W1_RM = w1RM,
+                    W2_Bil = w2Bil, W2_RM = w2RM,
+                    W3_Bil = w3Bil, W3_RM = w3RM,
+                    W4_Bil = w4Bil, W4_RM = w4RM,
+                    W5_Bil = w5Bil, W5_RM = w5RM,
+                    Total_Bil = totalBil,
+                    Total_RM = totalRM
+                }
+            };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal menjana ringkasan: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
 }

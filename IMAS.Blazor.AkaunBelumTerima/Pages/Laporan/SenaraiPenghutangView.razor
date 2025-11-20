@@ -1,66 +1,156 @@
-﻿@page "/LaporanSenaraiPenghutang"
+﻿@page "/laporan-senarai-penghutang"
 @using MudBlazor
+@using IMAS.API.AkaunBelumTerima.Shared.Models
+@using IMAS.Blazor.AkaunBelumTerima.Services.Refit
+@inject IPenyelenggaraanPenghutangApi PenghutangApi
+@inject ISnackbar Snackbar
 
 <MudPaper Class="pa-4">
-    <MudCard>
-        <MudCardHeader Class="bg-primary text-white">
-            <MudText Typo="Typo.h6" Class="text-white">Laporan Senarai Penghutang</MudText>
+    <MudCard Style="border-left:6px solid #2c7be5;">
+        <MudCardHeader Class="py-2" Style="background:#2c7be5; color:white;">
+            <MudText Typo="Typo.subtitle1" Class="pl-2">
+                Laporan Senarai Penghutang
+            </MudText>
         </MudCardHeader>
 
         <MudCardContent>
-            <MudGrid Class="mt-4">
 
-                <MudItem xs="12" sm="4">
-                    <MudSelect Label="Tahun Kewangan" @bind-Value="SelectedYear">
-                        @foreach (var year in FinancialYears)
+            @if (_loading)
+            {
+                <MudProgressLinear Indeterminate="true" Class="mb-2" />
+            }
+
+            <!-- ===================== KRITERIA LAPORAN ===================== -->
+            <MudGrid Class="mb-4" Style="max-width:900px;">
+
+                <!-- Tahun Kewangan -->
+                <MudItem xs="12" md="4">
+                    <MudText Typo="Typo.caption">Tahun Kewangan</MudText>
+                    <MudSelect T="int?" @bind-Value="_selectedYear"
+                               Dense="true" Variant="Variant.Outlined"
+                               Style="background:white;">
+                        <MudSelectItem T="int?" Value="@((int?)null)">Select...</MudSelectItem>
+                        @foreach (var year in _years)
                         {
-                            <MudSelectItem Value="year">@year</MudSelectItem>
+                            <MudSelectItem T="int?" Value="@year">@year</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>
 
-                <MudItem xs="12" sm="4">
-                    <MudTextField Label="Tarikh Mula" @bind-Value="StartDate" InputType="InputType.Date" />
+                <!-- Tarikh Mula -->
+                <MudItem xs="12" md="4">
+                    <MudText Typo="Typo.caption">Tarikh Mula</MudText>
+                    <MudDatePicker @bind-Date="_startDate"
+                                   Dense="true"
+                                   Variant="Variant.Outlined"
+                                   Format="dd/MM/yyyy"
+                                   Style="background:white;" />
                 </MudItem>
 
-                <MudItem xs="12" sm="4">
-                    <MudTextField Label="Tarikh Akhir" @bind-Value="EndDate" InputType="InputType.Date" />
+                <!-- Tarikh Akhir -->
+                <MudItem xs="12" md="4">
+                    <MudText Typo="Typo.caption">Tarikh Akhir</MudText>
+                    <MudDatePicker @bind-Date="_endDate"
+                                   Dense="true"
+                                   Variant="Variant.Outlined"
+                                   Format="dd/MM/yyyy"
+                                   Style="background:white;" />
                 </MudItem>
 
-                <MudItem xs="12" sm="4">
-                    <MudSelect Label="Kategori Penghutang" @bind-Value="SelectedCategory">
-                        @foreach (var c in Categories)
-                        {
-                            <MudSelectItem Value="c">@c</MudSelectItem>
-                        }
-                    </MudSelect>
+                <!-- Kategori Penghutang: code + dropdown -->
+                <MudItem xs="12" md="12" Class="mt-3">
+                    <MudText Typo="Typo.caption">Kategori Penghutang</MudText>
+                    <MudGrid>
+                        <!-- Kod kategori (readonly, ikut pilihan) -->
+                        <MudItem xs="12" md="3">
+                            <MudTextField T="string"
+                                          @bind-Value="_kategoriKod"
+                                          Dense="true"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="true"
+                                          Style="background:white;" />
+                        </MudItem>
+
+                        <!-- Senarai kategori -->
+                        <MudItem xs="12" md="9">
+                            <MudSelect T="Guid?"
+                                       Value="_selectedKategoriId"
+                                       ValueChanged="OnKategoriChanged"
+                                       Dense="true"
+                                       Variant="Variant.Outlined"
+                                       Style="background:white;">
+                                <MudSelectItem T="Guid?" Value="@((Guid?)null)">
+                                    Pilih kategori penghutang
+                                </MudSelectItem>
+                                @foreach (var k in _kategoriList)
+                                {
+                                    <MudSelectItem T="Guid?" Value="@k.ID">
+                                        @($"{k.Kod} - {k.KeteranganKod}")
+                                    </MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                    </MudGrid>
                 </MudItem>
 
             </MudGrid>
 
-            <MudDivider Class="my-6" />
+            <MudDivider Class="my-4" />
 
-            <MudGrid Justify="Justify.Center" Class="text-center">
+            <!-- ===================== HEADER LAPORAN (LOGO + TEKS) ===================== -->
+            <MudGrid Justify="Justify.Center" Class="text-center my-6">
                 <MudItem xs="12" sm="6">
                     <img src="/images/mpob_logo.png" style="width:180px;" />
-                    <MudText Typo="Typo.subtitle1" Class="mt-2"><b>LEMBAGA MINYAK SAWIT MALAYSIA</b></MudText>
-                    <MudText Typo="Typo.subtitle2" Class="mb-4">MALAYSIAN PALM OIL BOARD</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mt-2">
+                        <b>LEMBAGA MINYAK SAWIT MALAYSIA</b>
+                    </MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mb-4">
+                        MALAYSIAN PALM OIL BOARD
+                    </MudText>
 
-                    <MudText Typo="Typo.body2">6, Persiaran Institusi<br />Bandar Baru Bangi<br />43000 Kajang, Selangor.</MudText>
-                    <MudText Typo="Typo.body2" Class="mt-2">Tel : +603-8769 4400<br />Fax : +603-8925 9446</MudText>
-                    <MudText Typo="Typo.body2" Class="mb-6">Website : www.mpob.gov.my</MudText>
+                    <MudText Typo="Typo.body2">
+                        6, Persiaran Institusi<br />
+                        Bandar Baru Bangi<br />
+                        43000 Kajang, Selangor.
+                    </MudText>
 
-                    <MudText Typo="Typo.h6" Class="mt-4"><b>SISTEM PENGURUSAN KEWANGAN</b></MudText>
-                    <MudText Typo="Typo.body1">SENARAI PENGHUTANG</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-2">
+                        Tel : +603-8769 4400<br />
+                        Fax : +603-8925 9446
+                    </MudText>
+
+                    <MudText Typo="Typo.body2" Class="mb-6">
+                        Website : www.mpob.gov.my
+                    </MudText>
+
+                    <MudText Typo="Typo.h6" Class="mt-4">
+                        <b>SISTEM PENGURUSAN KEWANGAN</b>
+                    </MudText>
+                    <MudText Typo="Typo.body1">
+                        SENARAI PENGHUTANG
+                    </MudText>
                 </MudItem>
             </MudGrid>
 
-            <MudDivider Class="my-6" />
+            <MudDivider Class="my-4" />
 
-            <MudGrid Justify="Justify.Center" Class="mb-4">
+            <!-- ===================== BUTANG TINDAKAN ===================== -->
+            <MudGrid Justify="Justify.Center" Class="mb-2">
                 <MudItem>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-2">Cetak</MudButton>
-                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.FileDownload" Class="mx-2">Export Excel</MudButton>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Class="mx-2"
+                               OnClick="Cetak">
+                        Cetak
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
+                               StartIcon="@Icons.Material.Filled.FileDownload"
+                               Class="mx-2"
+                               OnClick="ExportExcel">
+                        Export Excel
+                    </MudButton>
                 </MudItem>
             </MudGrid>
 
@@ -69,12 +159,69 @@
 </MudPaper>
 
 @code {
-    public string SelectedYear { get; set; }
-    public List<string> FinancialYears { get; set; } = new() { "2023", "2024", "2025" };
+    private bool _loading;
 
-    public DateTime? StartDate { get; set; }
-    public DateTime? EndDate { get; set; }
+    // filter
+    private int? _selectedYear;
+    private DateTime? _startDate;
+    private DateTime? _endDate;
 
-    public string SelectedCategory { get; set; }
-    public List<string> Categories { get; set; } = new() { "Semua", "Kerajaan", "Swasta", "Individu" };
+    private Guid? _selectedKategoriId;
+    private string? _kategoriKod;
+
+    // sumber data dari PenyelenggaraanPenghutang
+    private List<int> _years = new();
+    private List<PenyelenggaraanPenghutangDTO> _kategoriList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        try
+        {
+            // ambil semua kategori/kod penghutang
+            var list = await PenghutangApi.GetAllAsync() ?? new List<PenyelenggaraanPenghutangDTO>();
+
+            // kategori = rekod yg ada Kod (bukan KodPenghutang)
+            _kategoriList = list
+                .Where(x => !string.IsNullOrWhiteSpace(x.Kod))
+                .OrderBy(x => x.Kod)
+                .ToList();
+
+            // Tahun kewangan ambil distinct dari DTO
+            _years = _kategoriList
+                .Where(x => x.TahunKewangan.HasValue)
+                .Select(x => x.TahunKewangan!.Value)
+                .Distinct()
+                .OrderByDescending(x => x)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memuatkan data penghutang: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private Task OnKategoriChanged(Guid? id)
+    {
+        _selectedKategoriId = id;
+        var item = _kategoriList.FirstOrDefault(x => x.ID == id);
+        _kategoriKod = item?.Kod ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private void Cetak()
+    {
+        // TODO: sambung ke endpoint laporan (PDF/print)
+        Snackbar.Add("Fungsi Cetak belum dihubungkan ke laporan.", Severity.Info);
+    }
+
+    private void ExportExcel()
+    {
+        // TODO: sambung ke endpoint export Excel
+        Snackbar.Add("Fungsi Export Excel belum dihubungkan ke laporan.", Severity.Info);
+    }
 }

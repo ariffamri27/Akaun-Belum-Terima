@@ -1,100 +1,166 @@
 ﻿@page "/status-baki-penghutang"
+@using MudBlazor
 
 <MudPaper Class="pa-4">
 
-    <!-- Header -->
-    <MudText Typo="Typo.h6" Class="mb-3">
-        📌 Pertanyaan Senarai Baki Penghutang
-    </MudText>
+    <!-- ======================= PERTANYAAN SENARAI BAKI PENGHUTANG ======================= -->
+    <MudCard Class="mb-4" Style="border-left:6px solid #16a085;">
+        <MudCardHeader Class="py-2" Style="background:#16a085; color:white;">
+            <MudText Typo="Typo.subtitle1" Class="pl-2">
+                Pertanyaan Senarai Baki Penghutang
+            </MudText>
+        </MudCardHeader>
 
-    <!-- FILTER SECTION -->
-    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <MudCardContent>
 
-        <MudGrid>
+            <MudGrid Class="mb-2" Style="max-width:1100px;">
+                <!-- Tahun -->
+                <MudItem xs="12" md="3">
+                    <MudText Typo="Typo.caption">Tahun</MudText>
+                    <MudSelect T="string" @bind-Value="SelectedYear"
+                               Dense="true" Variant="Variant.Outlined"
+                               Style="background:white;">
+                        <MudSelectItem T="string" Value="@("")">Pilih...</MudSelectItem>
+                        @foreach (var year in TahunList)
+                        {
+                            <MudSelectItem T="string" Value="@year">@year</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
 
-            <!-- Tahun -->
-            <MudItem xs="12" md="3">
-                <MudSelect Label="Tahun" T="string" @bind-Value="SelectedYear">
-                    @foreach (var year in TahunList)
-                    {
-                        <MudSelectItem T="string" Value="@year">@year</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
+                <!-- Jenis Penghutang -->
+                <MudItem xs="12" md="5">
+                    <MudText Typo="Typo.caption">Jenis Penghutang</MudText>
+                    <MudSelect T="string" @bind-Value="SelectedJenisPenghutang"
+                               Dense="true" Variant="Variant.Outlined"
+                               Style="background:white;">
+                        <MudSelectItem T="string" Value="@("")">Pilih...</MudSelectItem>
+                        @foreach (var jenis in JenisPenghutangList)
+                        {
+                            <MudSelectItem T="string" Value="@jenis">@jenis</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
 
-            <!-- Jenis Penghutang -->
-            <MudItem xs="12" md="5">
-                <MudSelect Label="Jenis Penghutang" T="string" @bind-Value="SelectedJenisPenghutang">
-                    @foreach (var jenis in JenisPenghutangList)
-                    {
-                        <MudSelectItem T="string" Value="@jenis">@jenis</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
+                <!-- Checkbox -->
+                <MudItem xs="12" md="4" Class="d-flex align-center mt-4 mt-md-0">
+                    <MudCheckBox T="bool" @bind-Checked="PaparKosong" Class="mr-2" />
+                    <MudText Typo="Typo.body2">Papar penghutang berbaki kosong</MudText>
+                </MudItem>
+            </MudGrid>
 
-            <!-- Checkbox -->
-            <MudItem xs="12" md="4">
-                <MudCheckBox T="bool" @bind-Checked="PaparKosong">
-                    Papar penghutang berbaki kosong
-                </MudCheckBox>
-            </MudItem>
+            <!-- Button carian -->
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Success"
+                       StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="Carian">
+                Carian
+            </MudButton>
 
-        </MudGrid>
-
-        <!-- CARIAN BUTTON -->
-        <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Search"
-                   Class="mt-3"
-                   OnClick="Carian">
-            Carian
-        </MudButton>
-
-    </MudPaper>
+        </MudCardContent>
+    </MudCard>
 
 
+    <!-- ======================= KEPUTUSAN CARIAN ======================= -->
+    <MudCard Style="border-left:6px solid #16a085;">
+        <MudCardHeader Class="py-2" Style="background:#16a085; color:white;">
+            <MudText Typo="Typo.subtitle1" Class="pl-2">
+                Keputusan Carian
+            </MudText>
+        </MudCardHeader>
 
-    <!-- KEPUTUSAN TABLE -->
-    <MudPaper Class="pa-4" Elevation="2">
+        <MudCardContent>
 
-        <MudText Typo="Typo.h6" Class="mb-3">📄 Keputusan Carian</MudText>
+            <!-- Controls: page size + search -->
+            <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
+                <MudItem xs="12" md="3">
+                    <MudSelect T="int"
+                               Value="@_pageSize"
+                               ValueChanged="(v)=>{ _pageSize = v; _page = 1; }"
+                               Dense="true"
+                               Variant="Variant.Outlined"
+                               Style="background:white; width:100px;">
+                        <MudSelectItem T="int" Value="10">10</MudSelectItem>
+                        <MudSelectItem T="int" Value="25">25</MudSelectItem>
+                        <MudSelectItem T="int" Value="50">50</MudSelectItem>
+                        <MudSelectItem T="int" Value="100">100</MudSelectItem>
+                    </MudSelect>
+                    <MudText Typo="Typo.caption">records</MudText>
+                </MudItem>
 
-        <MudTable Items="ResultList" Dense="true" Hover="true">
+                <MudItem xs="12" md="9" Class="d-flex justify-end">
+                    <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
+                    <MudTextField T="string"
+                                  @bind-Value="_search"
+                                  Immediate="true"
+                                  Dense="true"
+                                  Variant="Variant.Outlined"
+                                  Style="background:white; max-width:260px;" />
+                </MudItem>
+            </MudGrid>
 
-            <HeaderContent>
-                <MudTh>Kod Penghutang</MudTh>
-                <MudTh>Nama Penghutang</MudTh>
-                <MudTh>Amaun (RM)</MudTh>
-            </HeaderContent>
+            <!-- Table -->
+            <MudTable Items="PagedResults"
+                      T="ResultModel"
+                      Dense="true"
+                      Hover="true"
+                      Striped="true"
+                      Bordered="true"
+                      Elevation="0">
 
-            <RowTemplate>
-                <MudTd>@context.KodPenghutang</MudTd>
-                <MudTd>@context.NamaPenghutang</MudTd>
-                <MudTd>@context.Amaun</MudTd>
-            </RowTemplate>
+                <HeaderContent>
+                    <MudTh>Kod Penghutang</MudTh>
+                    <MudTh>Nama Penghutang</MudTh>
+                    <MudTh>Amaun (RM)</MudTh>
+                </HeaderContent>
 
-            <NoRecordsContent>
-                <MudText Class="pa-4">No data available in table</MudText>
-            </NoRecordsContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Kod Penghutang">@context.KodPenghutang</MudTd>
+                    <MudTd DataLabel="Nama Penghutang">@context.NamaPenghutang</MudTd>
+                    <MudTd DataLabel="Amaun (RM)">@context.Amaun</MudTd>
+                </RowTemplate>
 
-        </MudTable>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.caption" Class="pa-4">
+                        No data available in table
+                    </MudText>
+                </NoRecordsContent>
+            </MudTable>
 
-    </MudPaper>
+            <!-- Footer: showing X to Y of Z -->
+            <MudGrid AlignItems="AlignItems.Center" Class="mt-2">
+                <MudItem xs="12" md="6">
+                    <MudText Typo="Typo.caption">
+                        Showing @(TotalCount == 0 ? 0 : ((_page - 1) * _pageSize + 1))
+                        to @((Math.Min(_page * _pageSize, TotalCount)))
+                        of @TotalCount entries
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" md="6" Class="d-flex justify-end">
+                    <MudPagination Page="@_page"
+                                   PageChanged="(p)=>_page = p"
+                                   Count="@(Math.Max(1, (int)Math.Ceiling((double)TotalCount/_pageSize)))"
+                                   HidePrevNext="false"
+                                   Class="my-0" />
+                </MudItem>
+            </MudGrid>
+
+        </MudCardContent>
+    </MudCard>
 
 </MudPaper>
 
-
 @code {
+    // ===== Filter values =====
+    private string? SelectedYear;
+    private string? SelectedJenisPenghutang;
+    private bool PaparKosong = false;
 
-    // FILTER VALUES
-    string? SelectedYear;
-    string? SelectedJenisPenghutang;
-    bool PaparKosong = false;
+    // Dropdown sources (EMPTY – NO dummy data)
+    private List<string> TahunList = new();
+    private List<string> JenisPenghutangList = new();
 
-    // DROPDOWN SOURCES (EMPTY – NO DUMMY DATA)
-    List<string> TahunList = new();
-    List<string> JenisPenghutangList = new();
-
-    // TABLE MODEL
+    // ===== Table model =====
     public class ResultModel
     {
         public string? KodPenghutang { get; set; }
@@ -102,12 +168,31 @@
         public string? Amaun { get; set; }
     }
 
-    // EMPTY TABLE LIST (NO DUMMY DATA)
-    List<ResultModel> ResultList = new();
+    // Master list (empty)
+    private List<ResultModel> ResultList = new();
 
-    void Carian()
+    // ===== Paging & search =====
+    private int _page = 1;
+    private int _pageSize = 10;
+    private string _search = string.Empty;
+
+    private IEnumerable<ResultModel> Filtered =>
+        ResultList.Where(x =>
+            string.IsNullOrWhiteSpace(_search)
+            || (x.KodPenghutang?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (x.NamaPenghutang?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private List<ResultModel> PagedResults => Filtered
+        .OrderBy(x => x.KodPenghutang)
+        .Skip((_page - 1) * _pageSize)
+        .Take(_pageSize)
+        .ToList();
+
+    private int TotalCount => Filtered.Count();
+
+    private void Carian()
     {
-        // Bila sedia, anda hanya panggil API di sini.
-        // Sekarang dibiarkan kosong mengikut permintaan.
+        // Nanti bila ada API untuk baki penghutang, panggil di sini.
+        // Buat masa ini, senarai kekal kosong (ikut requirement).
     }
 }

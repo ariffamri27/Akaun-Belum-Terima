@@ -1,126 +1,388 @@
 ﻿@page "/status-terimaan"
+@using IMAS.API.AkaunBelumTerima.Shared.Models
+@using IMAS.Blazor.AkaunBelumTerima.Services.Refit
+@using MudBlazor
+
+@inject ISnackbar Snackbar
+@inject IResitApi ResitApi
+@inject IPenyelenggaraanPenghutangApi PenghutangApi
 
 <MudPaper Class="pa-4">
 
-    <!-- Header -->
-    <MudText Typo="Typo.h6" Class="mb-3">
-        📌 Jenis Carian
-    </MudText>
+    <!-- ======================= JENIS CARIAN ======================= -->
+    <MudCard Class="mb-4" Style="border-left:6px solid #16a085;">
+        <MudCardHeader Class="py-2" Style="background:#16a085; color:white;">
+            <MudText Typo="Typo.subtitle1" Class="pl-2">Jenis Carian</MudText>
+        </MudCardHeader>
+        <MudCardContent>
 
-    <!-- JENIS CARIAN -->
-    <MudPaper Class="pa-4 mb-4" Elevation="3">
+            <MudRadioGroup T="string" @bind-SelectedOption="JenisCarian" Row="true">
+                <MudRadio T="string" Option="CekDeraf">No Cek/Deraf</MudRadio>
+                <MudRadio T="string" Option="Nama">Nama</MudRadio>
+                <MudRadio T="string" Option="Amaun">Amaun</MudRadio>
+                <MudRadio T="string" Option="TarikhResit">Tarikh Resit</MudRadio>
+                <MudRadio T="string" Option="NoResit">No Resit</MudRadio>
+                <MudRadio T="string" Option="KodPenghutang">Kod Penghutang</MudRadio>
+            </MudRadioGroup>
 
-        <MudRadioGroup T="string" @bind-SelectedOption="JenisCarian" Row="true">
-            <MudRadio T="string" Option="CekDeraf">No Cek/Deraf</MudRadio>
-            <MudRadio T="string" Option="Nama">Nama</MudRadio>
-            <MudRadio T="string" Option="Amaun">Amaun</MudRadio>
-            <MudRadio T="string" Option="TarikhResit">Tarikh Resit</MudRadio>
-            <MudRadio T="string" Option="NoResit">No Resit</MudRadio>
-            <MudRadio T="string" Option="KodPenghutang">Kod Penghutang</MudRadio>
-        </MudRadioGroup>
+            <MudGrid Class="mt-3">
+                <MudItem xs="12" sm="4">
+                    <MudText Typo="Typo.caption">Tahun</MudText>
+                    <MudSelect T="string" @bind-Value="TahunDipilih"
+                               Dense="true" Variant="Variant.Outlined"
+                               Style="background:white;">
+                        <MudSelectItem T="string" Value="@("")">Pilih...</MudSelectItem>
+                        @foreach (var thn in TahunList)
+                        {
+                            <MudSelectItem T="string" Value="@thn">@thn</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
 
-        <MudGrid Class="mt-3">
-            <MudItem xs="12" sm="4">
-                <MudSelect Label="Tahun" T="string" @bind-Value="TahunDipilih">
-                    @foreach (var thn in TahunList)
-                    {
-                        <MudSelectItem T="string" Value="@thn">@thn</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
+                <MudItem xs="12" sm="8">
+                    <MudText Typo="Typo.caption">Nilai Carian</MudText>
+                    <MudTextField T="string"
+                                  @bind-Value="CarianText"
+                                  Variant="Variant.Outlined"
+                                  Style="background:white;" />
+                </MudItem>
+            </MudGrid>
 
-            <MudItem xs="12" sm="8">
-                <MudTextField Label="Kata carian..." @bind-Value="CarianText" />
-            </MudItem>
-        </MudGrid>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Success"
+                       StartIcon="@Icons.Material.Filled.Search"
+                       Class="mt-3"
+                       OnClick="Carian">
+                Carian
+            </MudButton>
 
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search"
-                   Class="mt-3" OnClick="Carian">
-            Carian
-        </MudButton>
+        </MudCardContent>
+    </MudCard>
 
-    </MudPaper>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Indeterminate />
+    }
+    else
+    {
+        <!-- ======================= KEPUTUSAN CARIAN ======================= -->
+        <MudCard Style="border-left:6px solid #16a085;">
+            <MudCardHeader Class="py-2" Style="background:#16a085; color:white;">
+                <MudText Typo="Typo.subtitle1" Class="pl-2">Keputusan Carian</MudText>
+            </MudCardHeader>
+            <MudCardContent>
 
+                <!-- Controls: page size + search -->
+                <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudItem xs="12" md="3">
+                        <MudSelect T="int"
+                                   Value="@_pageSize"
+                                   ValueChanged="(v)=>{ _pageSize = v; _page = 1; }"
+                                   Dense="true"
+                                   Variant="Variant.Outlined"
+                                   Style="background:white; width:100px;">
+                            <MudSelectItem T="int" Value="10">10</MudSelectItem>
+                            <MudSelectItem T="int" Value="25">25</MudSelectItem>
+                            <MudSelectItem T="int" Value="50">50</MudSelectItem>
+                            <MudSelectItem T="int" Value="100">100</MudSelectItem>
+                        </MudSelect>
+                        <MudText Typo="Typo.caption">records</MudText>
+                    </MudItem>
 
+                    <MudItem xs="12" md="9" Class="d-flex justify-end">
+                        <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
+                        <MudTextField T="string"
+                                      @bind-Value="_tableSearch"
+                                      Immediate="true"
+                                      Dense="true"
+                                      Variant="Variant.Outlined"
+                                      Style="background:white; max-width:260px;" />
+                    </MudItem>
+                </MudGrid>
 
-    <!-- KEPUTUSAN CARIAN -->
-    <MudPaper Class="pa-4" Elevation="2">
+                <!-- Table -->
+                <MudTable Items="PagedResults"
+                          T="KeputusanRow"
+                          Hover="true"
+                          Dense="true"
+                          Striped="true"
+                          Bordered="true"
+                          Elevation="0">
 
-        <MudText Typo="Typo.h6" Class="mb-3">📄 Keputusan Carian</MudText>
+                    <HeaderContent>
+                        <MudTh>No. Resit</MudTh>
+                        <MudTh>Tarikh Resit</MudTh>
+                        <MudTh>Amaun Resit (RM)</MudTh>
+                        <MudTh>Penerima</MudTh>
+                        <MudTh>No. Cek/Deraf</MudTh>
+                        <MudTh>Amaun Cek/Deraf (RM)</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>No. Slip (P)</MudTh>
+                        <MudTh>Tarikh Slip (P)</MudTh>
+                        <MudTh>No. Slip (N)</MudTh>
+                        <MudTh>Tarikh Slip (N)</MudTh>
+                        <MudTh>Di Tunai</MudTh>
+                    </HeaderContent>
 
-        <MudTable Items="KeputusanList" Hover="true" Dense="true">
+                    <RowTemplate>
+                        <MudTd DataLabel="No. Resit">@context.NoResit</MudTd>
+                        <MudTd DataLabel="Tarikh Resit">@context.TarikhResit?.ToString("dd/MM/yyyy")</MudTd>
+                        <MudTd DataLabel="Amaun Resit (RM)">@context.AmaunResit?.ToString("N2")</MudTd>
+                        <MudTd DataLabel="Penerima">@context.Penerima</MudTd>
+                        <MudTd DataLabel="No. Cek/Deraf">@context.NoCekDeraf</MudTd>
+                        <MudTd DataLabel="Amaun Cek/Deraf (RM)">@context.AmaunCekDeraf?.ToString("N2")</MudTd>
+                        <MudTd DataLabel="Status">@context.Status</MudTd>
+                        <MudTd DataLabel="No. Slip (P)">@context.NoSlipP</MudTd>
+                        <MudTd DataLabel="Tarikh Slip (P)">@context.TarikhSlipP?.ToString("dd/MM/yyyy")</MudTd>
+                        <MudTd DataLabel="No. Slip (N)">@context.NoSlipN</MudTd>
+                        <MudTd DataLabel="Tarikh Slip (N)">@context.TarikhSlipN?.ToString("dd/MM/yyyy")</MudTd>
+                        <MudTd DataLabel="Di Tunai">@context.DiTunai</MudTd>
+                    </RowTemplate>
 
-            <HeaderContent>
-                <MudTh>No. Resit</MudTh>
-                <MudTh>Tarikh Resit</MudTh>
-                <MudTh>Amaun Resit (RM)</MudTh>
-                <MudTh>Penerima</MudTh>
-                <MudTh>No. Cek/Deraf</MudTh>
-                <MudTh>Amaun Cek/Deraf (RM)</MudTh>
-                <MudTh>Status</MudTh>
-                <MudTh>No. Slip (P)</MudTh>
-                <MudTh>Tarikh Slip (P)</MudTh>
-                <MudTh>No. Slip (N)</MudTh>
-                <MudTh>Tarikh Slip (N)</MudTh>
-                <MudTh>Di Tunai</MudTh>
-            </HeaderContent>
+                    <NoRecordsContent>
+                        <MudText Typo="Typo.caption">No data available in table</MudText>
+                    </NoRecordsContent>
 
-            <RowTemplate>
-                <MudTd>@context.NoResit</MudTd>
-                <MudTd>@context.TarikhResit</MudTd>
-                <MudTd>@context.AmaunResit</MudTd>
-                <MudTd>@context.Penerima</MudTd>
-                <MudTd>@context.NoCekDeraf</MudTd>
-                <MudTd>@context.AmaunCekDeraf</MudTd>
-                <MudTd>@context.Status</MudTd>
-                <MudTd>@context.NoSlipP</MudTd>
-                <MudTd>@context.TarikhSlipP</MudTd>
-                <MudTd>@context.NoSlipN</MudTd>
-                <MudTd>@context.TarikhSlipN</MudTd>
-                <MudTd>@context.DiTunai</MudTd>
-            </RowTemplate>
+                </MudTable>
 
-            <NoRecordsContent>
-                <MudText Class="pa-4">No data available in table</MudText>
-            </NoRecordsContent>
+                <!-- Footer -->
+                <MudGrid AlignItems="AlignItems.Center" Class="mt-2">
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption">
+                            Showing @(TotalResults == 0 ? 0 : ((_page - 1) * _pageSize + 1))
+                            to @((Math.Min(_page * _pageSize, TotalResults)))
+                            of @TotalResults entries
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="6" Class="d-flex justify-end">
+                        <MudPagination Page="@_page"
+                                       PageChanged="(p)=>_page = p"
+                                       Count="@(Math.Max(1, (int)Math.Ceiling((double)TotalResults/_pageSize)))"
+                                       HidePrevNext="false"
+                                       Class="my-0" />
+                    </MudItem>
+                </MudGrid>
 
-        </MudTable>
-
-    </MudPaper>
+            </MudCardContent>
+        </MudCard>
+    }
 
 </MudPaper>
 
 @code {
+    // ========== Filter state ==========
+    private string JenisCarian { get; set; } = "CekDeraf";
+    private string? TahunDipilih;
+    private string? CarianText;
 
-    // --- FILTER ---
-    string JenisCarian = "";
-    string? TahunDipilih;
-    string? CarianText;
+    private List<string> TahunList = new();
 
-    List<string> TahunList = new(); // kosong, ikut permintaan
+    // ========== Master data dari API ==========
+    private bool _isLoading;
+    private List<ResitDTO> _allResit = new();
+    private List<PenyelenggaraanPenghutangDTO> _allDebtors = new();
+    private Dictionary<Guid, PenyelenggaraanPenghutangDTO> _debtorById =
+        new();
 
-    // --- TABLE MODEL (kosong tanpa dummy data) ---
-    public class KeputusanModel
+    // ========== Keputusan (view model) ==========
+    public class KeputusanRow
     {
         public string? NoResit { get; set; }
-        public string? TarikhResit { get; set; }
-        public string? AmaunResit { get; set; }
+        public DateTime? TarikhResit { get; set; }
+        public decimal? AmaunResit { get; set; }
         public string? Penerima { get; set; }
         public string? NoCekDeraf { get; set; }
-        public string? AmaunCekDeraf { get; set; }
+        public decimal? AmaunCekDeraf { get; set; }
         public string? Status { get; set; }
         public string? NoSlipP { get; set; }
-        public string? TarikhSlipP { get; set; }
+        public DateTime? TarikhSlipP { get; set; }
         public string? NoSlipN { get; set; }
-        public string? TarikhSlipN { get; set; }
+        public DateTime? TarikhSlipN { get; set; }
         public string? DiTunai { get; set; }
     }
 
-    List<KeputusanModel> KeputusanList = new();
+    private List<KeputusanRow> KeputusanList = new();
 
-    void Carian()
+    // ========== Paging + search ==========
+    private int _page = 1;
+    private int _pageSize = 10;
+    private string _tableSearch = string.Empty;
+
+    private IEnumerable<KeputusanRow> FilteredResults =>
+        KeputusanList.Where(x =>
+            string.IsNullOrWhiteSpace(_tableSearch)
+            || (x.NoResit?.Contains(_tableSearch, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (x.Penerima?.Contains(_tableSearch, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (x.Status?.Contains(_tableSearch, StringComparison.OrdinalIgnoreCase) ?? false)
+        );
+
+    private List<KeputusanRow> PagedResults => FilteredResults
+        .OrderByDescending(x => x.TarikhResit)
+        .ThenBy(x => x.NoResit)
+        .Skip((_page - 1) * _pageSize)
+        .Take(_pageSize)
+        .ToList();
+
+    private int TotalResults => FilteredResults.Count();
+
+    // ========== Lifecycle ==========
+    protected override async Task OnInitializedAsync()
     {
-        // Tambah logic API jika perlu
-        // Untuk sekarang, table dibiarkan kosong seperti permintaan
+        _isLoading = true;
+        try
+        {
+            _allResit = await ResitApi.GetAllAsync();
+            _allDebtors = await PenghutangApi.GetAllAsync();
+
+            _debtorById = _allDebtors
+                .GroupBy(d => d.ID)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            TahunList = _allResit
+                .Select(r => r.Tarikh?.Year)
+                .Where(y => y.HasValue)
+                .Select(y => y!.Value)
+                .Distinct()
+                .OrderByDescending(y => y)
+                .Select(y => y.ToString())
+                .ToList();
+
+            if (!TahunList.Any())
+                TahunList.Add(DateTime.Now.Year.ToString());
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memuatkan data asas: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // ========== Carian ==========
+    private async Task Carian()
+    {
+        try
+        {
+            var query = _allResit.AsEnumerable();
+
+            // Tahun
+            if (!string.IsNullOrWhiteSpace(TahunDipilih)
+                && int.TryParse(TahunDipilih, out var year))
+            {
+                query = query.Where(r => r.Tarikh?.Year == year);
+            }
+
+            // Nilai carian
+            if (!string.IsNullOrWhiteSpace(CarianText))
+            {
+                var term = CarianText.Trim();
+
+                switch (JenisCarian)
+                {
+                    case "CekDeraf":
+                        query = query.Where(r =>
+                            (r.NoBankSlip ?? string.Empty)
+                                .Contains(term, StringComparison.OrdinalIgnoreCase));
+                        break;
+
+                    case "Nama":
+                        query = query.Where(r =>
+                        {
+                            var nama = GetDebtorName(r.PenyelenggaraanPenghutangEntitiesID);
+                            return (nama ?? string.Empty)
+                                .Contains(term, StringComparison.OrdinalIgnoreCase);
+                        });
+                        break;
+
+                    case "Amaun":
+                        query = query.Where(r =>
+                            (r.Jumlah?.ToString() ?? string.Empty)
+                                .Contains(term, StringComparison.OrdinalIgnoreCase));
+                        break;
+
+                    case "TarikhResit":
+                        query = query.Where(r =>
+                            (r.Tarikh?.ToString("dd/MM/yyyy") ?? string.Empty)
+                                .Contains(term, StringComparison.OrdinalIgnoreCase));
+                        break;
+
+                    case "NoResit":
+                        query = query.Where(r =>
+                            (r.NoResit ?? string.Empty)
+                                .Contains(term, StringComparison.OrdinalIgnoreCase));
+                        break;
+
+                    case "KodPenghutang":
+                        query = query.Where(r =>
+                        {
+                            var kod = GetDebtorKod(r.PenyelenggaraanPenghutangEntitiesID);
+                            return (kod ?? string.Empty)
+                                .Contains(term, StringComparison.OrdinalIgnoreCase);
+                        });
+                        break;
+                }
+            }
+
+            // Map ke view model – beberapa kolum (cek/deraf, slip, di tunai) belum ada dalam DTO,
+            // jadi dibiarkan kosong untuk masa sekarang.
+            KeputusanList = query
+                .Select(r =>
+                {
+                    var debtor = GetDebtor(r.PenyelenggaraanPenghutangEntitiesID);
+                    return new KeputusanRow
+                    {
+                        NoResit = r.NoResit,
+                        TarikhResit = r.Tarikh,
+                        AmaunResit = r.Jumlah,
+                        Penerima = debtor?.Nama,
+                        NoCekDeraf = null,
+                        AmaunCekDeraf = null,
+                        Status = BuildStatus(r),
+                        NoSlipP = null,
+                        TarikhSlipP = null,
+                        NoSlipN = null,
+                        TarikhSlipN = null,
+                        DiTunai = null
+                    };
+                })
+                .ToList();
+
+            _page = 1;
+            _tableSearch = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal membuat carian: {ex.Message}", Severity.Error);
+            KeputusanList = new();
+        }
+
+        await Task.CompletedTask;
+    }
+
+    // ========== Helper debtor / status ==========
+    private PenyelenggaraanPenghutangDTO? GetDebtor(Guid? id)
+    {
+        if (!id.HasValue) return null;
+        return _debtorById.TryGetValue(id.Value, out var d) ? d : null;
+    }
+
+    private string? GetDebtorName(Guid? id) => GetDebtor(id)?.Nama;
+
+    private string? GetDebtorKod(Guid? id) => GetDebtor(id)?.KodPenghutang;
+
+    private static string BuildStatus(ResitDTO r)
+    {
+        if (!string.IsNullOrWhiteSpace(r.StatusSah) &&
+            r.StatusSah.Equals("SAH", StringComparison.OrdinalIgnoreCase))
+            return "Sah";
+
+        if (!string.IsNullOrWhiteSpace(r.StatusPos) &&
+            (r.StatusPos.Equals("SUDAH POS", StringComparison.OrdinalIgnoreCase)
+             || r.StatusPos.Equals("POS", StringComparison.OrdinalIgnoreCase)))
+            return "Pos";
+
+        return "Baru";
     }
 }

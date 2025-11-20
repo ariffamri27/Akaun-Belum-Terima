@@ -1,8 +1,12 @@
 ﻿@page "/pengesahan-bil"
+
 @using IMAS.API.AkaunBelumTerima.Shared.Models
 @using IMAS.Blazor.AkaunBelumTerima.Services.Refit
 @using MudBlazor
+
 @inject IBillApi BillApi
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <MudPaper Class="pa-4">
 
@@ -15,8 +19,9 @@
         <MudTabPanel Text="Bil Telah Disahkan" />
     </MudTabs>
 
-    <MudTextField Value="@_search"
-                  OnActivePanelIndexChanged="@OnTabChanged"
+    <MudTextField T="string"
+                  Value="@_search"
+                  ValueChanged="OnSearchChanged"
                   Placeholder="Cari No Bil / Penyedia / Keterangan"
                   Adornment="Adornment.Start"
                   AdornmentIcon="@Icons.Material.Filled.Search"
@@ -64,6 +69,7 @@
 
                     <MudButton Size="Size.Small"
                                Color="Color.Success"
+                               Variant="Variant.Outlined"
                                Disabled="@(!IsBelumSah(context))"
                                OnClick="@(() => ConfirmBill(context))">
                         Sahkan
@@ -71,6 +77,7 @@
 
                     <MudButton Size="Size.Small"
                                Color="Color.Error"
+                               Variant="Variant.Outlined"
                                Disabled="@(!IsBelumSah(context))"
                                OnClick="@(() => CancelBill(context))">
                         Batalkan
@@ -86,26 +93,39 @@
 @code {
     private List<BillDTO> _bills = new();
     private MudTable<BillDTO>? _table;
-    private int _activeTab = 0;   // 0 = Belum Sah, 1 = Telah Sah
+    private int _activeTab = 0;   // 0 = Belum Sah, 1 = Telah Sah (SAH/BATAL)
     private string _search = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        _bills = await BillApi.GetAllAsync();
+        try
+        {
+            _bills = await BillApi.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memuatkan bil: {ex.Message}", Severity.Error);
+        }
     }
 
-    // dipanggil oleh MudTable (server data mode)
+    // Dipanggil oleh MudTable (server data mode)
     private Task<TableData<BillDTO>> LoadServerData(
-    TableState state,
-    CancellationToken token)
+        TableState state,
+        CancellationToken token)
     {
         IEnumerable<BillDTO> query = _bills;
 
         // Tab filter
         if (_activeTab == 0)
-            query = query.Where(b => b.StatusSah?.ToUpper() == "BELUM SAH");
+        {
+            // Bil belum sah (StatusSah null/empty atau "BELUM SAH")
+            query = query.Where(IsBelumSah);
+        }
         else
-            query = query.Where(b => b.StatusSah?.ToUpper() == "SAH");
+        {
+            // Bil telah diproses (SAH atau BATAL)
+            query = query.Where(b => !IsBelumSah(b));
+        }
 
         // Search
         if (!string.IsNullOrWhiteSpace(_search))
@@ -120,6 +140,8 @@
         // Paging
         var total = query.Count();
         var items = query
+            .OrderByDescending(x => x.Tarikh)
+            .ThenBy(x => x.NoBil)
             .Skip(state.Page * state.PageSize)
             .Take(state.PageSize)
             .ToList();
@@ -130,7 +152,6 @@
             Items = items
         });
     }
-
 
     private void OnTabChanged(int index)
     {
@@ -150,15 +171,17 @@
             await _table.ReloadServerData();
     }
 
+    // Null atau kosong kita treat sebagai "BELUM SAH"
     private bool IsBelumSah(BillDTO bill)
-        => string.Equals(bill.StatusSah, "BELUM SAH", StringComparison.OrdinalIgnoreCase);
+        => string.IsNullOrWhiteSpace(bill.StatusSah) ||
+           string.Equals(bill.StatusSah, "BELUM SAH", StringComparison.OrdinalIgnoreCase);
 
     private Color GetStatusColor(string? status)
     {
         return status?.ToUpperInvariant() switch
         {
-            "SAH" => Color.Success,
-            "BELUM SAH" => Color.Warning,
+            "SUDAH SAH" => Color.Success,
+            "BELUM SAH" or null or "" => Color.Warning,
             "BATAL" => Color.Error,
             _ => Color.Default
         };
@@ -166,22 +189,59 @@
 
     private void ViewDetail(BillDTO bill)
     {
-        // TODO: navigate ke page butiran / buka dialog
+        // TODO: navigate ke page butiran / buka dialog detail
+        // Boleh guna DialogService kalau nak paparkan butiran ringkas.
     }
 
     private async Task ConfirmBill(BillDTO bill)
     {
-        bill.StatusSah = "SAH";
-        await BillApi.UpdateAsync(bill.ID, bill);
-        _bills = await BillApi.GetAllAsync();
-        await ReloadTable();
+        var ok = await DialogService.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Sahkan bil <b>{bill.NoBil}</b>?",
+            yesText: "Sahkan",
+            cancelText: "Batal");
+
+        if (ok is not true) return;
+
+        try
+        {
+            bill.StatusSah = "SUDAH SAH";
+
+            await BillApi.UpdateAsync(bill.ID, bill);
+            Snackbar.Add("Bil berjaya disahkan.", Severity.Success);
+
+            _bills = await BillApi.GetAllAsync();
+            await ReloadTable();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal mengesahkan bil: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task CancelBill(BillDTO bill)
     {
-        bill.StatusSah = "BATAL";
-        await BillApi.UpdateAsync(bill.ID, bill);
-        _bills = await BillApi.GetAllAsync();
-        await ReloadTable();
+        var ok = await DialogService.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Batalkan bil <b>{bill.NoBil}</b>?",
+            yesText: "Batalkan",
+            cancelText: "Kembali");
+
+        if (ok is not true) return;
+
+        try
+        {
+            bill.StatusSah = "BATAL";
+
+            await BillApi.UpdateAsync(bill.ID, bill);
+            Snackbar.Add("Bil berjaya dibatalkan.", Severity.Success);
+
+            _bills = await BillApi.GetAllAsync();
+            await ReloadTable();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal membatalkan bil: {ex.Message}", Severity.Error);
+        }
     }
 }

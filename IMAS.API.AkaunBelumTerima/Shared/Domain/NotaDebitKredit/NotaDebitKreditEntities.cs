@@ -13,9 +13,9 @@ namespace IMAS.API.AkaunBelumTerima.Shared.Domain.Entities
 
         public DateTime? Tarikh { get; set; }
 
-        public string? StatusPos { get; set; } = "BARU";
+        public string? StatusPos { get; set; } = "BELUM POS"; //SUDAH POS
 
-        public string? StatusSah { get; set; } = "BELUM SAH";
+        public string? StatusSah { get; set; } = "BELUM SAH";//SUDAH SAH
 
         public string? ButiranNota { get; set; } = string.Empty;
 

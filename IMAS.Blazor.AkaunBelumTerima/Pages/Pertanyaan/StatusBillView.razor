@@ -1,167 +1,612 @@
 ﻿@page "/status-bil"
 
+@using IMAS.API.AkaunBelumTerima.Shared.Models
+@using IMAS.Blazor.AkaunBelumTerima.Services.Refit
+@using MudBlazor
+
+@inject ISnackbar Snackbar
+@inject IBillApi BillApi
+@inject INotaDebitKreditApi NotaApi
+@inject IResitApi ResitApi
+@inject IPenyelenggaraanPenghutangApi PenghutangApi
+
 <MudPaper Class="pa-4">
 
-    <!-- Header -->
-    <MudText Typo="Typo.h6" Class="mb-2">
-        📌 Pertanyaan Transaksi Bil
-    </MudText>
+    <!-- ======================= PERTANYAAN TRANSAKSI BIL ======================= -->
+    <MudCard Class="mb-4" Style="border-left:6px solid #16a085;">
+        <MudCardHeader Class="py-2" Style="background:#16a085; color:white;">
+            <MudText Typo="Typo.subtitle1" Class="pl-2">
+                Pertanyaan Transaksi Bil
+            </MudText>
+        </MudCardHeader>
+        <MudCardContent>
 
-    <!-- Search Filter -->
-    <MudPaper Class="pa-4 mb-4" Elevation="3">
-        <MudRadioGroup T="string" @bind-SelectedOption="CarianJenis" Row="true">
-            <MudRadio T="string" Option="NoBil">No. Bil</MudRadio>
-            <MudRadio T="string" Option="Nama">Nama</MudRadio>
-            <MudRadio T="string" Option="Kategori">Kategori Penghutang</MudRadio>
+            <MudRadioGroup T="string" @bind-SelectedOption="_carianJenis" Row="true">
+                <MudRadio T="string" Option="NoBil">No. Bil</MudRadio>
+                <MudRadio T="string" Option="Nama">Nama</MudRadio>
+                <MudRadio T="string" Option="Kategori">Kategori Penghutang</MudRadio>
+            </MudRadioGroup>
 
-        </MudRadioGroup>
+            <MudTextField T="string"
+                          @bind-Value="_carianText"
+                          Variant="Variant.Outlined"
+                          Class="mt-2"
+                          Style="max-width:420px; background:white;" />
 
-        <MudTextField @bind-Value="CarianText" Label="Masukkan carian..." Class="mt-2" />
+            <MudButton Color="Color.Success"
+                       Variant="Variant.Filled"
+                       StartIcon="@Icons.Material.Filled.Search"
+                       Class="mt-3"
+                       OnClick="OnCarian">
+                Carian
+            </MudButton>
 
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Search" Class="mt-3"
-                   OnClick="Carian">
-            Carian
-        </MudButton>
-    </MudPaper>
+        </MudCardContent>
+    </MudCard>
 
+    @if (_isLoadingMaster)
+    {
+        <MudProgressLinear Indeterminate />
+    }
+    else
+    {
+        <!-- ======================= BIL ======================= -->
+        <MudCard Class="mb-4" Style="border-left:6px solid #1abc9c;">
+            <MudCardHeader Class="py-2" Style="background:#1abc9c; color:white;">
+                <MudText Typo="Typo.subtitle1" Class="pl-2">Bil</MudText>
+            </MudCardHeader>
+            <MudCardContent>
 
-    <!-- Section: Bil -->
-    <MudPaper Class="pa-4 mb-6" Elevation="2">
-        <MudText Typo="Typo.h6" Class="mb-3">📑 Bil</MudText>
+                <!-- Controls -->
+                <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudItem xs="12" md="3">
+                        <MudSelect T="int"
+                                   Value="@_bilPageSize"
+                                   ValueChanged="(v)=>{ _bilPageSize = v; _bilPage = 1; }"
+                                   Dense="true"
+                                   Variant="Variant.Outlined"
+                                   Style="background:white; width:100px;">
+                            <MudSelectItem T="int" Value="10">10</MudSelectItem>
+                            <MudSelectItem T="int" Value="25">25</MudSelectItem>
+                            <MudSelectItem T="int" Value="50">50</MudSelectItem>
+                            <MudSelectItem T="int" Value="100">100</MudSelectItem>
+                        </MudSelect>
+                        <MudText Typo="Typo.caption">records</MudText>
+                    </MudItem>
 
-        <MudTable Items="BilList" Dense="true" Hover="true">
-            <HeaderContent>
-                <MudTh>No. Bil</MudTh>
-                <MudTh>Tarikh Bil</MudTh>
-                <MudTh>Nama Penghutang</MudTh>
-                <MudTh>Amaun Bil</MudTh>
-                <MudTh>Status</MudTh>
-            </HeaderContent>
+                    <MudItem xs="12" md="9" Class="d-flex justify-end">
+                        <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
+                        <MudTextField T="string"
+                                      @bind-Value="_bilSearch"
+                                      Immediate="true"
+                                      Variant="Variant.Outlined"
+                                      Dense="true"
+                                      Style="background:white; max-width:260px;" />
+                    </MudItem>
+                </MudGrid>
 
-            <RowTemplate>
-                <MudTd>@context.NoBil</MudTd>
-                <MudTd>@context.TarikhBil</MudTd>
-                <MudTd>@context.NamaPenghutang</MudTd>
-                <MudTd>@context.AmaunBil</MudTd>
-                <MudTd>@context.Status</MudTd>
-            </RowTemplate>
+                <!-- Table -->
+                <MudTable Items="BilPaged"
+                          T="BilRow"
+                          Dense="true"
+                          Hover="true"
+                          Striped="true"
+                          Bordered="true"
+                          Elevation="0">
+                    <HeaderContent>
+                        <MudTh width="20%">No. Bil</MudTh>
+                        <MudTh width="16%">Tarikh Bil</MudTh>
+                        <MudTh>Nama Penghutang</MudTh>
+                        <MudTh width="16%">Amaun Bil</MudTh>
+                        <MudTh width="16%">Status</MudTh>
+                    </HeaderContent>
 
-            <NoRecordsContent>
-                <MudText Class="pa-4">No data available in table</MudText>
-            </NoRecordsContent>
-        </MudTable>
-    </MudPaper>
+                    <RowTemplate>
+                        <MudTd DataLabel="No. Bil">@context.NoBil</MudTd>
+                        <MudTd DataLabel="Tarikh Bil">@context.TarikhBil?.ToString("dd/MM/yyyy")</MudTd>
+                        <MudTd DataLabel="Nama Penghutang">@context.NamaPenghutang</MudTd>
+                        <MudTd DataLabel="Amaun Bil">@context.AmaunBil?.ToString("N2")</MudTd>
+                        <MudTd DataLabel="Status">@context.Status</MudTd>
+                    </RowTemplate>
 
+                    <NoRecordsContent>
+                        <MudText Typo="Typo.caption">No data available in table</MudText>
+                    </NoRecordsContent>
+                </MudTable>
 
+                <!-- Footer -->
+                <MudGrid AlignItems="AlignItems.Center" Class="mt-2">
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption">
+                            Showing @(BilTotal == 0 ? 0 : ((_bilPage - 1) * _bilPageSize + 1))
+                            to @((Math.Min(_bilPage * _bilPageSize, BilTotal)))
+                            of @BilTotal entries
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="6" Class="d-flex justify-end">
+                        <MudPagination Page="@_bilPage"
+                                       PageChanged="(p)=>_bilPage = p"
+                                       Count="@(Math.Max(1, (int)Math.Ceiling((double)BilTotal/_bilPageSize)))"
+                                       HidePrevNext="false"
+                                       Class="my-0" />
+                    </MudItem>
+                </MudGrid>
 
-    <!-- Section: Nota bagi Bil -->
-    <MudPaper Class="pa-4 mb-6" Elevation="2">
-        <MudText Typo="Typo.h6" Class="mb-3">📝 Nota Bagi Bil</MudText>
+            </MudCardContent>
+        </MudCard>
 
-        <MudTable Items="NotaList" Dense="true" Hover="true">
-            <HeaderContent>
-                <MudTh>No. Nota</MudTh>
-                <MudTh>Tarikh Nota</MudTh>
-                <MudTh>No. Bil</MudTh>
-                <MudTh>Tarikh Bil</MudTh>
-                <MudTh>Kod Penghutang</MudTh>
-                <MudTh>Amaun Total</MudTh>
-                <MudTh>Amaun Tax</MudTh>
-                <MudTh>Amaun</MudTh>
-            </HeaderContent>
+        <!-- ======================= NOTA BAGI BIL ======================= -->
+        <MudCard Class="mb-4" Style="border-left:6px solid #1abc9c;">
+            <MudCardHeader Class="py-2" Style="background:#1abc9c; color:white;">
+                <MudText Typo="Typo.subtitle1" Class="pl-2">Nota bagi bil</MudText>
+            </MudCardHeader>
+            <MudCardContent>
 
-            <RowTemplate>
-                <MudTd>@context.NoNota</MudTd>
-                <MudTd>@context.TarikhNota</MudTd>
-                <MudTd>@context.NoBil</MudTd>
-                <MudTd>@context.TarikhBil</MudTd>
-                <MudTd>@context.KodPenghutang</MudTd>
-                <MudTd>@context.AmaunTotal</MudTd>
-                <MudTd>@context.AmaunTax</MudTd>
-                <MudTd>@context.Amaun</MudTd>
-            </RowTemplate>
+                <!-- Controls -->
+                <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudItem xs="12" md="3">
+                        <MudSelect T="int"
+                                   Value="@_notaPageSize"
+                                   ValueChanged="(v)=>{ _notaPageSize = v; _notaPage = 1; }"
+                                   Dense="true"
+                                   Variant="Variant.Outlined"
+                                   Style="background:white; width:100px;">
+                            <MudSelectItem T="int" Value="10">10</MudSelectItem>
+                            <MudSelectItem T="int" Value="25">25</MudSelectItem>
+                            <MudSelectItem T="int" Value="50">50</MudSelectItem>
+                            <MudSelectItem T="int" Value="100">100</MudSelectItem>
+                        </MudSelect>
+                        <MudText Typo="Typo.caption">records</MudText>
+                    </MudItem>
 
-            <NoRecordsContent>
-                <MudText Class="pa-4">No data available in table</MudText>
-            </NoRecordsContent>
-        </MudTable>
-    </MudPaper>
+                    <MudItem xs="12" md="9" Class="d-flex justify-end">
+                        <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
+                        <MudTextField T="string"
+                                      @bind-Value="_notaSearch"
+                                      Immediate="true"
+                                      Variant="Variant.Outlined"
+                                      Dense="true"
+                                      Style="background:white; max-width:260px;" />
+                    </MudItem>
+                </MudGrid>
 
+                <!-- Table -->
+                <MudTable Items="NotaPaged"
+                          T="NotaRow"
+                          Dense="true"
+                          Hover="true"
+                          Striped="true"
+                          Bordered="true"
+                          Elevation="0">
+                    <HeaderContent>
+                        <MudTh width="16%">No. Nota</MudTh>
+                        <MudTh width="16%">Tarikh Nota</MudTh>
+                        <MudTh width="16%">No. Bil</MudTh>
+                        <MudTh width="16%">Tarikh Bil</MudTh>
+                        <MudTh width="12%">Kod Penghutang</MudTh>
+                        <MudTh width="12%">Amaun Total</MudTh>
+                        <MudTh width="12%">Amaun Tax</MudTh>
+                        <MudTh width="12%">Amaun</MudTh>
+                    </HeaderContent>
 
+                    <RowTemplate>
+                        <MudTd DataLabel="No. Nota">@context.NoNota</MudTd>
+                        <MudTd DataLabel="Tarikh Nota">@context.TarikhNota?.ToString("dd/MM/yyyy")</MudTd>
+                        <MudTd DataLabel="No. Bil">@context.NoBil</MudTd>
+                        <MudTd DataLabel="Tarikh Bil">@context.TarikhBil?.ToString("dd/MM/yyyy")</MudTd>
+                        <MudTd DataLabel="Kod Penghutang">@context.KodPenghutang</MudTd>
+                        <MudTd DataLabel="Amaun Total">@context.AmaunTotal?.ToString("N2")</MudTd>
+                        <MudTd DataLabel="Amaun Tax">@context.AmaunTax?.ToString("N2")</MudTd>
+                        <MudTd DataLabel="Amaun">@context.Amaun?.ToString("N2")</MudTd>
+                    </RowTemplate>
 
-    <!-- Section: Resit bagi Bil -->
-    <MudPaper Class="pa-4 mb-6" Elevation="2">
-        <MudText Typo="Typo.h6" Class="mb-3">🧾 Resit Bagi Bil</MudText>
+                    <NoRecordsContent>
+                        <MudText Typo="Typo.caption">No data available in table</MudText>
+                    </NoRecordsContent>
+                </MudTable>
 
-        <MudTable Items="ResitList" Dense="true" Hover="true">
-            <HeaderContent>
-                <MudTh>No. Resit</MudTh>
-                <MudTh>No. Bank Slip</MudTh>
-                <MudTh>Amaun Resit</MudTh>
-                <MudTh>Tarikh Resit</MudTh>
-            </HeaderContent>
+                <!-- Footer -->
+                <MudGrid AlignItems="AlignItems.Center" Class="mt-2">
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption">
+                            Showing @(NotaTotal == 0 ? 0 : ((_notaPage - 1) * _notaPageSize + 1))
+                            to @((Math.Min(_notaPage * _notaPageSize, NotaTotal)))
+                            of @NotaTotal entries
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="6" Class="d-flex justify-end">
+                        <MudPagination Page="@_notaPage"
+                                       PageChanged="(p)=>_notaPage = p"
+                                       Count="@(Math.Max(1, (int)Math.Ceiling((double)NotaTotal/_notaPageSize)))"
+                                       HidePrevNext="false"
+                                       Class="my-0" />
+                    </MudItem>
+                </MudGrid>
 
-            <RowTemplate>
-                <MudTd>@context.NoResit</MudTd>
-                <MudTd>@context.NoBankSlip</MudTd>
-                <MudTd>@context.AmaunResit</MudTd>
-                <MudTd>@context.TarikhResit</MudTd>
-            </RowTemplate>
+            </MudCardContent>
+        </MudCard>
 
-            <NoRecordsContent>
-                <MudText Class="pa-4">No data available in table</MudText>
-            </NoRecordsContent>
-        </MudTable>
-    </MudPaper>
+        <!-- ======================= RESIT BAGI BIL ======================= -->
+        <MudCard Class="mb-4" Style="border-left:6px solid #1abc9c;">
+            <MudCardHeader Class="py-2" Style="background:#1abc9c; color:white;">
+                <MudText Typo="Typo.subtitle1" Class="pl-2">Resit bagi bil</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+
+                <!-- Controls -->
+                <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
+                    <MudItem xs="12" md="3">
+                        <MudSelect T="int"
+                                   Value="@_resitPageSize"
+                                   ValueChanged="(v)=>{ _resitPageSize = v; _resitPage = 1; }"
+                                   Dense="true"
+                                   Variant="Variant.Outlined"
+                                   Style="background:white; width:100px;">
+                            <MudSelectItem T="int" Value="10">10</MudSelectItem>
+                            <MudSelectItem T="int" Value="25">25</MudSelectItem>
+                            <MudSelectItem T="int" Value="50">50</MudSelectItem>
+                            <MudSelectItem T="int" Value="100">100</MudSelectItem>
+                        </MudSelect>
+                        <MudText Typo="Typo.caption">records</MudText>
+                    </MudItem>
+
+                    <MudItem xs="12" md="9" Class="d-flex justify-end">
+                        <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
+                        <MudTextField T="string"
+                                      @bind-Value="_resitSearch"
+                                      Immediate="true"
+                                      Variant="Variant.Outlined"
+                                      Dense="true"
+                                      Style="background:white; max-width:260px;" />
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Table -->
+                <MudTable Items="ResitPaged"
+                          T="ResitRow"
+                          Dense="true"
+                          Hover="true"
+                          Striped="true"
+                          Bordered="true"
+                          Elevation="0">
+                    <HeaderContent>
+                        <MudTh width="22%">No. Resit</MudTh>
+                        <MudTh width="22%">No. Bank Slip</MudTh>
+                        <MudTh width="22%">Amaun Resit</MudTh>
+                        <MudTh width="22%">Tarikh Resit</MudTh>
+                    </HeaderContent>
+
+                    <RowTemplate>
+                        <MudTd DataLabel="No. Resit">@context.NoResit</MudTd>
+                        <MudTd DataLabel="No. Bank Slip">@context.NoBankSlip</MudTd>
+                        <MudTd DataLabel="Amaun Resit">@context.AmaunResit?.ToString("N2")</MudTd>
+                        <MudTd DataLabel="Tarikh Resit">@context.TarikhResit?.ToString("dd/MM/yyyy")</MudTd>
+                    </RowTemplate>
+
+                    <NoRecordsContent>
+                        <MudText Typo="Typo.caption">No data available in table</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+
+                <!-- Footer -->
+                <MudGrid AlignItems="AlignItems.Center" Class="mt-2">
+                    <MudItem xs="12" md="6">
+                        <MudText Typo="Typo.caption">
+                            Showing @(ResitTotal == 0 ? 0 : ((_resitPage - 1) * _resitPageSize + 1))
+                            to @((Math.Min(_resitPage * _resitPageSize, ResitTotal)))
+                            of @ResitTotal entries
+                        </MudText>
+                    </MudItem>
+                    <MudItem xs="12" md="6" Class="d-flex justify-end">
+                        <MudPagination Page="@_resitPage"
+                                       PageChanged="(p)=>_resitPage = p"
+                                       Count="@(Math.Max(1, (int)Math.Ceiling((double)ResitTotal/_resitPageSize)))"
+                                       HidePrevNext="false"
+                                       Class="my-0" />
+                    </MudItem>
+                </MudGrid>
+
+            </MudCardContent>
+        </MudCard>
+    }
 
 </MudPaper>
 
-
 @code {
+    // ========= Carian utama =========
+    private string _carianJenis = "NoBil";
+    private string _carianText = string.Empty;
 
-    string CarianJenis = "";
-    string CarianText = "";
+    // ========= Master data dari API =========
+    private bool _isLoadingMaster;
+    private List<BillDTO> _allBills = new();
+    private List<NotaDebitKreditDTO> _allNotas = new();
+    private List<ResitDTO> _allResits = new();
+    private List<PenyelenggaraanPenghutangDTO> _allDebtors = new();
+    private Dictionary<Guid, PenyelenggaraanPenghutangDTO> _debtorById
+        = new();
 
-    // EMPTY table models (NO dummy data)
-    public class BilModel
+    // ========= View models =========
+    public class BilRow
     {
         public string? NoBil { get; set; }
-        public string? TarikhBil { get; set; }
+        public DateTime? TarikhBil { get; set; }
         public string? NamaPenghutang { get; set; }
-        public string? AmaunBil { get; set; }
+        public decimal? AmaunBil { get; set; }
         public string? Status { get; set; }
     }
 
-    public class NotaModel
+    public class NotaRow
     {
         public string? NoNota { get; set; }
-        public string? TarikhNota { get; set; }
+        public DateTime? TarikhNota { get; set; }
         public string? NoBil { get; set; }
-        public string? TarikhBil { get; set; }
+        public DateTime? TarikhBil { get; set; }
         public string? KodPenghutang { get; set; }
-        public string? AmaunTotal { get; set; }
-        public string? AmaunTax { get; set; }
-        public string? Amaun { get; set; }
+        public decimal? AmaunTotal { get; set; }
+        public decimal? AmaunTax { get; set; }
+        public decimal? Amaun { get; set; }
     }
 
-    public class ResitModel
+    public class ResitRow
     {
         public string? NoResit { get; set; }
         public string? NoBankSlip { get; set; }
-        public string? AmaunResit { get; set; }
-        public string? TarikhResit { get; set; }
+        public decimal? AmaunResit { get; set; }
+        public DateTime? TarikhResit { get; set; }
     }
 
+    private List<BilRow> BilList = new();
+    private List<NotaRow> NotaList = new();
+    private List<ResitRow> ResitList = new();
 
-    // EMPTY lists (❗No dummy data)
-    List<BilModel> BilList = new();
-    List<NotaModel> NotaList = new();
-    List<ResitModel> ResitList = new();
+    // ========= Paging + search untuk setiap seksyen =========
+    private int _bilPage = 1;
+    private int _bilPageSize = 10;
+    private string _bilSearch = string.Empty;
 
+    private int _notaPage = 1;
+    private int _notaPageSize = 10;
+    private string _notaSearch = string.Empty;
 
-    void Carian()
+    private int _resitPage = 1;
+    private int _resitPageSize = 10;
+    private string _resitSearch = string.Empty;
+
+    // ========= Lifecycle =========
+    protected override async Task OnInitializedAsync()
     {
-        // Logic API boleh ditambah di sini
-        // Untuk sekarang: table kekal kosong
+        await LoadMasterData();
     }
+
+    private async Task LoadMasterData()
+    {
+        _isLoadingMaster = true;
+        try
+        {
+            _allDebtors = await PenghutangApi.GetAllAsync();
+            _debtorById = _allDebtors.GroupBy(d => d.ID)
+                                     .ToDictionary(g => g.Key, g => g.First());
+
+            _allBills = await BillApi.GetAllAsync();
+            _allNotas = await NotaApi.GetAllAsync();
+            _allResits = await ResitApi.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memuatkan data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoadingMaster = false;
+        }
+    }
+
+    // ========= Carian klik butang =========
+    private async Task OnCarian()
+    {
+        try
+        {
+            if (_isLoadingMaster)
+                return;
+
+            // Jika text kosong, clear result
+            if (string.IsNullOrWhiteSpace(_carianText))
+            {
+                BilList = new();
+                NotaList = new();
+                ResitList = new();
+            }
+            else
+            {
+                var term = _carianText.Trim();
+
+                IEnumerable<BillDTO> bilQ = _allBills;
+                IEnumerable<NotaDebitKreditDTO> notaQ = _allNotas;
+                IEnumerable<ResitDTO> resitQ = _allResits;
+
+                switch (_carianJenis)
+                {
+                    case "NoBil":
+                        bilQ = bilQ.Where(b => (b.NoBil ?? string.Empty)
+                            .Contains(term, StringComparison.OrdinalIgnoreCase));
+                        // Nota / Resit: tapis ikut nombor sendiri
+                        notaQ = notaQ.Where(n => (n.NoNota ?? string.Empty)
+                            .Contains(term, StringComparison.OrdinalIgnoreCase));
+                        resitQ = resitQ.Where(r => (r.NoResit ?? string.Empty)
+                            .Contains(term, StringComparison.OrdinalIgnoreCase));
+                        break;
+
+                    case "Nama":
+                        bilQ = bilQ.Where(b =>
+                        {
+                            var name = GetDebtorName(b.PenyelenggaraanPenghutangEntitiesID);
+                            return (name ?? string.Empty)
+                                .Contains(term, StringComparison.OrdinalIgnoreCase);
+                        });
+
+                        notaQ = notaQ.Where(n =>
+                        {
+                            var name = GetDebtorName(n.PenyelenggaraanPenghutangEntitiesID);
+                            return (name ?? string.Empty)
+                                .Contains(term, StringComparison.OrdinalIgnoreCase);
+                        });
+
+                        resitQ = resitQ.Where(r =>
+                        {
+                            var name = GetDebtorName(r.PenyelenggaraanPenghutangEntitiesID);
+                            return (name ?? string.Empty)
+                                .Contains(term, StringComparison.OrdinalIgnoreCase);
+                        });
+                        break;
+
+                    case "Kategori":
+                        bilQ = bilQ.Where(b =>
+                        {
+                            var cat = GetDebtorKategori(b.PenyelenggaraanPenghutangEntitiesID);
+                            return (cat ?? string.Empty)
+                                .Contains(term, StringComparison.OrdinalIgnoreCase);
+                        });
+
+                        notaQ = notaQ.Where(n =>
+                        {
+                            var cat = GetDebtorKategori(n.PenyelenggaraanPenghutangEntitiesID);
+                            return (cat ?? string.Empty)
+                                .Contains(term, StringComparison.OrdinalIgnoreCase);
+                        });
+
+                        resitQ = resitQ.Where(r =>
+                        {
+                            var cat = GetDebtorKategori(r.PenyelenggaraanPenghutangEntitiesID);
+                            return (cat ?? string.Empty)
+                                .Contains(term, StringComparison.OrdinalIgnoreCase);
+                        });
+                        break;
+                }
+
+                // Map ke view model
+                BilList = bilQ.Select(b =>
+                {
+                    var debtor = GetDebtor(b.PenyelenggaraanPenghutangEntitiesID);
+                    return new BilRow
+                    {
+                        NoBil = b.NoBil,
+                        TarikhBil = b.Tarikh,
+                        NamaPenghutang = debtor?.Nama,
+                        AmaunBil = b.Jumlah,
+                        Status = BuildBilStatus(b)
+                    };
+                }).ToList();
+
+                NotaList = notaQ.Select(n =>
+                {
+                    var debtor = GetDebtor(n.PenyelenggaraanPenghutangEntitiesID);
+                    return new NotaRow
+                    {
+                        NoNota = n.NoNota,
+                        TarikhNota = n.Tarikh,
+                        // Tiada link Bil dalam DTO – biar kosong dulu
+                        NoBil = string.Empty,
+                        TarikhBil = null,
+                        KodPenghutang = debtor?.KodPenghutang,
+                        // Amaun belum ada dalam DTO – biar null (papar kosong)
+                        AmaunTotal = null,
+                        AmaunTax = null,
+                        Amaun = null
+                    };
+                }).ToList();
+
+                ResitList = resitQ.Select(r => new ResitRow
+                {
+                    NoResit = r.NoResit,
+                    NoBankSlip = r.NoBankSlip,
+                    AmaunResit = r.Jumlah,
+                    TarikhResit = r.Tarikh
+                }).ToList();
+            }
+
+            // Reset paging & search setiap seksyen
+            _bilPage = _notaPage = _resitPage = 1;
+            _bilSearch = _notaSearch = _resitSearch = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal membuat carian: {ex.Message}", Severity.Error);
+        }
+
+        await Task.CompletedTask;
+    }
+
+    // ========= Helper debtor =========
+    private PenyelenggaraanPenghutangDTO? GetDebtor(Guid? id)
+    {
+        if (!id.HasValue) return null;
+        return _debtorById.TryGetValue(id.Value, out var d) ? d : null;
+    }
+
+    private string? GetDebtorName(Guid? id) => GetDebtor(id)?.Nama;
+
+    private string? GetDebtorKategori(Guid? id)
+    {
+        var d = GetDebtor(id);
+        if (d == null) return null;
+        var parts = new[] { d.Kod, d.KeteranganKod }
+            .Where(x => !string.IsNullOrWhiteSpace(x));
+        return string.Join(" - ", parts);
+    }
+
+    private static string BuildBilStatus(BillDTO bill)
+    {
+        if (bill.StatusSah != null &&
+            bill.StatusSah.Equals("SAH", StringComparison.OrdinalIgnoreCase))
+            return "Sah";
+
+        if (bill.StatusPos != null &&
+            (bill.StatusPos.Equals("SUDAH POS", StringComparison.OrdinalIgnoreCase) ||
+             bill.StatusPos.Equals("POS", StringComparison.OrdinalIgnoreCase)))
+            return "Pos";
+
+        return "Baru";
+    }
+
+    // ========= Derived list + paging: Bil =========
+    private IEnumerable<BilRow> BilQuery =>
+        BilList.Where(x =>
+            string.IsNullOrWhiteSpace(_bilSearch) ||
+            (x.NoBil?.Contains(_bilSearch, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (x.NamaPenghutang?.Contains(_bilSearch, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (x.Status?.Contains(_bilSearch, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private List<BilRow> BilPaged => BilQuery
+        .OrderByDescending(x => x.TarikhBil).ThenBy(x => x.NoBil)
+        .Skip((_bilPage - 1) * _bilPageSize).Take(_bilPageSize).ToList();
+
+    private int BilTotal => BilQuery.Count();
+
+    // ========= Derived list + paging: Nota =========
+    private IEnumerable<NotaRow> NotaQuery =>
+        NotaList.Where(x =>
+            string.IsNullOrWhiteSpace(_notaSearch) ||
+            (x.NoNota?.Contains(_notaSearch, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (x.NoBil?.Contains(_notaSearch, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (x.KodPenghutang?.Contains(_notaSearch, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private List<NotaRow> NotaPaged => NotaQuery
+        .OrderByDescending(x => x.TarikhNota).ThenBy(x => x.NoNota)
+        .Skip((_notaPage - 1) * _notaPageSize).Take(_notaPageSize).ToList();
+
+    private int NotaTotal => NotaQuery.Count();
+
+    // ========= Derived list + paging: Resit =========
+    private IEnumerable<ResitRow> ResitQuery =>
+        ResitList.Where(x =>
+            string.IsNullOrWhiteSpace(_resitSearch) ||
+            (x.NoResit?.Contains(_resitSearch, StringComparison.OrdinalIgnoreCase) ?? false) ||
+            (x.NoBankSlip?.Contains(_resitSearch, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private List<ResitRow> ResitPaged => ResitQuery
+        .OrderByDescending(x => x.TarikhResit).ThenBy(x => x.NoResit)
+        .Skip((_resitPage - 1) * _resitPageSize).Take(_resitPageSize).ToList();
+
+    private int ResitTotal => ResitQuery.Count();
 }

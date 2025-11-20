@@ -1,5 +1,11 @@
 ﻿@page "/LaporanPengurumanBil"
+
 @using MudBlazor
+@using IMAS.API.AkaunBelumTerima.Shared.Models
+@using IMAS.Blazor.AkaunBelumTerima.Services.Refit
+@inject ISnackbar Snackbar
+@inject IBillApi BillApi
+@inject IPenyelenggaraanPenghutangApi PenghutangApi
 
 <MudPaper Class="pa-4">
     <MudCard>
@@ -9,30 +15,44 @@
 
         <MudCardContent>
 
+            @if (_loading)
+            {
+                <MudProgressLinear Indeterminate Color="Color.Primary" Class="mb-2" />
+            }
+
             <!-- FILTERS -->
             <MudGrid Class="mt-4">
                 <MudItem xs="12" sm="4">
-                    <MudTextField Label="Tarikh Mula" @bind-Value="TarikhMula" InputType="InputType.Date" />
+                    <MudTextField Label="Tarikh Mula"
+                                  @bind-Value="TarikhMula"
+                                  InputType="InputType.Date" />
                 </MudItem>
 
                 <MudItem xs="12" sm="4">
-                    <MudTextField Label="Tarikh Akhir" @bind-Value="TarikhAkhir" InputType="InputType.Date" />
+                    <MudTextField Label="Tarikh Akhir"
+                                  @bind-Value="TarikhAkhir"
+                                  InputType="InputType.Date" />
                 </MudItem>
 
                 <MudItem xs="12" sm="4">
-                    <MudSelect Label="Kategori Penghutang" @bind-Value="KategoriPenghutang">
-                        @foreach (var c in KategoriList)
+                    <MudSelect T="string"
+                               Label="Kategori Penghutang"
+                               @bind-Value="KategoriPenghutangKod">
+                        <MudSelectItem T="string" Value="@("")">Semua</MudSelectItem>
+                        @foreach (var k in KategoriKodList)
                         {
-                            <MudSelectItem Value="c">@c</MudSelectItem>
+                            <MudSelectItem T="string" Value="@k">@k</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>
 
                 <MudItem xs="12" sm="4">
-                    <MudSelect Label="Dana" @bind-Value="Dana">
+                    <MudSelect T="string"
+                               Label="Dana"
+                               @bind-Value="Dana">
                         @foreach (var d in DanaList)
                         {
-                            <MudSelectItem Value="d">@d</MudSelectItem>
+                            <MudSelectItem T="string" Value="@d">@d</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>
@@ -45,8 +65,12 @@
                 <MudItem xs="12" sm="6">
                     <img src="/images/mpob_logo.png" style="width:180px;" />
 
-                    <MudText Typo="Typo.subtitle1" Class="mt-2"><b>LEMBAGA MINYAK SAWIT MALAYSIA</b></MudText>
-                    <MudText Typo="Typo.subtitle2" Class="mb-4">MALAYSIAN PALM OIL BOARD</MudText>
+                    <MudText Typo="Typo.subtitle1" Class="mt-2">
+                        <b>LEMBAGA MINYAK SAWIT MALAYSIA</b>
+                    </MudText>
+                    <MudText Typo="Typo.subtitle2" Class="mb-4">
+                        MALAYSIAN PALM OIL BOARD
+                    </MudText>
 
                     <MudText Typo="Typo.body2">
                         6, Persiaran Institusi<br />
@@ -63,15 +87,24 @@
                         Website : www.mpob.gov.my
                     </MudText>
 
-                    <MudText Typo="Typo.h6"><b>SISTEM PENGURUSAN KEWANGAN</b></MudText>
-                    <MudText Typo="Typo.body1">LAPORAN SENARAI PENGURUMAN BIL</MudText>
+                    <MudText Typo="Typo.h6">
+                        <b>SISTEM PENGURUSAN KEWANGAN</b>
+                    </MudText>
+                    <MudText Typo="Typo.body1">
+                        LAPORAN SENARAI PENGURUMAN BIL
+                    </MudText>
                 </MudItem>
             </MudGrid>
 
             <MudDivider Class="my-6" />
 
             <!-- TABLE -->
-            <MudTable T="PengurumanRecord" Items="DataList" Hover="true" Bordered="true" Dense="true">
+            <MudTable T="PengurumanRecord"
+                      Items="DataList"
+                      Hover="true"
+                      Bordered="true"
+                      Dense="true">
+
                 <HeaderContent>
                     <MudTh>#</MudTh>
                     <MudTh>Debtor</MudTh>
@@ -90,21 +123,25 @@
                 </HeaderContent>
 
                 <RowTemplate>
-                    <MudTd>@context.Id</MudTd>
+                    <MudTd>@context.Bil</MudTd>
                     <MudTd>@context.Debtor</MudTd>
                     <MudTd>@context.Date.ToString("dd/MM/yyyy")</MudTd>
                     <MudTd>@context.Document</MudTd>
-                    <MudTd>@context.Current</MudTd>
-                    <MudTd>@context.M1</MudTd>
-                    <MudTd>@context.M2</MudTd>
-                    <MudTd>@context.M3</MudTd>
-                    <MudTd>@context.M4</MudTd>
-                    <MudTd>@context.M5</MudTd>
-                    <MudTd>@context.M6Plus</MudTd>
-                    <MudTd>@context.OpenCredit</MudTd>
-                    <MudTd>@context.Total</MudTd>
-                    <MudTd>@context.Extended</MudTd>
+                    <MudTd>@context.Current.ToString("N2")</MudTd>
+                    <MudTd>@context.M1.ToString("N2")</MudTd>
+                    <MudTd>@context.M2.ToString("N2")</MudTd>
+                    <MudTd>@context.M3.ToString("N2")</MudTd>
+                    <MudTd>@context.M4.ToString("N2")</MudTd>
+                    <MudTd>@context.M5.ToString("N2")</MudTd>
+                    <MudTd>@context.M6Plus.ToString("N2")</MudTd>
+                    <MudTd>@context.OpenCredit.ToString("N2")</MudTd>
+                    <MudTd>@context.Total.ToString("N2")</MudTd>
+                    <MudTd>@context.Extended.ToString("N2")</MudTd>
                 </RowTemplate>
+
+                <NoRecordsContent>
+                    <MudText Class="pa-4">No data available in table</MudText>
+                </NoRecordsContent>
             </MudTable>
 
             <MudDivider Class="my-4" />
@@ -112,13 +149,18 @@
             <!-- BUTTON BAR -->
             <MudGrid Justify="Justify.Center" Class="mb-4">
                 <MudItem>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mx-2">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               Class="mx-2"
+                               OnClick="Cetak">
                         Cetak
                     </MudButton>
 
-                    <MudButton Variant="Variant.Filled" Color="Color.Success"
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Success"
                                StartIcon="@Icons.Material.Filled.FileDownload"
-                               Class="mx-2">
+                               Class="mx-2"
+                               OnClick="ExportExcel">
                         Export Excel
                     </MudButton>
                 </MudItem>
@@ -129,25 +171,29 @@
 </MudPaper>
 
 @code {
+    // --- filter fields ---
     public DateTime? TarikhMula { get; set; }
     public DateTime? TarikhAkhir { get; set; }
 
-    public string KategoriPenghutang { get; set; }
-    public string Dana { get; set; }
+    public string KategoriPenghutangKod { get; set; } = "";
+    public string Dana { get; set; } = "Semua";
 
-    public List<string> KategoriList { get; set; } =
-        new() { "Semua", "Kerajaan", "Swasta", "Individu" };
+    private bool _loading;
 
+    // diambil dari PenyelenggaraanPenghutangDTO
+    public List<string> KategoriKodList { get; set; } = new();
+
+    // buat masa ini hard-coded (tiada dalam DTO)
     public List<string> DanaList { get; set; } =
         new() { "Semua", "Dana Am", "Dana Khusus" };
 
-    // Data model
+    // hasil report
     public class PengurumanRecord
     {
-        public int Id { get; set; }
-        public string Debtor { get; set; }
+        public int Bil { get; set; }
+        public string Debtor { get; set; } = "";
         public DateTime Date { get; set; }
-        public string Document { get; set; }
+        public string Document { get; set; } = "";
         public decimal Current { get; set; }
         public decimal M1 { get; set; }
         public decimal M2 { get; set; }
@@ -161,4 +207,131 @@
     }
 
     public List<PengurumanRecord> DataList { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        try
+        {
+            // load senarai penghutang untuk drop-down kategori
+            var allPenghutang = await PenghutangApi.GetAllAsync();
+            KategoriKodList = allPenghutang
+                .Where(x => !string.IsNullOrWhiteSpace(x.Kod))
+                .Select(x => x.Kod!)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memuatkan kategori penghutang: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    // -- utama: bina data report dari BillDTO + PenyelenggaraanPenghutangDTO --
+    private async Task Carian()
+    {
+        _loading = true;
+        DataList.Clear();
+
+        try
+        {
+            var bills = await BillApi.GetAllAsync();
+            var penghutangList = await PenghutangApi.GetAllAsync();
+
+            // map penghutang by ID untuk join nama debtor
+            var penghutangById = penghutangList.ToDictionary(x => x.ID, x => x);
+
+            // filter tarikh
+            if (TarikhMula.HasValue)
+                bills = bills.Where(b => b.Tarikh.HasValue && b.Tarikh.Value.Date >= TarikhMula.Value.Date).ToList();
+
+            if (TarikhAkhir.HasValue)
+                bills = bills.Where(b => b.Tarikh.HasValue && b.Tarikh.Value.Date <= TarikhAkhir.Value.Date).ToList();
+
+            // filter kategori (guna Kod dari PenyelenggaraanPenghutangDTO jika ada)
+            if (!string.IsNullOrWhiteSpace(KategoriPenghutangKod))
+            {
+                var penghutangIdsDalamKategori = penghutangList
+                    .Where(p => string.Equals(p.Kod, KategoriPenghutangKod, StringComparison.OrdinalIgnoreCase))
+                    .Select(p => p.ID)
+                    .ToHashSet();
+
+                bills = bills
+                    .Where(b => b.PenyelenggaraanPenghutangEntitiesID.HasValue &&
+                                penghutangIdsDalamKategori.Contains(b.PenyelenggaraanPenghutangEntitiesID.Value))
+                    .ToList();
+            }
+
+            var rujukanTarikh = TarikhAkhir ?? DateTime.Today;
+            var bilCounter = 1;
+
+            foreach (var bill in bills.OrderBy(b => b.Tarikh ?? DateTime.MinValue))
+            {
+                var amaun = bill.Jumlah ?? 0m;
+                if (amaun == 0m) continue; // kalau tiada amaun, skip je
+
+                var tarikhBil = bill.Tarikh ?? rujukanTarikh;
+
+                // kira umur bil (dalam bulan)
+                var ageInMonths =
+                    (rujukanTarikh.Year - tarikhBil.Year) * 12 +
+                    (rujukanTarikh.Month - tarikhBil.Month);
+
+                if (ageInMonths < 0) ageInMonths = 0;
+
+                var row = new PengurumanRecord
+                {
+                    Bil = bilCounter++,
+                    Debtor = bill.PenyelenggaraanPenghutangEntitiesID.HasValue &&
+                             penghutangById.TryGetValue(bill.PenyelenggaraanPenghutangEntitiesID.Value, out var p)
+                        ? (p.Nama ?? p.KodPenghutang ?? "")
+                        : "",
+                    Date = tarikhBil,
+                    Document = bill.NoBil ?? "",
+                    Total = amaun,
+                    Extended = amaun
+                };
+
+                // bucket aging ringkas
+                switch (ageInMonths)
+                {
+                    case 0: row.Current = amaun; break;
+                    case 1: row.M1 = amaun; break;
+                    case 2: row.M2 = amaun; break;
+                    case 3: row.M3 = amaun; break;
+                    case 4: row.M4 = amaun; break;
+                    case 5: row.M5 = amaun; break;
+                    default: row.M6Plus = amaun; break;
+                }
+
+                // OpenCredit biar 0 dulu – boleh adjust bila ada rule sebenar
+                DataList.Add(row);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal menjana laporan: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task Cetak()
+    {
+        await Carian();
+        // hook sebenar untuk print boleh tambah kemudian
+    }
+
+    private async Task ExportExcel()
+    {
+        await Carian();
+        // hook sebenar untuk export Excel boleh tambah kemudian
+    }
 }

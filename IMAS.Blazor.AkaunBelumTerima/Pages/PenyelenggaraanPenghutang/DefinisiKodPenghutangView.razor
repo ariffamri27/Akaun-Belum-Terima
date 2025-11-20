@@ -2,6 +2,7 @@
 @using IMAS.API.AkaunBelumTerima.Shared.Models
 @using IMAS.Blazor.AkaunBelumTerima.Services.Refit
 @using MudBlazor
+
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject IPenyelenggaraanPenghutangApi PenyelenggaraanPenghutangService
@@ -19,8 +20,12 @@
             <!-- Controls: page size + search -->
             <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
                 <MudItem xs="12" md="3">
-                    <MudSelect T="int" Value="@_pageSize" ValueChanged="(v) => { _pageSize = v; _page = 1; }"
-                               Dense="true" Variant="Variant.Outlined" Style="background:white; width:100px;">
+                    <MudSelect T="int"
+                               Value="@_pageSize"
+                               ValueChanged="(v) => { _pageSize = v; _page = 1; }"
+                               Dense="true"
+                               Variant="Variant.Outlined"
+                               Style="background:white; width:100px;">
                         <MudSelectItem T="int" Value="10">10</MudSelectItem>
                         <MudSelectItem T="int" Value="25">25</MudSelectItem>
                         <MudSelectItem T="int" Value="50">50</MudSelectItem>
@@ -31,8 +36,11 @@
 
                 <MudItem xs="12" md="9" Class="d-flex justify-end">
                     <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
-                    <MudTextField T="string" @bind-Value="_search" Immediate="true"
-                                  Variant="Variant.Outlined" Dense="true"
+                    <MudTextField T="string"
+                                  @bind-Value="_search"
+                                  Immediate="true"
+                                  Variant="Variant.Outlined"
+                                  Dense="true"
                                   Style="background:white; max-width:260px;" />
                 </MudItem>
             </MudGrid>
@@ -44,7 +52,12 @@
             }
             else
             {
-                <MudTable Items="_paged" Dense="true" Hover="true" Striped="true" Bordered="true" Elevation="0"
+                <MudTable Items="_paged"
+                          Dense="true"
+                          Hover="true"
+                          Striped="true"
+                          Bordered="true"
+                          Elevation="0"
                           T="PenyelenggaraanPenghutangDTO">
                     <HeaderContent>
                         <MudTh width="18%">Kod Penghutang</MudTh>
@@ -61,8 +74,12 @@
                         <MudTd DataLabel="Bank">@context.Bank</MudTd>
                         <MudTd DataLabel="No. Akaun">@context.NoAkaun</MudTd>
                         <MudTd>
-                            <MudButton Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small"
-                                       OnClick="@(()=>EditItem(context))">Ubah</MudButton>
+                            <MudButton Color="Color.Info"
+                                       Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       OnClick="@(()=>EditItem(context))">
+                                Ubah
+                            </MudButton>
                         </MudTd>
                     </RowTemplate>
                     <NoRecordsContent>
@@ -79,9 +96,11 @@
                         </MudText>
                     </MudItem>
                     <MudItem xs="12" md="6" Class="d-flex justify-end">
-                        <MudPagination Page="@_page" PageChanged="(p)=>_page=p"
+                        <MudPagination Page="@_page"
+                                       PageChanged="(p)=>_page=p"
                                        Count="@(Math.Max(1, (int)Math.Ceiling((double)_total/_pageSize)))"
-                                       HidePrevNext="false" Class="my-0" />
+                                       HidePrevNext="false"
+                                       Class="my-0" />
                     </MudItem>
                 </MudGrid>
             }
@@ -92,7 +111,7 @@
     <MudCard Style="border-left:6px solid #16a085;">
         <MudCardHeader Class="py-2" Style="background:#16a085; color:white;">
             <MudText Typo="Typo.subtitle1" Class="pl-2">
-                @( _model.ID == Guid.Empty ? "Tambah Kod Penghutang" : "Ubah Kod Penghutang")
+                @(_model.ID == Guid.Empty ? "Tambah Kod Penghutang" : "Ubah Kod Penghutang")
             </MudText>
         </MudCardHeader>
         <MudCardContent>
@@ -101,29 +120,41 @@
             <MudGrid Class="mb-2">
                 <MudItem xs="12" md="4">
                     <MudText Typo="Typo.caption">Kod Penghutang *</MudText>
-                    <MudTextField T="string" @bind-Value="_model.KodPenghutang" Dense="true"
-                                  Variant="Variant.Outlined" Style="background:white;" />
+                    <MudTextField T="string"
+                                  @bind-Value="_model.KodPenghutang"
+                                  Dense="true"
+                                  Variant="Variant.Outlined"
+                                  Style="background:white;" />
                 </MudItem>
                 <MudItem xs="12" md="4">
                     <MudText Typo="Typo.caption">Nama *</MudText>
-                    <MudTextField T="string" @bind-Value="_model.Nama" Dense="true"
-                                  Variant="Variant.Outlined" Style="background:white;" />
+                    <MudTextField T="string"
+                                  @bind-Value="_model.Nama"
+                                  Dense="true"
+                                  Variant="Variant.Outlined"
+                                  Style="background:white;" />
                 </MudItem>
                 <MudItem xs="12" md="4">
                     <MudText Typo="Typo.caption">Nama Kedua</MudText>
-                    <MudTextField T="string" @bind-Value="_model.NamaKedua" Dense="true"
-                                  Variant="Variant.Outlined" Style="background:white;" />
+                    <MudTextField T="string"
+                                  @bind-Value="_model.NamaKedua"
+                                  Dense="true"
+                                  Variant="Variant.Outlined"
+                                  Style="background:white;" />
                 </MudItem>
             </MudGrid>
 
-            <!-- Tabs mirroring the UI (we implement Butiran Akaun fields) -->
+            <!-- Tabs (Butiran Akaun etc.) -->
             <MudTabs Rounded="true">
                 <MudTabPanel Text="Butiran Akaun">
                     <MudGrid>
                         <MudItem xs="12" md="6">
                             <MudText Typo="Typo.caption">Bank</MudText>
-                            <MudSelect T="string" @bind-Value="_model.Bank" Dense="true"
-                                       Variant="Variant.Outlined" Style="background:white;">
+                            <MudSelect T="string"
+                                       @bind-Value="_model.Bank"
+                                       Dense="true"
+                                       Variant="Variant.Outlined"
+                                       Style="background:white;">
                                 <MudSelectItem T="string" Value="@("")">Select...</MudSelectItem>
                                 @foreach (var b in _banks)
                                 {
@@ -133,22 +164,33 @@
                         </MudItem>
                         <MudItem xs="12" md="6">
                             <MudText Typo="Typo.caption">No. Akaun</MudText>
-                            <MudTextField T="string" @bind-Value="_model.NoAkaun" Dense="true"
-                                          Variant="Variant.Outlined" Style="background:white;" />
+                            <MudTextField T="string"
+                                          @bind-Value="_model.NoAkaun"
+                                          Dense="true"
+                                          Variant="Variant.Outlined"
+                                          Style="background:white;" />
                         </MudItem>
                     </MudGrid>
                 </MudTabPanel>
                 <MudTabPanel Text="Butiran Penghutang">
-                    <MudText Typo="Typo.caption" Class="text-secondary">— tiada medan khusus (boleh ditambah kemudian)</MudText>
+                    <MudText Typo="Typo.caption" Class="text-secondary">
+                        — tiada medan khusus (boleh ditambah kemudian)
+                    </MudText>
                 </MudTabPanel>
                 <MudTabPanel Text="Alamat">
-                    <MudText Typo="Typo.caption" Class="text-secondary">— tiada medan khusus (boleh ditambah kemudian)</MudText>
+                    <MudText Typo="Typo.caption" Class="text-secondary">
+                        — tiada medan khusus (boleh ditambah kemudian)
+                    </MudText>
                 </MudTabPanel>
                 <MudTabPanel Text="Surat Peringatan">
-                    <MudText Typo="Typo.caption" Class="text-secondary">— tiada medan khusus (boleh ditambah kemudian)</MudText>
+                    <MudText Typo="Typo.caption" Class="text-secondary">
+                        — tiada medan khusus (boleh ditambah kemudian)
+                    </MudText>
                 </MudTabPanel>
                 <MudTabPanel Text="Lain-lain">
-                    <MudText Typo="Typo.caption" Class="text-secondary">— tiada medan khusus (boleh ditambah kemudian)</MudText>
+                    <MudText Typo="Typo.caption" Class="text-secondary">
+                        — tiada medan khusus (boleh ditambah kemudian)
+                    </MudText>
                 </MudTabPanel>
             </MudTabs>
 
@@ -156,12 +198,25 @@
 
             <!-- Actions -->
             <MudStack Row="true" Spacing="2">
-                <MudButton Color="Color.Success" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save"
-                           OnClick="SaveItem">Simpan</MudButton>
-                <MudButton Color="Color.Info" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Restore"
-                           OnClick="ResetForm">Reset</MudButton>
-                <MudButton Color="Color.Error" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Delete"
-                           Disabled="@(_model.ID == Guid.Empty)" OnClick="DeleteItem">Padam</MudButton>
+                <MudButton Color="Color.Success"
+                           Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           OnClick="SaveItem">
+                    Simpan
+                </MudButton>
+                <MudButton Color="Color.Info"
+                           Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.Restore"
+                           OnClick="ResetForm">
+                    Reset
+                </MudButton>
+                <MudButton Color="Color.Error"
+                           Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           Disabled="@(_model.ID == Guid.Empty)"
+                           OnClick="DeleteItem">
+                    Padam
+                </MudButton>
             </MudStack>
 
         </MudCardContent>
@@ -178,7 +233,7 @@
     private List<PenyelenggaraanPenghutangDTO> _all = new();
     private PenyelenggaraanPenghutangDTO _model = NewModel();
 
-    // simple bank list (swap to API if you have one)
+    // simple bank list (boleh swap ke API kalau ada)
     private readonly List<string> _banks = new()
     {
         "Maybank", "CIMB", "RHB", "Bank Islam", "Public Bank", "Hong Leong"
@@ -195,10 +250,12 @@
                 || (x.NoAkaun?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false));
 
     private List<PenyelenggaraanPenghutangDTO> _paged =>
-        _filtered.OrderBy(x => x.KodPenghutang)
-                 .Skip((_page - 1) * _pageSize)
-                 .Take(_pageSize)
-                 .ToList();
+        _filtered
+            .OrderBy(x => x.KodPenghutang)
+            .ThenBy(x => x.Nama)
+            .Skip((_page - 1) * _pageSize)
+            .Take(_pageSize)
+            .ToList();
 
     private int _total => _filtered.Count();
 
@@ -210,10 +267,14 @@
         _isLoading = true;
         try
         {
-            // Refit baru: terus dapat List<PenyelenggaraanPenghutangDTO>
+            // Refit: terus dapat List<PenyelenggaraanPenghutangDTO>
             var list = await PenyelenggaraanPenghutangService.GetAllAsync();
-            // Jika campur kategori + kod dalam table sama, tapis hanya yg ada KodPenghutang
-            _all = (list ?? new()).Where(x => !string.IsNullOrWhiteSpace(x.KodPenghutang)).ToList();
+
+            // Kalau table sama guna utk kategori + kod, kita tapis yg ada KodPenghutang saja
+            _all = (list ?? new())
+                .Where(x => !string.IsNullOrWhiteSpace(x.KodPenghutang))
+                .ToList();
+
             _page = 1;
         }
         catch (Exception ex)
@@ -221,7 +282,10 @@
             _all = new();
             Snackbar.Add($"Gagal memuatkan data: {ex.Message}", Severity.Error);
         }
-        finally { _isLoading = false; }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 
     private static PenyelenggaraanPenghutangDTO NewModel() => new()
@@ -232,10 +296,13 @@
         NamaKedua = string.Empty,
         Bank = string.Empty,
         NoAkaun = string.Empty
+        // Property lain (Kod, Status, TahunKewangan, TarikhJanaan, IsSelected)
+        // guna default dari DTO (Status = "Aktif", IsSelected = false, dll.)
     };
 
     private void EditItem(PenyelenggaraanPenghutangDTO row)
     {
+        // Copy field yang relevan untuk form
         _model = new PenyelenggaraanPenghutangDTO
         {
             ID = row.ID,
@@ -243,7 +310,15 @@
             Nama = row.Nama,
             NamaKedua = row.NamaKedua,
             Bank = row.Bank,
-            NoAkaun = row.NoAkaun
+            NoAkaun = row.NoAkaun,
+            // preserve fields lain supaya kalau user tekan Simpan terus,
+            // kita still ada nilai asal.
+            Kod = row.Kod,
+            KeteranganKod = row.KeteranganKod,
+            Status = string.IsNullOrWhiteSpace(row.Status) ? "Aktif" : row.Status,
+            TahunKewangan = row.TahunKewangan,
+            TarikhJanaan = row.TarikhJanaan,
+            IsSelected = row.IsSelected
         };
     }
 
@@ -251,22 +326,44 @@
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(_model.KodPenghutang) || string.IsNullOrWhiteSpace(_model.Nama))
+            _model.KodPenghutang = _model.KodPenghutang?.Trim();
+            _model.Nama = _model.Nama?.Trim();
+            _model.NamaKedua = _model.NamaKedua?.Trim();
+            _model.Bank = _model.Bank?.Trim();
+            _model.NoAkaun = _model.NoAkaun?.Trim();
+
+            if (string.IsNullOrWhiteSpace(_model.KodPenghutang) ||
+                string.IsNullOrWhiteSpace(_model.Nama))
             {
                 Snackbar.Add("Kod Penghutang dan Nama wajib diisi.", Severity.Warning);
                 return;
             }
 
+            // Pastikan Status ada nilai yang valid
+            if (string.IsNullOrWhiteSpace(_model.Status))
+                _model.Status = "Aktif";
+
             if (_model.ID == Guid.Empty)
             {
-                // CREATE – Refit baru return DTO terus
+                // CREATE – guna DTO penuh
                 var created = await PenyelenggaraanPenghutangService.CreateAsync(_model);
                 Snackbar.Add("Rekod berjaya ditambah.", Severity.Success);
             }
             else
             {
-                // UPDATE – Refit baru return DTO terus
-                var updated = await PenyelenggaraanPenghutangService.UpdateAsync(_model.ID, _model);
+                // UPDATE – ambil rekod asal supaya field lain tak hilang
+                var existing = await PenyelenggaraanPenghutangService.GetByIdAsync(_model.ID);
+
+                existing.KodPenghutang = _model.KodPenghutang;
+                existing.Nama = _model.Nama;
+                existing.NamaKedua = _model.NamaKedua;
+                existing.Bank = _model.Bank;
+                existing.NoAkaun = _model.NoAkaun;
+
+                // Kalau nak, kita boleh juga update Status / TahunKewangan etc. di sini.
+                // Buat masa ni kita kekalkan nilai sedia ada.
+
+                var updated = await PenyelenggaraanPenghutangService.UpdateAsync(existing.ID, existing);
                 Snackbar.Add("Rekod berjaya dikemaskini.", Severity.Success);
             }
 
@@ -286,15 +383,20 @@
         if (_model.ID == Guid.Empty) return;
 
         var confirm = await DialogService.ShowMessageBox(
-            "Pengesahan", (MarkupString)$"Padam rekod <b>{_model.KodPenghutang}</b>?",
-            yesText: "Padam", cancelText: "Batal", options: new DialogOptions { CloseOnEscapeKey = true });
+            "Pengesahan",
+            (MarkupString)$"Padam rekod <b>{_model.KodPenghutang}</b>?",
+            yesText: "Padam",
+            cancelText: "Batal",
+            options: new DialogOptions { CloseOnEscapeKey = true });
 
         if (confirm is not true) return;
 
         try
         {
             var del = await PenyelenggaraanPenghutangService.DeleteAsync(_model.ID);
-            if (!del.IsSuccessStatusCode) throw new Exception(del.Error?.Message ?? $"HTTP {(int)del.StatusCode}");
+            if (!del.IsSuccessStatusCode)
+                throw new Exception(del.Error?.Message ?? $"HTTP {(int)del.StatusCode}");
+
             Snackbar.Add("Rekod berjaya dipadam.", Severity.Success);
             ResetForm();
             await LoadData();

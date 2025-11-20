@@ -1,9 +1,13 @@
-﻿@* @page "/pengesahan-resit"
+﻿@page "/pengesahan-resit"
+
 @using MudBlazor
+@using IMAS.API.AkaunBelumTerima.Shared.Models
 @using IMAS.Blazor.AkaunBelumTerima.Services.Refit
+
 @inject ISnackbar Snackbar
 @inject IDialogService Dialogs
-@inject IPengesahanResitApi PengesahanResitService
+@inject IResitApi ResitService
+@inject IPenyelenggaraanPenghutangApi PenghutangService
 
 <MudPaper Class="pa-4">
 
@@ -22,8 +26,12 @@
                     <!-- controls -->
                     <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
                         <MudItem xs="12" md="3">
-                            <MudSelect T="int" Value="@_pageSize1" ValueChanged="(v)=>{ _pageSize1=v; _page1=1; }"
-                                       Dense="true" Variant="Variant.Outlined" Style="background:white; width:100px;">
+                            <MudSelect T="int"
+                                       Value="@_pageSize1"
+                                       ValueChanged="(v)=>{ _pageSize1=v; _page1=1; }"
+                                       Dense="true"
+                                       Variant="Variant.Outlined"
+                                       Style="background:white; width:100px;">
                                 <MudSelectItem T="int" Value="10">10</MudSelectItem>
                                 <MudSelectItem T="int" Value="25">25</MudSelectItem>
                                 <MudSelectItem T="int" Value="50">50</MudSelectItem>
@@ -34,8 +42,11 @@
 
                         <MudItem xs="12" md="9" Class="d-flex justify-end">
                             <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
-                            <MudTextField T="string" @bind-Value="_search1" Immediate="true"
-                                          Variant="Variant.Outlined" Dense="true"
+                            <MudTextField T="string"
+                                          @bind-Value="_search1"
+                                          Immediate="true"
+                                          Variant="Variant.Outlined"
+                                          Dense="true"
                                           Style="background:white; max-width:260px;" />
                         </MudItem>
                     </MudGrid>
@@ -46,35 +57,55 @@
                     }
                     else
                     {
-                        <MudTable Items="_paged1" Dense="true" Hover="true" Striped="true" Bordered="true" Elevation="0"
-                                  T="PengesahanResitDTO">
+                        <MudTable Items="_paged1"
+                                  Dense="true"
+                                  Hover="true"
+                                  Striped="true"
+                                  Bordered="true"
+                                  Elevation="0"
+                                  T="ResitRow">
                             <HeaderContent>
                                 <MudTh width="5%">
-                                    <MudCheckBox Checked="@_allChecked" CheckedChanged="(v)=>ToggleAll(v)" />
+                                    <MudCheckBox T="bool"
+                                                 Checked="@_allChecked"
+                                                 CheckedChanged="(v)=>ToggleAll(v)" />
                                 </MudTh>
                                 <MudTh width="16%">No. Resit</MudTh>
                                 <MudTh width="12%">Tarikh</MudTh>
                                 <MudTh width="22%">Nama Penghutang</MudTh>
                                 <MudTh>Butiran</MudTh>
-                                <MudTh width="22%"></MudTh>
+                                <MudTh width="22%">Status</MudTh>
                             </HeaderContent>
                             <RowTemplate>
                                 <MudTd>
-                                    <MudCheckBox Checked="@_selected.Contains(context.ID)"
-                                                 CheckedChanged="(v)=>ToggleRow(context.ID, v)" />
+                                    <MudCheckBox T="bool"
+                                                 Checked="@(context.Resit.ID.HasValue && _selected.Contains(context.Resit.ID.Value))"
+                                                 CheckedChanged="(v)=>ToggleRow(context, v)" />
                                 </MudTd>
-                                <MudTd>@context.NoResit</MudTd>
-                                <MudTd>@context.Tarikh?.ToString("dd/MM/yyyy")</MudTd>
+                                <MudTd>@context.Resit.NoResit</MudTd>
+                                <MudTd>@context.Resit.Tarikh?.ToString("dd/MM/yyyy")</MudTd>
                                 <MudTd>@context.NamaPenghutang</MudTd>
-                                <MudTd>@context.Butiran</MudTd>
+                                <MudTd>@context.Resit.Butiran</MudTd>
                                 <MudTd>
                                     <MudStack Row="true" Spacing="1">
-                                        <MudButton Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small"
-                                                   OnClick="@(()=>ShowDetails(context))">Papar Butiran</MudButton>
-                                        <MudButton Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small"
-                                                   OnClick="@(()=>Approve(context))">Sahkan</MudButton>
-                                        <MudButton Color="Color.Error" Variant="Variant.Outlined" Size="Size.Small"
-                                                   OnClick="@(()=>Cancel(context))">Batalkan</MudButton>
+                                        <MudButton Color="Color.Info"
+                                                   Variant="Variant.Outlined"
+                                                   Size="Size.Small"
+                                                   OnClick="@(()=>ShowDetails(context))">
+                                            Papar Butiran
+                                        </MudButton>
+                                        <MudButton Color="Color.Success"
+                                                   Variant="Variant.Outlined"
+                                                   Size="Size.Small"
+                                                   OnClick="@(()=>Approve(context))">
+                                            Sahkan
+                                        </MudButton>
+                                        <MudButton Color="Color.Error"
+                                                   Variant="Variant.Outlined"
+                                                   Size="Size.Small"
+                                                   OnClick="@(()=>Cancel(context))">
+                                            Batalkan
+                                        </MudButton>
                                     </MudStack>
                                 </MudTd>
                             </RowTemplate>
@@ -93,16 +124,20 @@
                                 </MudText>
                             </MudItem>
                             <MudItem xs="12" md="6" Class="d-flex justify-end">
-                                <MudPagination Page="@_page1" PageChanged="(p)=>_page1=p"
+                                <MudPagination Page="@_page1"
+                                               PageChanged="(p)=>_page1=p"
                                                Count="@(Math.Max(1, (int)Math.Ceiling((double)_total1/_pageSize1)))"
-                                               HidePrevNext="false" Class="my-0"/>
+                                               HidePrevNext="false"
+                                               Class="my-0" />
                             </MudItem>
                         </MudGrid>
 
                         <MudDivider Class="my-3" />
 
-                        <MudButton Color="Color.Success" Variant="Variant.Filled"
-                                   Disabled="@(!_selected.Any())" OnClick="ApproveBulk">
+                        <MudButton Color="Color.Success"
+                                   Variant="Variant.Filled"
+                                   Disabled="@(!_selected.Any())"
+                                   OnClick="ApproveBulk">
                             Sah berkelompok
                         </MudButton>
                     }
@@ -113,8 +148,12 @@
 
                     <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
                         <MudItem xs="12" md="3">
-                            <MudSelect T="int" Value="@_pageSize2" ValueChanged="(v)=>{ _pageSize2=v; _page2=1; }"
-                                       Dense="true" Variant="Variant.Outlined" Style="background:white; width:100px;">
+                            <MudSelect T="int"
+                                       Value="@_pageSize2"
+                                       ValueChanged="(v)=>{ _pageSize2=v; _page2=1; }"
+                                       Dense="true"
+                                       Variant="Variant.Outlined"
+                                       Style="background:white; width:100px;">
                                 <MudSelectItem T="int" Value="10">10</MudSelectItem>
                                 <MudSelectItem T="int" Value="25">25</MudSelectItem>
                                 <MudSelectItem T="int" Value="50">50</MudSelectItem>
@@ -124,8 +163,11 @@
 
                         <MudItem xs="12" md="9" Class="d-flex justify-end">
                             <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
-                            <MudTextField T="string" @bind-Value="_search2" Immediate="true"
-                                          Variant="Variant.Outlined" Dense="true"
+                            <MudTextField T="string"
+                                          @bind-Value="_search2"
+                                          Immediate="true"
+                                          Variant="Variant.Outlined"
+                                          Dense="true"
                                           Style="background:white; max-width:260px;" />
                         </MudItem>
                     </MudGrid>
@@ -136,8 +178,13 @@
                     }
                     else
                     {
-                        <MudTable Items="_paged2" Dense="true" Hover="true" Striped="true" Bordered="true" Elevation="0"
-                                  T="PengesahanResitDTO">
+                        <MudTable Items="_paged2"
+                                  Dense="true"
+                                  Hover="true"
+                                  Striped="true"
+                                  Bordered="true"
+                                  Elevation="0"
+                                  T="ResitRow">
                             <HeaderContent>
                                 <MudTh width="16%">No. Resit</MudTh>
                                 <MudTh width="12%">Tarikh</MudTh>
@@ -147,16 +194,25 @@
                                 <MudTh width="14%"></MudTh>
                             </HeaderContent>
                             <RowTemplate>
-                                <MudTd>@context.NoResit</MudTd>
-                                <MudTd>@context.Tarikh?.ToString("dd/MM/yyyy")</MudTd>
+                                <MudTd>@context.Resit.NoResit</MudTd>
+                                <MudTd>@context.Resit.Tarikh?.ToString("dd/MM/yyyy")</MudTd>
                                 <MudTd>@context.NamaPenghutang</MudTd>
-                                <MudTd>@context.Butiran</MudTd>
+                                <MudTd>@context.Resit.Butiran</MudTd>
                                 <MudTd>
-                                    <MudChip Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">@context.Status</MudChip>
+                                    <MudChip T="string"
+                                             Color="@GetStatusColor(context.Resit.StatusSah)"
+                                             Variant="Variant.Filled"
+                                             Size="Size.Small">
+                                        @context.Resit.StatusSah
+                                    </MudChip>
                                 </MudTd>
                                 <MudTd>
-                                    <MudButton Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small"
-                                               OnClick="@(()=>ShowDetails(context))">Papar Butiran</MudButton>
+                                    <MudButton Color="Color.Info"
+                                               Variant="Variant.Outlined"
+                                               Size="Size.Small"
+                                               OnClick="@(()=>ShowDetails(context))">
+                                        Papar Butiran
+                                    </MudButton>
                                 </MudTd>
                             </RowTemplate>
                             <NoRecordsContent>
@@ -173,9 +229,11 @@
                                 </MudText>
                             </MudItem>
                             <MudItem xs="12" md="6" Class="d-flex justify-end">
-                                <MudPagination Page="@_page2" PageChanged="(p)=>_page2=p"
+                                <MudPagination Page="@_page2"
+                                               PageChanged="(p)=>_page2=p"
                                                Count="@(Math.Max(1, (int)Math.Ceiling((double)_total2/_pageSize2)))"
-                                               HidePrevNext="false" Class="my-0"/>
+                                               HidePrevNext="false"
+                                               Class="my-0" />
                             </MudItem>
                         </MudGrid>
                     }
@@ -189,55 +247,76 @@
 </MudPaper>
 
 @code {
-    // ===== DTO =====
-    public class PengesahanResitDTO
+    // ===== View model baris (gabung ResitDTO + NamaPenghutang) =====
+    public class ResitRow
     {
-        public Guid ID { get; set; }
-        public string? NoResit { get; set; }
-        public DateTime? Tarikh { get; set; }
+        public ResitDTO Resit { get; set; } = new();
         public string? NamaPenghutang { get; set; }
-        public string? Butiran { get; set; }
-        public string Status { get; set; } = "Pengesahan"; // Pengesahan | Disahkan | Batal
     }
 
     // ===== State =====
     private bool _loading;
     private int _tab = 0;
-    private List<PengesahanResitDTO> _all = new();
+    private List<ResitRow> _all = new();
 
     // Tab 1
     private int _page1 = 1, _pageSize1 = 10;
     private string _search1 = string.Empty;
     private HashSet<Guid> _selected = new();
-    private bool _allChecked => _paged1.Any() && _paged1.All(x => _selected.Contains(x.ID));
+    private bool _allChecked => _paged1.Any()
+                                && _paged1.All(x => x.Resit.ID.HasValue && _selected.Contains(x.Resit.ID.Value));
 
     // Tab 2
     private int _page2 = 1, _pageSize2 = 10;
     private string _search2 = string.Empty;
 
+    // ===== Helper status =====
+    private static bool IsBelumSah(string? statusSah) =>
+        string.IsNullOrWhiteSpace(statusSah) ||
+        statusSah.Equals("BELUM SAH", StringComparison.OrdinalIgnoreCase);
+
+    private Color GetStatusColor(string? statusSah)
+    {
+        var s = statusSah?.ToUpperInvariant() ?? "";
+        return s switch
+        {
+            "SAH" => Color.Success,
+            "BATAL" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
     // ===== Filters & paging =====
-    private IEnumerable<PengesahanResitDTO> PendingQuery =>
-        _all.Where(x => string.Equals(x.Status, "Pengesahan", StringComparison.OrdinalIgnoreCase))
+    private IEnumerable<ResitRow> PendingQuery =>
+        _all
+            .Where(x => IsBelumSah(x.Resit.StatusSah))
             .Where(x => string.IsNullOrWhiteSpace(_search1)
-                || (x.NoResit?.Contains(_search1, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (x.Resit.NoResit?.Contains(_search1, StringComparison.OrdinalIgnoreCase) ?? false)
                 || (x.NamaPenghutang?.Contains(_search1, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (x.Butiran?.Contains(_search1, StringComparison.OrdinalIgnoreCase) ?? false));
+                || (x.Resit.Butiran?.Contains(_search1, StringComparison.OrdinalIgnoreCase) ?? false));
 
-    private IEnumerable<PengesahanResitDTO> ApprovedQuery =>
-        _all.Where(x => string.Equals(x.Status, "Disahkan", StringComparison.OrdinalIgnoreCase))
+    private IEnumerable<ResitRow> ApprovedQuery =>
+        _all
+            .Where(x => !IsBelumSah(x.Resit.StatusSah))
             .Where(x => string.IsNullOrWhiteSpace(_search2)
-                || (x.NoResit?.Contains(_search2, StringComparison.OrdinalIgnoreCase) ?? false)
+                || (x.Resit.NoResit?.Contains(_search2, StringComparison.OrdinalIgnoreCase) ?? false)
                 || (x.NamaPenghutang?.Contains(_search2, StringComparison.OrdinalIgnoreCase) ?? false)
-                || (x.Butiran?.Contains(_search2, StringComparison.OrdinalIgnoreCase) ?? false));
+                || (x.Resit.Butiran?.Contains(_search2, StringComparison.OrdinalIgnoreCase) ?? false));
 
-    private List<PengesahanResitDTO> _paged1 => PendingQuery
-        .OrderByDescending(x => x.Tarikh).ThenBy(x => x.NoResit)
-        .Skip((_page1 - 1) * _pageSize1).Take(_pageSize1).ToList();
+    private List<ResitRow> _paged1 => PendingQuery
+        .OrderByDescending(x => x.Resit.Tarikh)
+        .ThenBy(x => x.Resit.NoResit)
+        .Skip((_page1 - 1) * _pageSize1)
+        .Take(_pageSize1)
+        .ToList();
     private int _total1 => PendingQuery.Count();
 
-    private List<PengesahanResitDTO> _paged2 => ApprovedQuery
-        .OrderByDescending(x => x.Tarikh).ThenBy(x => x.NoResit)
-        .Skip((_page2 - 1) * _pageSize2).Take(_pageSize2).ToList();
+    private List<ResitRow> _paged2 => ApprovedQuery
+        .OrderByDescending(x => x.Resit.Tarikh)
+        .ThenBy(x => x.Resit.NoResit)
+        .Skip((_page2 - 1) * _pageSize2)
+        .Take(_pageSize2)
+        .ToList();
     private int _total2 => ApprovedQuery.Count();
 
     // ===== Lifecycle =====
@@ -248,123 +327,197 @@
         _loading = true;
         try
         {
-            var resp = await PengesahanResitService.GetAll();
-            if (!resp.IsSuccessStatusCode) throw new Exception(resp.Error?.Message ?? $"HTTP {(int)resp.StatusCode}");
-            _all = resp.Content ?? new();
+            var resitList = await ResitService.GetAllAsync();
+            var penghutangList = await PenghutangService.GetAllAsync();
+
+            var penghutangDict = penghutangList
+                .Where(p => p.ID != Guid.Empty && !string.IsNullOrWhiteSpace(p.Nama))
+                .ToDictionary(p => p.ID, p => p.Nama!);
+
+            _all = (resitList ?? new())
+                .Select(r => new ResitRow
+                {
+                    Resit = r,
+                    NamaPenghutang = (r.PenyelenggaraanPenghutangEntitiesID.HasValue &&
+                                      penghutangDict.TryGetValue(r.PenyelenggaraanPenghutangEntitiesID.Value, out var nama))
+                        ? nama
+                        : string.Empty
+                })
+                .ToList();
+
+            _selected.Clear();
         }
         catch (Exception ex)
         {
             _all = new();
             Snackbar.Add($"Gagal memuatkan data: {ex.Message}", Severity.Error);
         }
-        finally { _loading = false; }
+        finally
+        {
+            _loading = false;
+        }
     }
 
     // ===== Selection =====
-    private void ToggleRow(Guid id, bool v)
+    private void ToggleRow(ResitRow row, bool v)
     {
+        if (!row.Resit.ID.HasValue) return;
+
+        var id = row.Resit.ID.Value;
         if (v) _selected.Add(id); else _selected.Remove(id);
     }
+
     private void ToggleAll(bool v)
     {
-        if (v) foreach (var r in _paged1) _selected.Add(r.ID);
-        else foreach (var r in _paged1) _selected.Remove(r.ID);
+        if (v)
+        {
+            foreach (var r in _paged1)
+            {
+                if (r.Resit.ID.HasValue)
+                    _selected.Add(r.Resit.ID.Value);
+            }
+        }
+        else
+        {
+            foreach (var r in _paged1)
+            {
+                if (r.Resit.ID.HasValue)
+                    _selected.Remove(r.Resit.ID.Value);
+            }
+        }
     }
 
     // ===== Actions =====
-    private async Task Approve(PengesahanResitDTO row)
+    private async Task Approve(ResitRow row)
     {
-        var ok = await Dialogs.ShowMessageBox("Pengesahan", (MarkupString)$"Sahkan resit <b>{row.NoResit}</b>?", yesText: "Sahkan", cancelText: "Batal");
+        if (!row.Resit.ID.HasValue)
+        {
+            Snackbar.Add("Resit tidak mempunyai ID yang sah.", Severity.Error);
+            return;
+        }
+
+        var ok = await Dialogs.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Sahkan resit <b>{row.Resit.NoResit}</b>?",
+            yesText: "Sahkan",
+            cancelText: "Batal");
+
         if (ok is not true) return;
 
         try
         {
-            var resp = await PengesahanResitService.Approve(row.ID);
-            if (!resp.IsSuccessStatusCode) throw new Exception(resp.Error?.Message ?? $"HTTP {(int)resp.StatusCode}");
+            var id = row.Resit.ID.Value;
+            var dto = await ResitService.GetByIdAsync(id);
+            dto.StatusSah = "SAH";
+
+            await ResitService.UpdateAsync(id, dto);
             Snackbar.Add("Resit telah disahkan.", Severity.Success);
             await LoadData();
         }
-        catch (Exception ex) { Snackbar.Add($"Gagal sahkan: {ex.Message}", Severity.Error); }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal sahkan: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task ApproveBulk()
     {
+        var ids = _selected.ToList();
+        if (!ids.Any())
+        {
+            Snackbar.Add("Tiada resit dipilih untuk disahkan.", Severity.Warning);
+            return;
+        }
+
+        var ok = await Dialogs.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Sahkan berkelompok <b>{ids.Count}</b> resit terpilih?",
+            yesText: "Sahkan",
+            cancelText: "Batal");
+
+        if (ok is not true) return;
+
         try
         {
-            var resp = await PengesahanResitService.ApproveBulk(new ApproveResitBulkRequest { Ids = _selected.ToList() });
-            if (!resp.IsSuccessStatusCode) throw new Exception(resp.Error?.Message ?? $"HTTP {(int)resp.StatusCode}");
+            foreach (var id in ids)
+            {
+                var dto = await ResitService.GetByIdAsync(id);
+                dto.StatusSah = "SAH";
+                await ResitService.UpdateAsync(id, dto);
+            }
+
             Snackbar.Add("Resit terpilih telah disahkan.", Severity.Success);
             _selected.Clear();
             await LoadData();
         }
-        catch (Exception ex) { Snackbar.Add($"Gagal sah berkelompok: {ex.Message}", Severity.Error); }
-    }
-
-    private async Task Cancel(PengesahanResitDTO row)
-    {
-        string? reason = null;
-        var prm = new DialogParameters
+        catch (Exception ex)
         {
-            ["Content"] = (RenderFragment)(b =>
-            {
-                b.AddContent(0, (MarkupString)$"<b>Batalkan resit {row.NoResit}?</b>");
-                b.OpenComponent<MudTextField<string>>(1);
-                b.AddAttribute(2, "Label", "Sebab pembatalan");
-                b.AddAttribute(3, "Lines", 3);
-                b.AddAttribute(4, "Immediate", true);
-                b.AddAttribute(5, "Value", reason);
-                b.AddAttribute(6, "ValueChanged", EventCallback.Factory.Create<string>(this, v => reason = v));
-                b.CloseComponent();
-            })
-        };
-        var dlg = Dialogs.Show<MudDialog>("Pembatalan", prm);
-        var res = await dlg.Result;
-        if (res.Cancelled) return;
-
-        try
-        {
-            var resp = await PengesahanResitService.Cancel(row.ID, new CancelResitRequest { Sebab = reason ?? "" });
-            if (!resp.IsSuccessStatusCode) throw new Exception(resp.Error?.Message ?? $"HTTP {(int)resp.StatusCode}");
-            Snackbar.Add("Resit telah dibatalkan.", Severity.Success);
-            await LoadData();
+            Snackbar.Add($"Gagal sah berkelompok: {ex.Message}", Severity.Error);
         }
-        catch (Exception ex) { Snackbar.Add($"Gagal batalkan: {ex.Message}", Severity.Error); }
     }
 
-    private async Task ShowDetails(PengesahanResitDTO row)
+    private async Task Cancel(ResitRow row)
     {
-        var resp = await PengesahanResitService.GetDetails(row.ID);
-        if (!resp.IsSuccessStatusCode)
+        if (!row.Resit.ID.HasValue)
         {
-            Snackbar.Add("Gagal memuatkan butiran.", Severity.Error);
+            Snackbar.Add("Resit tidak mempunyai ID yang sah.", Severity.Error);
             return;
         }
 
-        await Dialogs.ShowMessageBox("Butiran Resit",
-            (MarkupString)$"""
-            <div style='line-height:1.6'>
-              <b>No. Resit:</b> {row.NoResit}<br/>
-              <b>Tarikh:</b> {row.Tarikh:dd/MM/yyyy}<br/>
-              <b>Nama Penghutang:</b> {row.NamaPenghutang}<br/>
-              <b>Butiran:</b> {row.Butiran}<br/>
-              <hr/>
-              {resp.Content}
-            </div>
-            """,
-            yesText: "Tutup");
+        var ok = await Dialogs.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Batalkan resit <b>{row.Resit.NoResit}</b>?",
+            yesText: "Batalkan",
+            cancelText: "Kembali");
+
+        if (ok is not true) return;
+
+        try
+        {
+            var id = row.Resit.ID.Value;
+            var dto = await ResitService.GetByIdAsync(id);
+            dto.StatusSah = "BATAL";
+
+            await ResitService.UpdateAsync(id, dto);
+            Snackbar.Add("Resit telah dibatalkan.", Severity.Success);
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal batalkan: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ShowDetails(ResitRow row)
+    {
+        if (!row.Resit.ID.HasValue)
+        {
+            Snackbar.Add("Resit tidak mempunyai ID yang sah.", Severity.Error);
+            return;
+        }
+
+        try
+        {
+            var dto = await ResitService.GetByIdAsync(row.Resit.ID.Value);
+
+            var markup = (MarkupString)$@"
+<div style='line-height:1.6'>
+  <b>No. Resit:</b> {dto.NoResit}<br/>
+  <b>No. Bank Slip:</b> {dto.NoBankSlip}<br/>
+  <b>Tarikh:</b> {dto.Tarikh:dd/MM/yyyy}<br/>
+  <b>Nama Penghutang:</b> {row.NamaPenghutang}<br/>
+  <b>Jumlah:</b> {dto.Jumlah:N2}<br/>
+  <b>Status Pos:</b> {dto.StatusPos}<br/>
+  <b>Status Sah:</b> {dto.StatusSah}<br/>
+  <b>Butiran:</b><br/>
+  {dto.Butiran}
+</div>";
+
+            await Dialogs.ShowMessageBox("Butiran Resit", markup, yesText: "Tutup");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memuatkan butiran: {ex.Message}", Severity.Error);
+        }
     }
 }
-
-/* ===== Example Refit API contracts (rename to your real endpoints) =====
-public interface IPengesahanResitApi
-{
-    Task<ApiResponse<List<PengesahanResitDTO>>> GetAll();
-    Task<ApiResponse<string>> GetDetails(Guid id);
-    Task<ApiResponse<bool>> Approve(Guid id);
-    Task<ApiResponse<bool>> ApproveBulk(ApproveResitBulkRequest body);
-    Task<ApiResponse<bool>> Cancel(Guid id, CancelResitRequest body);
-}
-public record ApproveResitBulkRequest { public List<Guid> Ids { get; set; } = new(); }
-public record CancelResitRequest { public string Sebab { get; set; } = ""; }
-*/
- *@

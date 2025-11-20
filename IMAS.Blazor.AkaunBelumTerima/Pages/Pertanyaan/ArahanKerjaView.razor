@@ -1,110 +1,181 @@
 ﻿@page "/arahan-kerja"
+@using MudBlazor
 
 <MudPaper Class="pa-4">
 
-    <!-- Header Section -->
-    <MudText Typo="Typo.h6" Class="mb-3">
-        📘 Jenis Carian
-    </MudText>
+    <!-- ======================= JENIS CARIAN ======================= -->
+    <MudCard Class="mb-4" Style="border-left:6px solid #16a085;">
+        <MudCardHeader Class="py-2" Style="background:#16a085; color:white;">
+            <MudText Typo="Typo.subtitle1" Class="pl-2">
+                Jenis Carian
+            </MudText>
+        </MudCardHeader>
 
-    <!-- FILTER PANEL -->
-    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <MudCardContent>
 
-        <MudGrid>
+            <MudGrid Class="mb-2" Style="max-width:1100px;">
 
-            <!-- Tahun -->
-            <MudItem xs="12" md="3">
-                <MudSelect T="string" Label="Tahun" @bind-Value="SelectedYear">
-                    @foreach (var year in TahunList)
-                    {
-                        <MudSelectItem T="string" Value="@year">@year</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
+                <!-- Tahun -->
+                <MudItem xs="12" md="3">
+                    <MudText Typo="Typo.caption">Tahun</MudText>
+                    <MudSelect T="string" @bind-Value="SelectedYear"
+                               Dense="true" Variant="Variant.Outlined"
+                               Style="background:white;">
+                        <MudSelectItem T="string" Value="@("")">Pilih..</MudSelectItem>
+                        @foreach (var year in TahunList)
+                        {
+                            <MudSelectItem T="string" Value="@year">@year</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
 
-            <!-- Bulan -->
-            <MudItem xs="12" md="3">
-                <MudSelect T="string" Label="Bulan" @bind-Value="SelectedMonth">
-                    @foreach (var b in BulanList)
-                    {
-                        <MudSelectItem T="string" Value="@b">@b</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
+                <!-- Bulan -->
+                <MudItem xs="12" md="3">
+                    <MudText Typo="Typo.caption">Bulan</MudText>
+                    <MudSelect T="string" @bind-Value="SelectedMonth"
+                               Dense="true" Variant="Variant.Outlined"
+                               Style="background:white;">
+                        <MudSelectItem T="string" Value="@("")">Pilih..</MudSelectItem>
+                        @foreach (var b in BulanList)
+                        {
+                            <MudSelectItem T="string" Value="@b">@b</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
 
-            <!-- Jenis Bil -->
-            <MudItem xs="12" md="3">
-                <MudSelect T="string" Label="Jenis Bil" @bind-Value="SelectedJenisBil">
-                    @foreach (var jenis in JenisBilList)
-                    {
-                        <MudSelectItem T="string" Value="@jenis">@jenis</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
+                <!-- Jenis Bil -->
+                <MudItem xs="12" md="3">
+                    <MudText Typo="Typo.caption">Jenis Bil</MudText>
+                    <MudSelect T="string" @bind-Value="SelectedJenisBil"
+                               Dense="true" Variant="Variant.Outlined"
+                               Style="background:white;">
+                        <MudSelectItem T="string" Value="@("")">Pilih..</MudSelectItem>
+                        @foreach (var jenis in JenisBilList)
+                        {
+                            <MudSelectItem T="string" Value="@jenis">@jenis</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
 
-        </MudGrid>
+            </MudGrid>
 
-        <MudButton Variant="Variant.Filled"
-                   Color="Color.Primary"
-                   StartIcon="@Icons.Material.Filled.Search"
-                   Class="mt-3"
-                   OnClick="Carian">
-            Carian
-        </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Success"
+                       StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="Carian">
+                Carian
+            </MudButton>
 
-    </MudPaper>
+        </MudCardContent>
+    </MudCard>
 
 
+    <!-- ======================= SENARAI ARAHAN KERJA ======================= -->
+    <MudCard Style="border-left:6px solid #16a085;">
+        <MudCardHeader Class="py-2" Style="background:#16a085; color:white;">
+            <MudText Typo="Typo.subtitle1" Class="pl-2">
+                Senarai Arahan Kerja
+            </MudText>
+        </MudCardHeader>
 
-    <!-- RESULT SECTION -->
-    <MudText Typo="Typo.h6" Class="mb-3">
-        📄 Senarai Arahan Kerja
-    </MudText>
+        <MudCardContent>
 
-    <MudPaper Class="pa-4" Elevation="2">
+            <!-- Controls: page size + search -->
+            <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
+                <MudItem xs="12" md="3">
+                    <MudSelect T="int"
+                               Value="@_pageSize"
+                               ValueChanged="(v)=>{ _pageSize = v; _page = 1; }"
+                               Dense="true"
+                               Variant="Variant.Outlined"
+                               Style="background:white; width:100px;">
+                        <MudSelectItem T="int" Value="10">10</MudSelectItem>
+                        <MudSelectItem T="int" Value="25">25</MudSelectItem>
+                        <MudSelectItem T="int" Value="50">50</MudSelectItem>
+                        <MudSelectItem T="int" Value="100">100</MudSelectItem>
+                    </MudSelect>
+                    <MudText Typo="Typo.caption">records</MudText>
+                </MudItem>
 
-        <MudTable Items="ArahanList" Dense="true" Hover="true">
+                <MudItem xs="12" md="9" Class="d-flex justify-end">
+                    <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
+                    <MudTextField T="string"
+                                  @bind-Value="_search"
+                                  Immediate="true"
+                                  Dense="true"
+                                  Variant="Variant.Outlined"
+                                  Style="background:white; max-width:260px;" />
+                </MudItem>
+            </MudGrid>
 
-            <HeaderContent>
-                <MudTh>No. Arahan</MudTh>
-                <MudTh>Tarikh</MudTh>
-                <MudTh>Jenis Arahan</MudTh>
-                <MudTh>Jenis Bil</MudTh>
-                <MudTh>Penghutang</MudTh>
-            </HeaderContent>
+            <!-- Table -->
+            <MudTable Items="PagedArahan"
+                      T="ArahanModel"
+                      Dense="true"
+                      Hover="true"
+                      Striped="true"
+                      Bordered="true"
+                      Elevation="0">
 
-            <RowTemplate>
-                <MudTd>@context.NoArahan</MudTd>
-                <MudTd>@context.Tarikh</MudTd>
-                <MudTd>@context.JenisArahan</MudTd>
-                <MudTd>@context.JenisBil</MudTd>
-                <MudTd>@context.Penghutang</MudTd>
-            </RowTemplate>
+                <HeaderContent>
+                    <MudTh>No. Arahan</MudTh>
+                    <MudTh>Tarikh</MudTh>
+                    <MudTh>Jenis Arahan</MudTh>
+                    <MudTh>Jenis Bil</MudTh>
+                    <MudTh>Penghutang</MudTh>
+                </HeaderContent>
 
-            <NoRecordsContent>
-                <MudText Class="pa-4">No data available in table</MudText>
-            </NoRecordsContent>
+                <RowTemplate>
+                    <MudTd DataLabel="No. Arahan">@context.NoArahan</MudTd>
+                    <MudTd DataLabel="Tarikh">@context.Tarikh</MudTd>
+                    <MudTd DataLabel="Jenis Arahan">@context.JenisArahan</MudTd>
+                    <MudTd DataLabel="Jenis Bil">@context.JenisBil</MudTd>
+                    <MudTd DataLabel="Penghutang">@context.Penghutang</MudTd>
+                </RowTemplate>
 
-        </MudTable>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.caption" Class="pa-4">
+                        No data available in table
+                    </MudText>
+                </NoRecordsContent>
 
-    </MudPaper>
+            </MudTable>
+
+            <!-- Footer: showing X to Y of Z -->
+            <MudGrid AlignItems="AlignItems.Center" Class="mt-2">
+                <MudItem xs="12" md="6">
+                    <MudText Typo="Typo.caption">
+                        Showing @(TotalCount == 0 ? 0 : ((_page - 1) * _pageSize + 1))
+                        to @((Math.Min(_page * _pageSize, TotalCount)))
+                        of @TotalCount entries
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12" md="6" Class="d-flex justify-end">
+                    <MudPagination Page="@_page"
+                                   PageChanged="(p)=>_page = p"
+                                   Count="@(Math.Max(1, (int)Math.Ceiling((double)TotalCount/_pageSize)))"
+                                   HidePrevNext="false"
+                                   Class="my-0" />
+                </MudItem>
+            </MudGrid>
+
+        </MudCardContent>
+    </MudCard>
 
 </MudPaper>
 
-
 @code {
+    // ===== Filters =====
+    private string? SelectedYear;
+    private string? SelectedMonth;
+    private string? SelectedJenisBil;
 
-    // FILTERS
-    string? SelectedYear;
-    string? SelectedMonth;
-    string? SelectedJenisBil;
+    // Dropdown sources (EMPTY – no dummy data)
+    private List<string> TahunList = new();
+    private List<string> BulanList = new();
+    private List<string> JenisBilList = new();
 
-    // DROPDOWN DATA (EMPTY, tiada dummy data)
-    List<string> TahunList = new();
-    List<string> BulanList = new();
-    List<string> JenisBilList = new();
-
-    // TABLE MODEL
+    // ===== Table model =====
     public class ArahanModel
     {
         public string? NoArahan { get; set; }
@@ -114,12 +185,33 @@
         public string? Penghutang { get; set; }
     }
 
-    List<ArahanModel> ArahanList = new();
+    // Master list (EMPTY – no dummy data)
+    private List<ArahanModel> ArahanList = new();
 
-    // CARIAN FUNCTION
-    void Carian()
+    // ===== Paging & search =====
+    private int _page = 1;
+    private int _pageSize = 10;
+    private string _search = string.Empty;
+
+    private IEnumerable<ArahanModel> FilteredArahan =>
+        ArahanList.Where(x =>
+            string.IsNullOrWhiteSpace(_search)
+            || (x.NoArahan?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (x.JenisArahan?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (x.JenisBil?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false)
+            || (x.Penghutang?.Contains(_search, StringComparison.OrdinalIgnoreCase) ?? false));
+
+    private List<ArahanModel> PagedArahan => FilteredArahan
+        .OrderBy(x => x.NoArahan)
+        .Skip((_page - 1) * _pageSize)
+        .Take(_pageSize)
+        .ToList();
+
+    private int TotalCount => FilteredArahan.Count();
+
+    private void Carian()
     {
-        // bila ada API nanti, masukkan logik di sini
-        // skrg biarkan kosong seperti permintaan
+        // Nanti bila ada API untuk senarai arahan kerja, panggil di sini.
+        // Sekarang dibiarkan kosong mengikut permintaan.
     }
 }

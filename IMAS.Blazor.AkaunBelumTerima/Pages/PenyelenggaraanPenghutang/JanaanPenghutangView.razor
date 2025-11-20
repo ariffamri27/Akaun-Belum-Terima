@@ -1,5 +1,13 @@
 ﻿@page "/janaan-penghutang"
 
+@using IMAS.API.AkaunBelumTerima.Shared.Models
+@using IMAS.Blazor.AkaunBelumTerima.Services.Refit
+@using MudBlazor
+
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IPenyelenggaraanPenghutangApi PenyelenggaraanPenghutangService
+
 <MudPaper Class="pa-4">
 
     <!-- Header -->
@@ -10,7 +18,13 @@
     <!-- Filter Section -->
     <MudGrid Class="mb-4">
         <MudItem xs="12" sm="6" md="3">
-            <MudSelect Label="Tahun Kewangan" T="string" @bind-Value="SelectedYear">
+            <MudSelect Label="Tahun Kewangan"
+                       T="string"
+                       @bind-Value="SelectedYear"
+                       Dense="true"
+                       Variant="Variant.Outlined"
+                       Style="background:white;">
+                <MudSelectItem T="string" Value="@("")">— Semua Tahun —</MudSelectItem>
                 @foreach (var year in TahunList)
                 {
                     <MudSelectItem T="string" Value="@year">@year</MudSelectItem>
@@ -19,7 +33,13 @@
         </MudItem>
 
         <MudItem xs="12" sm="6" md="4">
-            <MudSelect Label="Nama Penghutang" T="string" @bind-Value="SelectedPenghutang">
+            <MudSelect Label="Nama Penghutang"
+                       T="string"
+                       @bind-Value="SelectedPenghutang"
+                       Dense="true"
+                       Variant="Variant.Outlined"
+                       Style="background:white;">
+                <MudSelectItem T="string" Value="@("")">— Semua Penghutang —</MudSelectItem>
                 @foreach (var p in PenghutangList)
                 {
                     <MudSelectItem T="string" Value="@p">@p</MudSelectItem>
@@ -28,60 +48,188 @@
         </MudItem>
     </MudGrid>
 
-    <!-- Table -->
-    <MudTable Items="PenghutangTable" Hover="true" Elevation="0" Dense="true">
-        <HeaderContent>
-            <MudTh>Pilih</MudTh>
-            <MudTh>Kod Jenis Penghutang</MudTh>
-            <MudTh>Keterangan</MudTh>
-        </HeaderContent>
+    @if (_isLoading)
+    {
+        <MudProgressLinear Indeterminate />
+    }
+    else
+    {
+        <!-- Table -->
+        <MudTable T="PenyelenggaraanPenghutangDTO"
+                  Items="PenghutangTable"
+                  Hover="true"
+                  Elevation="0"
+                  Dense="true"
+                  Bordered="true"
+                  Striped="true">
+            <HeaderContent>
+                <MudTh width="8%">Pilih</MudTh>
+                <MudTh width="24%">Kod Jenis Penghutang</MudTh>
+                <MudTh>Keterangan</MudTh>
+                <MudTh width="14%">Tahun Kewangan</MudTh>
+                <MudTh width="18%">Tarikh Janaan</MudTh>
+            </HeaderContent>
 
-        <RowTemplate>
-            <MudTd>
-                <MudCheckBox T="bool" @bind-Checked="context.IsChecked" />
-            </MudTd>
-            <MudTd>@context.KodPenghutang</MudTd>
-            <MudTd>@context.Keterangan</MudTd>
-        </RowTemplate>
+            <RowTemplate>
+                <MudTd>
+                    <MudCheckBox T="bool"
+                                 Checked="@context.IsSelected"
+                                 CheckedChanged="v => context.IsSelected = v" />
+                </MudTd>
+                <MudTd>@context.Kod</MudTd>
+                <MudTd>@context.KeteranganKod</MudTd>
+                <MudTd>@(context.TahunKewangan?.ToString() ?? "-")</MudTd>
+                <MudTd>@(context.TarikhJanaan?.ToString("dd/MM/yyyy") ?? "-")</MudTd>
+            </RowTemplate>
 
-        <NoRecordsContent>
-            <MudText Class="pa-4">Tiada rekod.</MudText>
-        </NoRecordsContent>
-    </MudTable>
+            <NoRecordsContent>
+                <MudText Class="pa-4">Tiada rekod.</MudText>
+            </NoRecordsContent>
+        </MudTable>
 
-    <!-- Button -->
-    <div class="d-flex justify-end mt-4">
-        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.PlayArrow" OnClick="Jana">
-            Jana
-        </MudButton>
-    </div>
+        <!-- Button -->
+        <div class="d-flex justify-end mt-4">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Success"
+                       StartIcon="@Icons.Material.Filled.PlayArrow"
+                       OnClick="Jana">
+                Jana
+            </MudButton>
+        </div>
+    }
 
 </MudPaper>
 
 @code {
+    private bool _isLoading;
 
     // Filter values
-    string? SelectedYear;
-    string? SelectedPenghutang;
+    private string? SelectedYear = string.Empty;
+    private string? SelectedPenghutang = string.Empty;
 
-    // Dropdown source (empty dulu)
-    List<string> TahunList = new();
-    List<string> PenghutangList = new();
+    // Dropdown source
+    private List<string> TahunList = new();
+    private List<string> PenghutangList = new();
 
-    // Table Model - kosong
-    public class PenghutangRow
+    // Data dari API
+    private List<PenyelenggaraanPenghutangDTO> _all = new();
+
+    // Table view (ikut filter)
+    private IEnumerable<PenyelenggaraanPenghutangDTO> Filtered =>
+        _all
+            .Where(x =>
+                string.IsNullOrWhiteSpace(SelectedYear)
+                || (x.TahunKewangan.HasValue && x.TahunKewangan.Value.ToString() == SelectedYear))
+            .Where(x =>
+                string.IsNullOrWhiteSpace(SelectedPenghutang)
+                || string.Equals(x.Nama, SelectedPenghutang, StringComparison.OrdinalIgnoreCase));
+
+    private List<PenyelenggaraanPenghutangDTO> PenghutangTable =>
+        Filtered
+            .Where(x => !string.IsNullOrWhiteSpace(x.Kod)) // fokus kod jenis penghutang
+            .OrderBy(x => x.Kod)
+            .ThenBy(x => x.KeteranganKod)
+            .ToList();
+
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
     {
-        public bool IsChecked { get; set; }
-        public string KodPenghutang { get; set; } = "";
-        public string Keterangan { get; set; } = "";
+        _isLoading = true;
+        try
+        {
+            var list = await PenyelenggaraanPenghutangService.GetAllAsync();
+            _all = list ?? new();
+
+            // Tahun Kewangan list (distinct)
+            TahunList = _all
+                .Where(x => x.TahunKewangan.HasValue)
+                .Select(x => x.TahunKewangan!.Value)
+                .Distinct()
+                .OrderByDescending(x => x)
+                .Select(x => x.ToString())
+                .ToList();
+
+            // Pastikan tahun semasa ada dalam list
+            var thisYear = DateTime.Now.Year.ToString();
+            if (!TahunList.Contains(thisYear))
+                TahunList.Insert(0, thisYear);
+
+            // Nama Penghutang (distinct)
+            PenghutangList = _all
+                .Where(x => !string.IsNullOrWhiteSpace(x.Nama))
+                .Select(x => x.Nama!)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            _all = new();
+            Snackbar.Add($"Gagal memuatkan data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 
-    // Table data - TIADA dummy data
-    List<PenghutangRow> PenghutangTable = new();
-
-    void Jana()
+    private async Task Jana()
     {
-        // Letak logic API di sini kalau perlu
-        // Sekarang kosong sahaja
+        try
+        {
+            if (string.IsNullOrWhiteSpace(SelectedYear))
+            {
+                Snackbar.Add("Sila pilih Tahun Kewangan.", Severity.Warning);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(SelectedPenghutang))
+            {
+                Snackbar.Add("Sila pilih Nama Penghutang.", Severity.Warning);
+                return;
+            }
+
+            if (!int.TryParse(SelectedYear, out var tahun))
+            {
+                Snackbar.Add("Tahun Kewangan tidak sah.", Severity.Warning);
+                return;
+            }
+
+            var selectedRows = PenghutangTable.Where(x => x.IsSelected).ToList();
+            if (!selectedRows.Any())
+            {
+                Snackbar.Add("Sila pilih sekurang-kurangnya satu jenis penghutang untuk dijana.", Severity.Warning);
+                return;
+            }
+
+            var ok = await DialogService.ShowMessageBox(
+                "Pengesahan",
+                (MarkupString)$"Jana penghutang untuk <b>{selectedRows.Count}</b> rekod terpilih?",
+                yesText: "Jana",
+                cancelText: "Batal");
+
+            if (ok is not true) return;
+
+            foreach (var row in selectedRows)
+            {
+                // Ambil semula penuh dari API untuk elak overwrite field lain
+                var dto = await PenyelenggaraanPenghutangService.GetByIdAsync(row.ID);
+
+                dto.TahunKewangan = tahun;
+                dto.TarikhJanaan = DateTime.Today;
+                dto.IsSelected = true;
+                dto.Nama = SelectedPenghutang; // bind kepada penghutang yang dipilih
+
+                await PenyelenggaraanPenghutangService.UpdateAsync(dto.ID, dto);
+            }
+
+            Snackbar.Add("Janaan penghutang berjaya.", Severity.Success);
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal menjana penghutang: {ex.Message}", Severity.Error);
+        }
     }
 }

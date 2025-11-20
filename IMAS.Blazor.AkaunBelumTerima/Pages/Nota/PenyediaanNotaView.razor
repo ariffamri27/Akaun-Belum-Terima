@@ -1,5 +1,13 @@
 ﻿@page "/NotaDebitKredit"
+
+@using IMAS.API.AkaunBelumTerima.Shared.Models
+@using IMAS.Blazor.AkaunBelumTerima.Services.Refit
 @using MudBlazor
+
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject INotaDebitKreditApi NotaService
+@inject IPenyelenggaraanPenghutangApi PenghutangService
 
 <MudPaper Class="pa-4">
     <MudCard>
@@ -13,94 +21,167 @@
             <!-- ACTION BUTTONS -->
             <MudGrid Class="mt-4 mb-2">
                 <MudItem>
-                    <MudButton Color="Color.Success" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Class="mr-2">
+                    <MudButton Color="Color.Success"
+                               Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.Add"
+                               Class="mr-2"
+                               OnClick="AddNew">
                         Tambah
                     </MudButton>
 
-                    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Class="mr-2">
+                    <MudButton Color="Color.Primary"
+                               Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.Edit"
+                               Class="mr-2"
+                               Disabled="@(_selectedBelum.Count != 1)"
+                               OnClick="EditSelected">
                         Ubah
                     </MudButton>
 
-                    <MudButton Color="Color.Error" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete">
+                    <MudButton Color="Color.Error"
+                               Variant="Variant.Filled"
+                               StartIcon="@Icons.Material.Filled.Clear"
+                               Disabled="@(!_selectedBelum.Any())"
+                               OnClick="ClearSelection">
                         Batal
                     </MudButton>
                 </MudItem>
             </MudGrid>
 
-            <!-- TAB -->
-            <MudTabs Rounded="true" Elevation="0" Border="true">
+            <MudTabs Rounded="true" Elevation="0" Border="true" @bind-ActivePanelIndex="_activeTab">
+                <!-- TAB 1: BELUM POS -->
                 <MudTabPanel Text="Belum Pos">
 
-                    <!-- TABLE -->
-                    <MudTable T="NotaRow" Items="EmptyList" Hover="true" Dense="true" Bordered="true">
+                    @if (_isLoading)
+                    {
+                        <MudProgressLinear Indeterminate />
+                    }
+                    else
+                    {
+                        <!-- TABLE -->
+                        <MudTable T="NotaRow"
+                                  Items="_belumPos"
+                                  Hover="true"
+                                  Dense="true"
+                                  Bordered="true"
+                                  Striped="true">
 
-                        <HeaderContent>
-                            <MudTh><MudCheckBox T="bool" @bind-Checked="SelectAll" /></MudTh>
-                            <MudTh>No. Nota</MudTh>
-                            <MudTh>Tarikh</MudTh>
-                            <MudTh>Nama Penghutang</MudTh>
-                            <MudTh>Status</MudTh>
-                            <MudTh>Aksi</MudTh>
-                        </HeaderContent>
+                            <HeaderContent>
+                                <MudTh width="6%">
+                                    <MudCheckBox T="bool"
+                                                 Checked="_selectAllBelum"
+                                                 CheckedChanged="ToggleSelectAllBelum" />
+                                </MudTh>
+                                <MudTh>No. Nota</MudTh>
+                                <MudTh>Tarikh</MudTh>
+                                <MudTh>Nama Penghutang</MudTh>
+                                <MudTh>Status</MudTh>
+                                <MudTh>Aksi</MudTh>
+                            </HeaderContent>
 
-                        <NoRecordsContent>
-                            <MudText Class="pa-4">Tiada rekod untuk dipaparkan.</MudText>
-                        </NoRecordsContent>
+                            <RowTemplate>
+                                <MudTd>
+                                    <MudCheckBox T="bool"
+                                                 Checked="@(context.Nota.ID.HasValue && _selectedBelum.Contains(context.Nota.ID.Value))"
+                                                 CheckedChanged="v => ToggleSelect(context, v)" />
+                                </MudTd>
+                                <MudTd>@context.Nota.NoNota</MudTd>
+                                <MudTd>@(context.Nota.Tarikh?.ToString("dd/MM/yyyy"))</MudTd>
+                                <MudTd>@context.NamaPenghutang</MudTd>
+                                <MudTd>
+                                    <MudChip T="string"
+                                             Color="@MapStatusColor(context.Nota.StatusPos)"
+                                             Variant="Variant.Filled"
+                                             Size="Size.Small">
+                                        @MapStatusPosToUi(context.Nota.StatusPos)
+                                    </MudChip>
+                                </MudTd>
 
-                        <!-- EMPTY ROW TEMPLATE (NO DATA) -->
-                        <RowTemplate>
-                            <MudTd><MudCheckBox T="bool" /></MudTd>
-                            <MudTd></MudTd>
-                            <MudTd></MudTd>
-                            <MudTd></MudTd>
-                            <MudTd><MudChip T="string" Color="Color.Info">Baru</MudChip></MudTd>
+                                <MudTd>
+                                    <MudButton Color="Color.Primary"
+                                               Variant="Variant.Outlined"
+                                               Size="Size.Small"
+                                               Class="mr-1"
+                                               OnClick="@(() => SelectForEdit(context))">
+                                        Pilih
+                                    </MudButton>
+                                    <MudButton Color="Color.Success"
+                                               Variant="Variant.Outlined"
+                                               Size="Size.Small"
+                                               Class="mr-1"
+                                               OnClick="@(() => PostSingle(context))">
+                                        Pos
+                                    </MudButton>
+                                    <MudButton Color="Color.Error"
+                                               Variant="Variant.Outlined"
+                                               Size="Size.Small"
+                                               OnClick="@(() => DeleteSingle(context))">
+                                        Hapus
+                                    </MudButton>
+                                </MudTd>
+                            </RowTemplate>
 
-                            <MudTd>
-                                <MudButton Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small" Class="mr-1">
-                                    Pilih
-                                </MudButton>
-                                <MudButton Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" Class="mr-1">
-                                    Pos
-                                </MudButton>
-                                <MudButton Color="Color.Error" Variant="Variant.Outlined" Size="Size.Small">
-                                    Hapus
-                                </MudButton>
-                            </MudTd>
-                        </RowTemplate>
+                            <NoRecordsContent>
+                                <MudText Class="pa-4">Tiada rekod untuk dipaparkan.</MudText>
+                            </NoRecordsContent>
 
-                    </MudTable>
+                        </MudTable>
 
-                    <!-- POS BERKELOMPOK -->
-                    <MudButton Color="Color.Success" Variant="Variant.Filled" Class="mt-3">
-                        Pos Berkelompok
-                    </MudButton>
+                        <!-- POS BERKELOMPOK -->
+                        <MudButton Color="Color.Success"
+                                   Variant="Variant.Filled"
+                                   Class="mt-3"
+                                   Disabled="@(!_selectedBelum.Any())"
+                                   OnClick="PostSelected">
+                            Pos Berkelompok
+                        </MudButton>
+                    }
 
                 </MudTabPanel>
 
                 <!-- TAB 2: SUDAH POS -->
                 <MudTabPanel Text="Sudah Pos">
 
-                    <MudTable T="NotaRow" Items="EmptyList" Hover="true" Dense="true" Bordered="true">
+                    @if (_isLoading)
+                    {
+                        <MudProgressLinear Indeterminate />
+                    }
+                    else
+                    {
+                        <MudTable T="NotaRow"
+                                  Items="_sudahPos"
+                                  Hover="true"
+                                  Dense="true"
+                                  Bordered="true"
+                                  Striped="true">
 
-                        <HeaderContent>
-                            <MudTh>No. Nota</MudTh>
-                            <MudTh>Tarikh</MudTh>
-                            <MudTh>Nama Penghutang</MudTh>
-                            <MudTh>Status</MudTh>
-                        </HeaderContent>
+                            <HeaderContent>
+                                <MudTh>No. Nota</MudTh>
+                                <MudTh>Tarikh</MudTh>
+                                <MudTh>Nama Penghutang</MudTh>
+                                <MudTh>Status</MudTh>
+                            </HeaderContent>
 
-                        <NoRecordsContent>
-                            <MudText Class="pa-4">Tiada rekod untuk dipaparkan.</MudText>
-                        </NoRecordsContent>
+                            <RowTemplate>
+                                <MudTd>@context.Nota.NoNota</MudTd>
+                                <MudTd>@(context.Nota.Tarikh?.ToString("dd/MM/yyyy"))</MudTd>
+                                <MudTd>@context.NamaPenghutang</MudTd>
+                                <MudTd>
+                                    <MudChip T="string"
+                                             Color="@MapStatusColor(context.Nota.StatusPos)"
+                                             Variant="Variant.Filled"
+                                             Size="Size.Small">
+                                        @MapStatusPosToUi(context.Nota.StatusPos)
+                                    </MudChip>
+                                </MudTd>
+                            </RowTemplate>
 
-                        <RowTemplate>
-                            <MudTd></MudTd>
-                            <MudTd></MudTd>
-                            <MudTd></MudTd>
-                            <MudTd><MudChip T="string" Color="Color.Success">Pos</MudChip></MudTd>
-                        </RowTemplate>
+                            <NoRecordsContent>
+                                <MudText Class="pa-4">Tiada rekod untuk dipaparkan.</MudText>
+                            </NoRecordsContent>
 
-                    </MudTable>
+                        </MudTable>
+                    }
 
                 </MudTabPanel>
             </MudTabs>
@@ -112,15 +193,263 @@
 
 @code
 {
-    public bool SelectAll { get; set; }
+    private bool _isLoading;
+    private int _activeTab = 0; // 0 = Belum Pos, 1 = Sudah Pos
 
+    // View model baris
     public class NotaRow
     {
-        public string NoNota { get; set; }
-        public DateTime? Tarikh { get; set; }
-        public string NamaPenghutang { get; set; }
-        public string Status { get; set; }
+        public NotaDebitKreditDTO Nota { get; set; } = new();
+        public string? NamaPenghutang { get; set; }
     }
 
-    public List<NotaRow> EmptyList { get; set; } = new();
+    private List<NotaRow> _all = new();
+
+    // selection untuk tab Belum Pos
+    private HashSet<Guid> _selectedBelum = new();
+    private bool _selectAllBelum;
+
+    // ===== Helper status
+    private static bool IsSudahPos(string? statusPos)
+    {
+        if (string.IsNullOrWhiteSpace(statusPos)) return false;
+        var s = statusPos.ToUpperInvariant();
+        return s == "SUDAH POS" || s == "POS";
+    }
+
+    private static string MapStatusPosToUi(string? statusPos)
+        => IsSudahPos(statusPos) ? "Pos" : "Baru";
+
+    private static string MapUiToStatusPos(string? uiStatus)
+    {
+        if (string.Equals(uiStatus, "Pos", StringComparison.OrdinalIgnoreCase))
+            return "SUDAH POS";
+        return "BARU"; // default untuk nota
+    }
+
+    private Color MapStatusColor(string? statusPos)
+        => IsSudahPos(statusPos) ? Color.Success : Color.Info;
+
+    // ===== Derived lists
+    private IEnumerable<NotaRow> _belumPos =>
+        _all.Where(r => !IsSudahPos(r.Nota.StatusPos));
+
+    private IEnumerable<NotaRow> _sudahPos =>
+        _all.Where(r => IsSudahPos(r.Nota.StatusPos));
+
+    // ===== Lifecycle
+    protected override async Task OnInitializedAsync() => await LoadData();
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        try
+        {
+            var penghutangList = await PenghutangService.GetAllAsync();
+            var notaList = await NotaService.GetAllAsync();
+
+            var penghutangDict = penghutangList
+                .Where(p => p.ID != Guid.Empty && !string.IsNullOrWhiteSpace(p.Nama))
+                .ToDictionary(p => p.ID, p => p.Nama!);
+
+            _all = notaList
+                .Select(n => new NotaRow
+                {
+                    Nota = n,
+                    NamaPenghutang = (n.PenyelenggaraanPenghutangEntitiesID.HasValue &&
+                                      penghutangDict.TryGetValue(n.PenyelenggaraanPenghutangEntitiesID.Value, out var nama))
+                        ? nama
+                        : string.Empty
+                })
+                .OrderByDescending(r => r.Nota.Tarikh)
+                .ThenBy(r => r.Nota.NoNota)
+                .ToList();
+
+            _selectedBelum.Clear();
+            _selectAllBelum = false;
+        }
+        catch (Exception ex)
+        {
+            _all = new();
+            Snackbar.Add($"Gagal memuatkan data nota: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    // ===== Selection
+    private void ToggleSelect(NotaRow row, bool selected)
+    {
+        if (!row.Nota.ID.HasValue) return;
+
+        var id = row.Nota.ID.Value;
+
+        if (selected)
+            _selectedBelum.Add(id);
+        else
+            _selectedBelum.Remove(id);
+
+        _selectAllBelum = _belumPos.Any()
+            && _belumPos.All(r => r.Nota.ID.HasValue && _selectedBelum.Contains(r.Nota.ID.Value));
+    }
+
+    private void ToggleSelectAllBelum(bool value)
+    {
+        _selectAllBelum = value;
+
+        if (value)
+        {
+            foreach (var row in _belumPos)
+            {
+                if (row.Nota.ID.HasValue)
+                    _selectedBelum.Add(row.Nota.ID.Value);
+            }
+        }
+        else
+        {
+            foreach (var row in _belumPos)
+            {
+                if (row.Nota.ID.HasValue)
+                    _selectedBelum.Remove(row.Nota.ID.Value);
+            }
+        }
+    }
+
+    private void ClearSelection()
+    {
+        _selectedBelum.Clear();
+        _selectAllBelum = false;
+    }
+
+    // ===== Actions - top buttons
+    private void AddNew()
+    {
+        // Placeholder – nanti boleh buka form / dialog tambah Nota
+        Snackbar.Add("Fungsi tambah nota belum diimplementasi.", Severity.Info);
+    }
+
+    private void EditSelected()
+    {
+        if (_selectedBelum.Count != 1)
+        {
+            Snackbar.Add("Sila pilih satu nota untuk diubah.", Severity.Warning);
+            return;
+        }
+
+        // Placeholder – nanti boleh navigate ke page/ dialog ubah Nota
+        Snackbar.Add("Fungsi ubah nota belum diimplementasi.", Severity.Info);
+    }
+
+    private void SelectForEdit(NotaRow row)
+    {
+        if (!row.Nota.ID.HasValue) return;
+
+        _selectedBelum.Clear();
+        _selectedBelum.Add(row.Nota.ID.Value);
+    }
+
+    // ===== Actions - row & bulk
+    private async Task PostSingle(NotaRow row)
+    {
+        if (!row.Nota.ID.HasValue)
+        {
+            Snackbar.Add("Nota tidak mempunyai ID yang sah.", Severity.Error);
+            return;
+        }
+
+        var ok = await DialogService.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Pos nota <b>{row.Nota.NoNota}</b>?",
+            yesText: "Pos",
+            cancelText: "Batal");
+
+        if (ok is not true) return;
+
+        try
+        {
+            var id = row.Nota.ID.Value;
+            var dto = await NotaService.GetByIdAsync(id);
+
+            dto.StatusPos = "SUDAH POS";
+
+            await NotaService.UpdateAsync(id, dto);
+            Snackbar.Add("Nota berjaya dipos.", Severity.Success);
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memposkan nota: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task PostSelected()
+    {
+        var ids = _selectedBelum.ToList();
+        if (!ids.Any())
+        {
+            Snackbar.Add("Tiada nota dipilih untuk dipos.", Severity.Warning);
+            return;
+        }
+
+        var ok = await DialogService.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Pos berkelompok <b>{ids.Count}</b> nota terpilih?",
+            yesText: "Pos",
+            cancelText: "Batal");
+
+        if (ok is not true) return;
+
+        try
+        {
+            foreach (var id in ids)
+            {
+                var dto = await NotaService.GetByIdAsync(id);
+                dto.StatusPos = "SUDAH POS";
+                await NotaService.UpdateAsync(id, dto);
+            }
+
+            Snackbar.Add("Nota terpilih berjaya dipos.", Severity.Success);
+            _selectedBelum.Clear();
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal pos berkelompok: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteSingle(NotaRow row)
+    {
+        if (!row.Nota.ID.HasValue)
+        {
+            Snackbar.Add("Nota tidak mempunyai ID yang sah.", Severity.Error);
+            return;
+        }
+
+        var ok = await DialogService.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Padam nota <b>{row.Nota.NoNota}</b>?",
+            yesText: "Padam",
+            cancelText: "Batal");
+
+        if (ok is not true) return;
+
+        try
+        {
+            var id = row.Nota.ID.Value;
+            var resp = await NotaService.DeleteAsync(id);
+
+            if (!resp.IsSuccessStatusCode)
+                throw new Exception(resp.Error?.Message ?? $"HTTP {(int)resp.StatusCode}");
+
+            Snackbar.Add("Nota berjaya dipadam.", Severity.Success);
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memadam nota: {ex.Message}", Severity.Error);
+        }
+    }
 }

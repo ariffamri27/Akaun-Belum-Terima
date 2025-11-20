@@ -3,6 +3,7 @@
 @using IMAS.Blazor.AkaunBelumTerima.Services.Refit
 @using MudBlazor
 @using Microsoft.AspNetCore.Components
+
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject IBillApi BillService
@@ -13,23 +14,41 @@
     <!-- ======================= PENYEDIAAN BIL (FIXED BILLING) ======================= -->
     <MudCard Class="mb-4" Style="border-left:6px solid #8e44ad;">
         <MudCardHeader Class="py-2" Style="background:#8e44ad; color:white;">
-            <MudText Typo="Typo.subtitle1" Class="pl-2">Penyediaan Bil</MudText>
+            <MudText Typo="Typo.subtitle1" Class="pl-2">Penyediaan Bil (Fixed Billing)</MudText>
         </MudCardHeader>
 
         <MudCardContent>
 
             <!-- Top action bar -->
             <MudStack Row="true" Spacing="1" Class="mb-2">
-                <MudButton Color="Color.Success" StartIcon="@Icons.Material.Filled.Add" OnClick="AddNew">Tambah</MudButton>
-                <MudButton Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" Disabled="@(!_singleSelected.HasValue)" OnClick="EditSelected">Ubah</MudButton>
-                <MudButton Color="Color.Default" StartIcon="@Icons.Material.Filled.Clear" Disabled="@(!_selected.Any())" OnClick="@(() => _selected.Clear())">Batal</MudButton>
+                <MudButton Color="Color.Success"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="AddNew">
+                    Tambah
+                </MudButton>
+                <MudButton Color="Color.Info"
+                           StartIcon="@Icons.Material.Filled.Edit"
+                           Disabled="@(!_singleSelected.HasValue)"
+                           OnClick="EditSelected">
+                    Ubah
+                </MudButton>
+                <MudButton Color="Color.Default"
+                           StartIcon="@Icons.Material.Filled.Clear"
+                           Disabled="@(!_selected.Any())"
+                           OnClick="@(() => _selected.Clear())">
+                    Batal
+                </MudButton>
             </MudStack>
 
             <!-- Filters row -->
             <MudGrid AlignItems="AlignItems.End" Class="mb-2">
                 <MudItem xs="12" md="3">
                     <MudText Typo="Typo.caption">Pilih Bulan..</MudText>
-                    <MudSelect T="int?" @bind-Value="_filterBulan" Dense="true" Variant="Variant.Outlined" Style="background:white;">
+                    <MudSelect T="int?"
+                               @bind-Value="_filterBulan"
+                               Dense="true"
+                               Variant="Variant.Outlined"
+                               Style="background:white;">
                         <MudSelectItem T="int?" Value="@((int?)null)">Semua Bulan</MudSelectItem>
                         @for (var m = 1; m <= 12; m++)
                         {
@@ -40,7 +59,11 @@
 
                 <MudItem xs="12" md="3">
                     <MudText Typo="Typo.caption">Pilih Tahun..</MudText>
-                    <MudSelect T="int?" @bind-Value="_filterTahun" Dense="true" Variant="Variant.Outlined" Style="background:white;">
+                    <MudSelect T="int?"
+                               @bind-Value="_filterTahun"
+                               Dense="true"
+                               Variant="Variant.Outlined"
+                               Style="background:white;">
                         <MudSelectItem T="int?" Value="@((int?)null)">Semua Tahun</MudSelectItem>
                         @foreach (var y in _years)
                         {
@@ -50,7 +73,9 @@
                 </MudItem>
 
                 <MudItem xs="12" md="3">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.FileDownload"
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Warning"
+                               StartIcon="@Icons.Material.Filled.FileDownload"
                                OnClick="ExportExcel">
                         Export Excel
                     </MudButton>
@@ -58,7 +83,11 @@
 
                 <MudItem xs="12" md="3" Class="d-flex justify-end">
                     <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
-                    <MudTextField T="string" @bind-Value="_search" Immediate="true" Variant="Variant.Outlined" Dense="true"
+                    <MudTextField T="string"
+                                  @bind-Value="_search"
+                                  Immediate="true"
+                                  Variant="Variant.Outlined"
+                                  Dense="true"
                                   Style="background:white; max-width:240px;" />
                 </MudItem>
             </MudGrid>
@@ -66,8 +95,12 @@
             <!-- Table controls -->
             <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
                 <MudItem xs="12" md="3">
-                    <MudSelect T="int" Value="@_pageSize" ValueChanged="(v) => { _pageSize = v; _page = 1; }"
-                               Dense="true" Variant="Variant.Outlined" Style="background:white; width:100px;">
+                    <MudSelect T="int"
+                               Value="@_pageSize"
+                               ValueChanged="(v) => { _pageSize = v; _page = 1; }"
+                               Dense="true"
+                               Variant="Variant.Outlined"
+                               Style="background:white; width:100px;">
                         <MudSelectItem T="int" Value="10">10</MudSelectItem>
                         <MudSelectItem T="int" Value="25">25</MudSelectItem>
                         <MudSelectItem T="int" Value="50">50</MudSelectItem>
@@ -84,7 +117,12 @@
             }
             else
             {
-                <MudTable Items="_paged" Dense="true" Hover="true" Striped="true" Bordered="true" Elevation="0"
+                <MudTable Items="_paged"
+                          Dense="true"
+                          Hover="true"
+                          Striped="true"
+                          Bordered="true"
+                          Elevation="0"
                           T="FixedBillingDTO">
                     <HeaderContent>
                         <MudTh width="4%">
@@ -116,19 +154,37 @@
                         <MudTd DataLabel="Status">
                             @if (context.SudahJana)
                             {
-                                <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">SUDAH JANA</MudChip>
+                                <MudChip T="string"
+                                         Color="Color.Success"
+                                         Variant="Variant.Filled"
+                                         Size="Size.Small">
+                                    SUDAH JANA
+                                </MudChip>
                             }
                             else
                             {
-                                <MudChip T="string" Color="Color.Default" Variant="Variant.Filled" Size="Size.Small">BELUM JANA</MudChip>
+                                <MudChip T="string"
+                                         Color="Color.Default"
+                                         Variant="Variant.Filled"
+                                         Size="Size.Small">
+                                    BELUM JANA
+                                </MudChip>
                             }
                         </MudTd>
                         <MudTd>
                             <MudStack Row="true" Spacing="1">
-                                <MudButton Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small"
-                                           OnClick="@(()=>EditItem(context))">Pilih</MudButton>
-                                <MudButton Color="Color.Error" Variant="Variant.Outlined" Size="Size.Small"
-                                           OnClick="@(()=>DeleteItem(context))">Hapus</MudButton>
+                                <MudButton Color="Color.Info"
+                                           Variant="Variant.Outlined"
+                                           Size="Size.Small"
+                                           OnClick="@(()=>EditItem(context))">
+                                    Pilih
+                                </MudButton>
+                                <MudButton Color="Color.Error"
+                                           Variant="Variant.Outlined"
+                                           Size="Size.Small"
+                                           OnClick="@(()=>DeleteItem(context))">
+                                    Hapus
+                                </MudButton>
                             </MudStack>
                         </MudTd>
                     </RowTemplate>
@@ -147,9 +203,11 @@
                         </MudText>
                     </MudItem>
                     <MudItem xs="12" md="6" Class="d-flex justify-end">
-                        <MudPagination Page="@_page" PageChanged="(p)=>_page=p"
+                        <MudPagination Page="@_page"
+                                       PageChanged="(p)=>_page=p"
                                        Count="@(Math.Max(1, (int)Math.Ceiling((double)_total/_pageSize)))"
-                                       HidePrevNext="false" Class="my-0" />
+                                       HidePrevNext="false"
+                                       Class="my-0" />
                     </MudItem>
                 </MudGrid>
 
@@ -158,16 +216,23 @@
                 <!-- Bottom actions -->
                 <MudGrid AlignItems="AlignItems.Center">
                     <MudItem xs="12" md="6">
-                        <MudButton Color="Color.Success" Variant="Variant.Filled"
+                        <MudButton Color="Color.Success"
+                                   Variant="Variant.Filled"
                                    Disabled="@(!_selected.Any())"
                                    OnClick="JanaBerkelompok">
                             Jana Berkelompok
                         </MudButton>
                     </MudItem>
                     <MudItem xs="12" md="6" Class="d-flex justify-end">
-                        <MudDatePicker @bind-Date="_janaTarikh" Variant="Variant.Outlined" Dense="true"
+                        <MudDatePicker @bind-Date="_janaTarikh"
+                                       Variant="Variant.Outlined"
+                                       Dense="true"
                                        Style="background:white; max-width:220px;" />
-                        <MudButton Color="Color.Success" Class="ml-2" OnClick="JanaTarikh">Jana Tarikh</MudButton>
+                        <MudButton Color="Color.Success"
+                                   Class="ml-2"
+                                   OnClick="JanaTarikh">
+                            Jana Tarikh
+                        </MudButton>
                     </MudItem>
                 </MudGrid>
             }
@@ -177,6 +242,10 @@
 </MudPaper>
 
 @code {
+    // ===== Constants untuk status jana (selari dengan BillDTO + handler)
+    private const string StatusJanaBelum = "BELUM JANA";
+    private const string StatusJanaSudah = "SUDAH JANA";
+
     // ===== View model untuk Fixed Billing (map daripada BillDTO)
     public class FixedBillingDTO
     {
@@ -228,6 +297,7 @@
 
     private List<FixedBillingDTO> _paged => _filtered
         .OrderBy(x => x.NoFixedBil)
+        .ThenBy(x => x.TarikhMula)
         .Skip((_page - 1) * _pageSize)
         .Take(_pageSize)
         .ToList();
@@ -244,9 +314,11 @@
         {
             // Load semua penghutang untuk dapatkan nama
             var debtors = await PenghutangService.GetAllAsync();
-            _allDebtors = debtors.Where(d => !string.IsNullOrWhiteSpace(d.Nama)).ToList();
+            _allDebtors = debtors
+                .Where(d => !string.IsNullOrWhiteSpace(d.Nama))
+                .ToList();
 
-            // Load semua bill, tapi yang ada NoFixedBil sahaja untuk Fixed Billing
+            // Load semua bil, tapi yang ada NoFixedBil sahaja untuk Fixed Billing
             var bills = await BillService.GetAllAsync();
 
             _all = bills
@@ -254,6 +326,14 @@
                 .Select(b =>
                 {
                     var debtor = _allDebtors.FirstOrDefault(d => d.ID == b.PenyelenggaraanPenghutangEntitiesID);
+
+                    var bulan = b.TarikhMula?.Month ?? b.TarikhAkhir?.Month;
+                    var tahun = b.TarikhMula?.Year ?? b.TarikhAkhir?.Year;
+
+                    // StatusJana treat null/empty as BELUM JANA (selari dgn default di backend)
+                    var sudahJana = !string.IsNullOrWhiteSpace(b.StatusJana) &&
+                                    b.StatusJana.Equals(StatusJanaSudah, StringComparison.OrdinalIgnoreCase);
+
                     return new FixedBillingDTO
                     {
                         ID = b.ID,
@@ -264,10 +344,9 @@
                         NamaPenghutang = debtor?.Nama,
                         NoArahanKerja = b.NoArahanKerja,
                         NoBil = b.NoBil,
-                        SudahJana = b.StatusJana != null &&
-                                    b.StatusJana.Equals("SUDAH JANA", StringComparison.OrdinalIgnoreCase),
-                        Bulan = b.TarikhMula?.Month ?? b.TarikhAkhir?.Month,
-                        Tahun = b.TarikhMula?.Year ?? b.TarikhAkhir?.Year,
+                        SudahJana = sudahJana,
+                        Bulan = bulan,
+                        Tahun = tahun,
                         TarikhJana = b.Tarikh
                     };
                 })
@@ -278,18 +357,31 @@
             _all = new();
             Snackbar.Add($"Gagal memuatkan data: {ex.Message}", Severity.Error);
         }
-        finally { _isLoading = false; }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 
     // ===== Selection helpers
     private void ToggleRow(FixedBillingDTO row, bool v)
     {
-        if (v) _selected.Add(row.ID); else _selected.Remove(row.ID);
+        if (v) _selected.Add(row.ID);
+        else _selected.Remove(row.ID);
     }
+
     private void ToggleAll(bool v)
     {
-        if (v) foreach (var r in _paged) _selected.Add(r.ID);
-        else foreach (var r in _paged) _selected.Remove(r.ID);
+        if (v)
+        {
+            foreach (var r in _paged)
+                _selected.Add(r.ID);
+        }
+        else
+        {
+            foreach (var r in _paged)
+                _selected.Remove(r.ID);
+        }
     }
 
     // ===== Actions
@@ -319,31 +411,56 @@
 
     private async Task DeleteItem(FixedBillingDTO row)
     {
-        var ok = await DialogService.ShowMessageBox("Pengesahan",
+        var ok = await DialogService.ShowMessageBox(
+            "Pengesahan",
             (MarkupString)$"Padam rekod <b>{row.NoFixedBil}</b>?",
-            yesText: "Hapus", cancelText: "Batal");
+            yesText: "Hapus",
+            cancelText: "Batal");
+
         if (ok is not true) return;
 
         try
         {
             var resp = await BillService.DeleteAsync(row.ID);
-            if (!resp.IsSuccessStatusCode) throw new Exception(resp.Error?.Message ?? $"HTTP {(int)resp.StatusCode}");
+            if (!resp.IsSuccessStatusCode)
+                throw new Exception(resp.Error?.Message ?? $"HTTP {(int)resp.StatusCode}");
+
             Snackbar.Add("Rekod berjaya dipadam.", Severity.Success);
             await LoadData();
         }
-        catch (Exception ex) { Snackbar.Add($"Gagal memadam: {ex.Message}", Severity.Error); }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memadam: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task JanaBerkelompok()
     {
+        if (!_selected.Any())
+        {
+            Snackbar.Add("Sila pilih sekurang-kurangnya satu rekod.", Severity.Warning);
+            return;
+        }
+
+        var ok = await DialogService.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Jana bil untuk <b>{_selected.Count}</b> rekod terpilih?",
+            yesText: "Jana",
+            cancelText: "Batal");
+
+        if (ok is not true) return;
+
         try
         {
             foreach (var id in _selected)
             {
                 var bill = await BillService.GetByIdAsync(id);
-                bill.StatusJana = "SUDAH JANA";
+
+                bill.StatusJana = StatusJanaSudah;
+
                 if (_janaTarikh.HasValue)
                     bill.Tarikh = _janaTarikh;
+
                 await BillService.UpdateAsync(id, bill);
             }
 
@@ -351,7 +468,10 @@
             _selected.Clear();
             await LoadData();
         }
-        catch (Exception ex) { Snackbar.Add($"Gagal jana berkelompok: {ex.Message}", Severity.Error); }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal jana berkelompok: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task JanaTarikh()
@@ -365,6 +485,7 @@
             }
 
             var bills = await BillService.GetAllAsync();
+
             foreach (var bill in bills.Where(b => !string.IsNullOrWhiteSpace(b.NoFixedBil)))
             {
                 bill.Tarikh = _janaTarikh;
@@ -374,7 +495,10 @@
             Snackbar.Add("Tarikh berjaya dijana untuk semua fixed billing.", Severity.Success);
             await LoadData();
         }
-        catch (Exception ex) { Snackbar.Add($"Gagal jana tarikh: {ex.Message}", Severity.Error); }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal jana tarikh: {ex.Message}", Severity.Error);
+        }
     }
 
     // ===== Dialog for Tambah/Ubah
@@ -384,10 +508,15 @@
         {
             ["Model"] = model
         };
-        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium, FullWidth = true };
 
-        // Di sini kita cuma buka dialog placeholder.
-        // Kalau projek asal memang ada component <FixedBillingEditDialog>, ini akan guna yang tu.
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        // Placeholder – kalau ada component sebenar:
         // DialogService.Show<FixedBillingEditDialog>("Fixed Billing", parameters, options);
     }
 }

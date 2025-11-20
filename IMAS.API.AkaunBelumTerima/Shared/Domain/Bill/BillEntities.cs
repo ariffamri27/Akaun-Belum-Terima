@@ -12,7 +12,7 @@ namespace IMAS.API.AkaunBelumTerima.Shared.Domain.Entities
         //BILL
         public string? NoBil { get; set; }
         public DateTime? Tarikh { get; set; }
-        public string? StatusPos { get; set; } = "BELUM POS";
+        public string? StatusPos { get; set; } = "BELUM POS"; //SUDAH POS
 
         //FIXED BILLING
         public string? NoFixedBil { get; set; }
@@ -20,7 +20,7 @@ namespace IMAS.API.AkaunBelumTerima.Shared.Domain.Entities
         public DateTime? TarikhAkhir { get; set; }
         //NAMA DARI PENYELENGGARAAN PENGHUTANG
         public string? NoArahanKerja { get; set; }
-        public string? StatusJana { get; set; } = "BELUM JANA";
+        public string? StatusJana { get; set; } = "BELUM JANA"; // SUDAH JANA
 
 
         //PENGESAHAN BILL
@@ -29,7 +29,7 @@ namespace IMAS.API.AkaunBelumTerima.Shared.Domain.Entities
         // NAMA PENGHUTANG DARI PENYELE HUTANG
         [Column(TypeName = "decimal(18,2)")]
         public decimal? Jumlah { get; set; }
-        public string? StatusSah { get; set; } = "BELUM SAH";
+        public string? StatusSah { get; set; } = "BELUM SAH"; //SUDAH SAH
 
         public Guid? PenyelenggaraanPenghutangEntitiesID { get; set; }
 

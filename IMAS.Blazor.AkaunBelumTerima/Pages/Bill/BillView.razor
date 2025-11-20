@@ -1,7 +1,9 @@
 ﻿@page "/penyediaan-bil"
+
 @using IMAS.API.AkaunBelumTerima.Shared.Models
 @using IMAS.Blazor.AkaunBelumTerima.Services.Refit
 @using MudBlazor
+
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 @inject IBillApi BilService
@@ -23,8 +25,12 @@
                     <!-- Controls -->
                     <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
                         <MudItem xs="12" md="3">
-                            <MudSelect T="int" Value="@_pageSizeBelum" ValueChanged="(v) => { _pageSizeBelum = v; _pageBelum = 1; }"
-                                       Dense="true" Variant="Variant.Outlined" Style="background:white; width:100px;">
+                            <MudSelect T="int"
+                                       Value="@_pageSizeBelum"
+                                       ValueChanged="(v) => { _pageSizeBelum = v; _pageBelum = 1; }"
+                                       Dense="true"
+                                       Variant="Variant.Outlined"
+                                       Style="background:white; width:100px;">
                                 <MudSelectItem T="int" Value="10">10</MudSelectItem>
                                 <MudSelectItem T="int" Value="25">25</MudSelectItem>
                                 <MudSelectItem T="int" Value="50">50</MudSelectItem>
@@ -34,8 +40,11 @@
                         </MudItem>
                         <MudItem xs="12" md="9" Class="d-flex justify-end">
                             <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
-                            <MudTextField T="string" @bind-Value="_searchBelum" Immediate="true"
-                                          Variant="Variant.Outlined" Dense="true"
+                            <MudTextField T="string"
+                                          @bind-Value="_searchBelum"
+                                          Immediate="true"
+                                          Variant="Variant.Outlined"
+                                          Dense="true"
                                           Style="background:white; max-width:260px;" />
                         </MudItem>
                     </MudGrid>
@@ -47,8 +56,13 @@
                     }
                     else
                     {
-                        <MudTable Items="_pagedBelum" Dense="true" Hover="true" Striped="true" Bordered="true" Elevation="0"
-                                  T="PenyediaanBilDTO">
+                        <MudTable Items="_pagedBelum"
+                                  T="PenyediaanBilDTO"
+                                  Dense="true"
+                                  Hover="true"
+                                  Striped="true"
+                                  Bordered="true"
+                                  Elevation="0">
                             <HeaderContent>
                                 <MudTh width="6%"></MudTh>
                                 <MudTh width="20%">No. Bil</MudTh>
@@ -61,7 +75,7 @@
                                 <MudTd>
                                     <MudCheckBox T="bool"
                                                  Checked="@_selectedBelum.Contains(context.ID)"
-                                                 CheckedChanged="(v)=>ToggleSelect(context.ID, v)" />
+                                                 CheckedChanged="(v) => ToggleSelect(context.ID, v)" />
                                 </MudTd>
                                 <MudTd DataLabel="No. Bil">@context.NoBil</MudTd>
                                 <MudTd DataLabel="Tarikh">@context.Tarikh?.ToString("dd/MM/yyyy")</MudTd>
@@ -69,12 +83,24 @@
                                 <MudTd DataLabel="Status">@context.Status</MudTd>
                                 <MudTd>
                                     <MudStack Row="true" Spacing="1">
-                                        <MudButton Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small"
-                                                   OnClick="(()=>EditItem(context))">Pilih</MudButton>
-                                        <MudButton Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small"
-                                                   OnClick="(()=>PostSingle(context))">Pos</MudButton>
-                                        <MudButton Color="Color.Error" Variant="Variant.Outlined" Size="Size.Small"
-                                                   OnClick="(()=>DeleteItem(context))">Hapus</MudButton>
+                                        <MudButton Color="Color.Info"
+                                                   Variant="Variant.Outlined"
+                                                   Size="Size.Small"
+                                                   OnClick="(() => EditItem(context))">
+                                            Pilih
+                                        </MudButton>
+                                        <MudButton Color="Color.Success"
+                                                   Variant="Variant.Outlined"
+                                                   Size="Size.Small"
+                                                   OnClick="(() => PostSingle(context))">
+                                            Pos
+                                        </MudButton>
+                                        <MudButton Color="Color.Error"
+                                                   Variant="Variant.Outlined"
+                                                   Size="Size.Small"
+                                                   OnClick="(() => DeleteItem(context))">
+                                            Hapus
+                                        </MudButton>
                                     </MudStack>
                                 </MudTd>
                             </RowTemplate>
@@ -93,16 +119,21 @@
                                 </MudText>
                             </MudItem>
                             <MudItem xs="12" md="6" Class="d-flex justify-end">
-                                <MudPagination Page="@_pageBelum" PageChanged="(p)=>_pageBelum=p"
-                                               Count="@(Math.Max(1, (int)Math.Ceiling((double)_totalBelum/_pageSizeBelum)))"
-                                               HidePrevNext="false" Class="my-0" />
+                                <MudPagination Page="@_pageBelum"
+                                               PageChanged="(p) => _pageBelum = p"
+                                               Count="@(Math.Max(1, (int)Math.Ceiling((double)_totalBelum / _pageSizeBelum)))"
+                                               HidePrevNext="false"
+                                               Class="my-0" />
                             </MudItem>
                         </MudGrid>
 
                         <MudDivider Class="my-3" />
 
-                        <MudButton Color="Color.Success" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.LocalPostOffice"
-                                   Disabled="@(!_selectedBelum.Any())" OnClick="PostSelected">
+                        <MudButton Color="Color.Success"
+                                   Variant="Variant.Filled"
+                                   StartIcon="@Icons.Material.Filled.LocalPostOffice"
+                                   Disabled="@(!_selectedBelum.Any())"
+                                   OnClick="PostSelected">
                             Pos Berkelompok
                         </MudButton>
                     }
@@ -113,8 +144,12 @@
                     <!-- Controls -->
                     <MudGrid AlignItems="AlignItems.Center" Class="mb-2">
                         <MudItem xs="12" md="3">
-                            <MudSelect T="int" Value="@_pageSizeSudah" ValueChanged="(v) => { _pageSizeSudah = v; _pageSudah = 1; }"
-                                       Dense="true" Variant="Variant.Outlined" Style="background:white; width:100px;">
+                            <MudSelect T="int"
+                                       Value="@_pageSizeSudah"
+                                       ValueChanged="(v) => { _pageSizeSudah = v; _pageSudah = 1; }"
+                                       Dense="true"
+                                       Variant="Variant.Outlined"
+                                       Style="background:white; width:100px;">
                                 <MudSelectItem T="int" Value="10">10</MudSelectItem>
                                 <MudSelectItem T="int" Value="25">25</MudSelectItem>
                                 <MudSelectItem T="int" Value="50">50</MudSelectItem>
@@ -124,8 +159,11 @@
                         </MudItem>
                         <MudItem xs="12" md="9" Class="d-flex justify-end">
                             <MudText Typo="Typo.caption" Class="mr-2">Search:</MudText>
-                            <MudTextField T="string" @bind-Value="_searchSudah" Immediate="true"
-                                          Variant="Variant.Outlined" Dense="true"
+                            <MudTextField T="string"
+                                          @bind-Value="_searchSudah"
+                                          Immediate="true"
+                                          Variant="Variant.Outlined"
+                                          Dense="true"
                                           Style="background:white; max-width:260px;" />
                         </MudItem>
                     </MudGrid>
@@ -137,8 +175,13 @@
                     }
                     else
                     {
-                        <MudTable Items="_pagedSudah" Dense="true" Hover="true" Striped="true" Bordered="true" Elevation="0"
-                                  T="PenyediaanBilDTO">
+                        <MudTable Items="_pagedSudah"
+                                  T="PenyediaanBilDTO"
+                                  Dense="true"
+                                  Hover="true"
+                                  Striped="true"
+                                  Bordered="true"
+                                  Elevation="0">
                             <HeaderContent>
                                 <MudTh width="20%">No. Bil</MudTh>
                                 <MudTh width="12%">Tarikh</MudTh>
@@ -152,8 +195,12 @@
                                 <MudTd DataLabel="Nama Penghutang">@context.NamaPenghutang</MudTd>
                                 <MudTd DataLabel="Status">@context.Status</MudTd>
                                 <MudTd>
-                                    <MudButton Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small"
-                                               OnClick="(()=>EditItem(context))">Pilih</MudButton>
+                                    <MudButton Color="Color.Info"
+                                               Variant="Variant.Outlined"
+                                               Size="Size.Small"
+                                               OnClick="(() => EditItem(context))">
+                                        Pilih
+                                    </MudButton>
                                 </MudTd>
                             </RowTemplate>
                             <NoRecordsContent>
@@ -171,9 +218,11 @@
                                 </MudText>
                             </MudItem>
                             <MudItem xs="12" md="6" Class="d-flex justify-end">
-                                <MudPagination Page="@_pageSudah" PageChanged="(p)=>_pageSudah=p"
-                                               Count="@(Math.Max(1, (int)Math.Ceiling((double)_totalSudah/_pageSizeSudah)))"
-                                               HidePrevNext="false" Class="my-0" />
+                                <MudPagination Page="@_pageSudah"
+                                               PageChanged="(p) => _pageSudah = p"
+                                               Count="@(Math.Max(1, (int)Math.Ceiling((double)_totalSudah / _pageSizeSudah)))"
+                                               HidePrevNext="false"
+                                               Class="my-0" />
                             </MudItem>
                         </MudGrid>
                     }
@@ -186,45 +235,75 @@
     <!-- ======================= BORANG BIL (Tambah / Ubah) ======================= -->
     <MudCard Style="border-left:6px solid #2c7be5;">
         <MudCardHeader Class="py-2" Style="background:#2c7be5; color:white;">
-            <MudText Typo="Typo.subtitle1" Class="pl-2">@(_model.ID == Guid.Empty ? "Tambah Bil" : "Ubah Bil")</MudText>
+            <MudText Typo="Typo.subtitle1" Class="pl-2">
+                @(_model.ID == Guid.Empty ? "Tambah Bil" : "Ubah Bil")
+            </MudText>
         </MudCardHeader>
         <MudCardContent>
 
             <MudGrid Class="mb-2">
                 <MudItem xs="12" md="4">
                     <MudText Typo="Typo.caption">No. Bil *</MudText>
-                    <MudTextField T="string" @bind-Value="_model.NoBil" Dense="true" Variant="Variant.Outlined" Style="background:white;" />
+                    <MudTextField T="string"
+                                  @bind-Value="_model.NoBil"
+                                  Dense="true"
+                                  Variant="Variant.Outlined"
+                                  Style="background:white;" />
                 </MudItem>
                 <MudItem xs="12" md="3">
                     <MudText Typo="Typo.caption">Tarikh *</MudText>
-                    <MudDatePicker @bind-Date="_model.Tarikh" Dense="true" InputIcon="@Icons.Material.Filled.Event"
-                                   Variant="Variant.Outlined" Style="background:white;" />
+                    <MudDatePicker @bind-Date="_model.Tarikh"
+                                   Dense="true"
+                                   InputIcon="@Icons.Material.Filled.Event"
+                                   Variant="Variant.Outlined"
+                                   Style="background:white;" />
                 </MudItem>
                 <MudItem xs="12" md="5">
                     <MudText Typo="Typo.caption">Nama Penghutang *</MudText>
                     <MudAutocomplete T="PenyelenggaraanPenghutangDTO"
                                      @bind-Value="_selectedDebtorForForm"
                                      ToStringFunc="d => d is null ? string.Empty : d.Nama"
-                                     SearchFunc="SearchDebtors" Dense="true"
-                                     Variant="Variant.Outlined" Style="background:white;" />
+                                     SearchFunc="SearchDebtors"
+                                     Dense="true"
+                                     Variant="Variant.Outlined"
+                                     Style="background:white;" />
                 </MudItem>
             </MudGrid>
 
             <MudGrid>
                 <MudItem xs="12" md="3">
                     <MudText Typo="Typo.caption">Status</MudText>
-                    <MudTextField T="string" @bind-Value="_model.Status" Dense="true" Variant="Variant.Outlined"
-                                  ReadOnly="true" Style="background:white;" />
+                    <MudTextField T="string"
+                                  @bind-Value="_model.Status"
+                                  Dense="true"
+                                  Variant="Variant.Outlined"
+                                  ReadOnly="true"
+                                  Style="background:white;" />
                 </MudItem>
             </MudGrid>
 
             <MudDivider Class="my-3" />
 
             <MudStack Row="true" Spacing="2">
-                <MudButton Color="Color.Success" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveItem">Simpan</MudButton>
-                <MudButton Color="Color.Info" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Restore" OnClick="ResetForm">Reset</MudButton>
-                <MudButton Color="Color.Error" Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Delete"
-                           Disabled="@(_model.ID == Guid.Empty)" OnClick="(()=>DeleteItem(_model))">Padam</MudButton>
+                <MudButton Color="Color.Success"
+                           Variant="Variant.Filled"
+                           StartIcon="@Icons.Material.Filled.Save"
+                           OnClick="SaveItem">
+                    Simpan
+                </MudButton>
+                <MudButton Color="Color.Info"
+                           Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.Restore"
+                           OnClick="ResetForm">
+                    Reset
+                </MudButton>
+                <MudButton Color="Color.Error"
+                           Variant="Variant.Outlined"
+                           StartIcon="@Icons.Material.Filled.Delete"
+                           Disabled="@(_model.ID == Guid.Empty)"
+                           OnClick="(() => DeleteItem(_model))">
+                    Padam
+                </MudButton>
             </MudStack>
 
         </MudCardContent>
@@ -241,7 +320,7 @@
         public DateTime? Tarikh { get; set; }
         public string? NamaPenghutang { get; set; }
         public Guid? PenghutangId { get; set; }
-        public string Status { get; set; } = "Baru"; // "Baru" / "Pos" (UI)
+        public string Status { get; set; } = "Baru"; // "Baru" / "Pos"
         public bool SudahPos => string.Equals(Status, "Pos", StringComparison.OrdinalIgnoreCase);
         public string? NotaPembetulan { get; set; }
     }
@@ -268,7 +347,7 @@
     private PenyediaanBilDTO _model = NewModel();
     private PenyelenggaraanPenghutangDTO? _selectedDebtorForForm;
 
-    // ===== Filters
+    // ===== Filters & paging
     private IEnumerable<PenyediaanBilDTO> _belumQuery =>
         _all.Where(x => !x.SudahPos)
             .Where(x => string.IsNullOrWhiteSpace(_searchBelum)
@@ -302,13 +381,13 @@
         _isLoading = true;
         try
         {
-            // 1) Load penghutang via Refit (simple list)
+            // Penghutang via Refit
             var respDeb = await PenghutangService.GetAllAsync();
             _allDebtors = respDeb
                 .Where(d => !string.IsNullOrWhiteSpace(d.Nama))
                 .ToList();
 
-            // 2) Load bill dari API baru (IBillApi + BillDTO)
+            // Bill via Refit
             var bills = await BilService.GetAllAsync();
 
             _all = bills
@@ -333,7 +412,10 @@
             _all = new();
             Snackbar.Add($"Gagal memuatkan data: {ex.Message}", Severity.Error);
         }
-        finally { _isLoading = false; }
+        finally
+        {
+            _isLoading = false;
+        }
     }
 
     private static PenyediaanBilDTO NewModel() => new()
@@ -378,7 +460,10 @@
     // ===== Table actions
     private void ToggleSelect(Guid id, bool selected)
     {
-        if (selected) _selectedBelum.Add(id); else _selectedBelum.Remove(id);
+        if (selected)
+            _selectedBelum.Add(id);
+        else
+            _selectedBelum.Remove(id);
     }
 
     private void EditItem(PenyediaanBilDTO row)
@@ -393,13 +478,19 @@
             Status = row.Status,
             NotaPembetulan = row.NotaPembetulan
         };
+
         _selectedDebtorForForm = _allDebtors.FirstOrDefault(d => d.ID == row.PenghutangId);
         StateHasChanged();
     }
 
     private async Task PostSingle(PenyediaanBilDTO row)
     {
-        var ok = await DialogService.ShowMessageBox("Pengesahan", (MarkupString)$"Pos bil <b>{row.NoBil}</b>?", yesText: "Pos", cancelText: "Batal");
+        var ok = await DialogService.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Pos bil <b>{row.NoBil}</b>?",
+            yesText: "Pos",
+            cancelText: "Batal");
+
         if (ok is not true) return;
 
         try
@@ -411,13 +502,22 @@
             Snackbar.Add("Bil berjaya dipos.", Severity.Success);
             await LoadData();
         }
-        catch (Exception ex) { Snackbar.Add($"Gagal pos bil: {ex.Message}", Severity.Error); }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal pos bil: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task PostSelected()
     {
         var ids = _selectedBelum.ToList();
-        var ok = await DialogService.ShowMessageBox("Pengesahan", (MarkupString)$"Pos berkelompok <b>{ids.Count}</b> bil terpilih?", yesText: "Pos", cancelText: "Batal");
+
+        var ok = await DialogService.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Pos berkelompok <b>{ids.Count}</b> bil terpilih?",
+            yesText: "Pos",
+            cancelText: "Batal");
+
         if (ok is not true) return;
 
         try
@@ -433,30 +533,45 @@
             _selectedBelum.Clear();
             await LoadData();
         }
-        catch (Exception ex) { Snackbar.Add($"Gagal pos berkelompok: {ex.Message}", Severity.Error); }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal pos berkelompok: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task DeleteItem(PenyediaanBilDTO row)
     {
-        var ok = await DialogService.ShowMessageBox("Pengesahan", (MarkupString)$"Padam bil <b>{row.NoBil}</b>?", yesText: "Padam", cancelText: "Batal");
+        var ok = await DialogService.ShowMessageBox(
+            "Pengesahan",
+            (MarkupString)$"Padam bil <b>{row.NoBil}</b>?",
+            yesText: "Padam",
+            cancelText: "Batal");
+
         if (ok is not true) return;
 
         try
         {
             var resp = await BilService.DeleteAsync(row.ID);
-            if (!resp.IsSuccessStatusCode) throw new Exception(resp.Error?.Message ?? $"HTTP {(int)resp.StatusCode}");
+            if (!resp.IsSuccessStatusCode)
+                throw new Exception(resp.Error?.Message ?? $"HTTP {(int)resp.StatusCode}");
+
             Snackbar.Add("Bil berjaya dipadam.", Severity.Success);
             await LoadData();
         }
-        catch (Exception ex) { Snackbar.Add($"Gagal memadam: {ex.Message}", Severity.Error); }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal memadam: {ex.Message}", Severity.Error);
+        }
     }
 
-    // ===== Form actions (Save/Reset/Delete)
+    // ===== Form actions
     private async Task SaveItem()
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(_model.NoBil) || !_model.Tarikh.HasValue || _selectedDebtorForForm is null)
+            if (string.IsNullOrWhiteSpace(_model.NoBil) ||
+                !_model.Tarikh.HasValue ||
+                _selectedDebtorForForm is null)
             {
                 Snackbar.Add("No. Bil, Tarikh dan Nama Penghutang wajib diisi.", Severity.Warning);
                 return;
@@ -467,28 +582,34 @@
 
             if (_model.ID == Guid.Empty)
             {
-                // CREATE – guna BillDTO + CreateBill
+                // CREATE
                 var dto = BuildBillFromModel(_model);
                 var created = await BilService.CreateAsync(dto);
+
                 Snackbar.Add("Bil berjaya ditambah.", Severity.Success);
             }
             else
             {
-                // UPDATE – ambil record penuh dulu supaya field lain tak hilang
+                // UPDATE
                 var existing = await BilService.GetByIdAsync(_model.ID);
+
                 existing.NoBil = _model.NoBil;
                 existing.Tarikh = _model.Tarikh;
                 existing.StatusPos = MapStatusToStatusPos(_model.Status);
                 existing.PenyelenggaraanPenghutangEntitiesID = _model.PenghutangId;
 
                 var updated = await BilService.UpdateAsync(_model.ID, existing);
+
                 Snackbar.Add("Bil berjaya dikemaskini.", Severity.Success);
             }
 
             ResetForm();
             await LoadData();
         }
-        catch (Exception ex) { Snackbar.Add($"Gagal menyimpan: {ex.Message}", Severity.Error); }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Gagal menyimpan: {ex.Message}", Severity.Error);
+        }
     }
 
     private void ResetForm()
@@ -497,16 +618,21 @@
         _selectedDebtorForForm = null;
     }
 
-    // Autocomplete search for penghutang
-    private Task<IEnumerable<PenyelenggaraanPenghutangDTO>> SearchDebtors(string value, CancellationToken token)
+    // ===== Autocomplete penghutang
+    private Task<IEnumerable<PenyelenggaraanPenghutangDTO>> SearchDebtors(
+        string value,
+        CancellationToken token)
     {
         IEnumerable<PenyelenggaraanPenghutangDTO> q = _allDebtors;
+
         if (!string.IsNullOrWhiteSpace(value))
         {
             var s = value.Trim();
-            q = q.Where(d => (d.Nama?.Contains(s, StringComparison.OrdinalIgnoreCase) ?? false)
-                           || (d.KodPenghutang?.Contains(s, StringComparison.OrdinalIgnoreCase) ?? false));
+            q = q.Where(d =>
+                (d.Nama?.Contains(s, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (d.KodPenghutang?.Contains(s, StringComparison.OrdinalIgnoreCase) ?? false));
         }
+
         return Task.FromResult(q);
     }
 }

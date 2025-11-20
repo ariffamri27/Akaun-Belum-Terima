@@ -1,8 +1,8 @@
 using FluentValidation;
-using IMAS.API.AkaunBelumTerima.Shared.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using IMAS_API_Example.Shared.Middleware;
 using Scalar.AspNetCore;
+using IMAS.API.AkaunBelumTerima.Shared.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,7 +38,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference(options =>
     {
         // Object initializer
-        options.Title = "IMAS.AkaunBelumTerima API";
+        options.Title = "IMAS.LejarAm API";
         options.ShowSidebar = true;
     });
 }
@@ -63,5 +63,5 @@ void ApplyMigration()
     using var scope = app.Services.CreateScope();
     var _DbFinancial = scope.ServiceProvider.GetRequiredService<AkaunBelumTerimaDbContext>();
 
-    //_DbFinancial?.Database.Migrate();
+    _DbFinancial?.Database.Migrate();
 }

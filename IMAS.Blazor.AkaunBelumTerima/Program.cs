@@ -1,5 +1,4 @@
-﻿using IMAS.API.AkaunBelumTerima.Shared.Infrastructure.Refit;
-using IMAS.Blazor.AkaunBelumTerima;
+﻿using IMAS.Blazor.AkaunBelumTerima;
 using IMAS.Blazor.AkaunBelumTerima.Services.Refit;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
@@ -23,19 +22,16 @@ var refitSettings = new RefitSettings
         })
 };
 
-
-
-// Register Refit clients with settings
-builder.Services.AddRefitClient<IAuditTrailApi>(refitSettings)
+builder.Services.AddRefitClient<IBillApi>(refitSettings)
     .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://localhost:9003"));
 
-builder.Services.AddRefitClient<IAuditTrailFilterApi>(refitSettings)
+builder.Services.AddRefitClient<IResitApi>(refitSettings)
     .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://localhost:9003"));
 
-builder.Services.AddRefitClient<IJurnalApi>(refitSettings)
+builder.Services.AddRefitClient<INotaDebitKreditApi>(refitSettings)
     .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://localhost:9003"));
 
-builder.Services.AddRefitClient<IPenyelenggaraanLejarApi>(refitSettings)
+builder.Services.AddRefitClient<IPenyelenggaraanPenghutangApi>(refitSettings)
     .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://localhost:9003"));
 
 // Optional plain HttpClient if needed elsewhere
